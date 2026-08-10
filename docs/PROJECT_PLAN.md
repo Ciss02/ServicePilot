@@ -21,7 +21,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-001 - Struttura iniziale del repository**
   Creare README provvisorio, `.gitignore`, licenza e organizzare la documentazione.
   Verifica: la struttura è comprensibile e Git non include file locali o segreti.
-- [ ] **SP-002 - Ambiente Python locale**
+- [x] **SP-002 - Ambiente Python locale**
   Verificare Python, creare l'ambiente isolato e definire le dipendenze iniziali.
   Verifica: l'ambiente può essere ricreato seguendo istruzioni scritte.
 - [ ] **SP-003 - Prima applicazione FastAPI**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-002**. La milestone attiva è **Milestone 0**.
+La prossima attività è **SP-003**. La milestone attiva è **Milestone 0**.

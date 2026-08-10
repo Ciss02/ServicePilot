@@ -82,3 +82,22 @@ ramo principale `main`.
 
 Il repository pubblico rende visibili sia il risultato sia il processo di sviluppo e
 permetterà di usare issue e milestone come tasklist operativa del portfolio.
+
+## D-006 - Versione Python e dipendenze iniziali
+
+**Data:** 10 agosto 2026
+**Stato:** confermata durante SP-002
+
+**Decisione:**
+
+- usare Python 3.13 per lo sviluppo dell'MVP;
+- separare le dipendenze dell'applicazione in `requirements.txt` dagli strumenti di
+  sviluppo in `requirements-dev.txt`;
+- usare versioni esplicite delle dipendenze dirette.
+
+**Motivazione:**
+
+Python 3.13 offre una base recente e stabile, con maggiore probabilità di compatibilità
+con le future librerie AI rispetto all'adozione immediata della serie più nuova. La
+separazione dei requisiti rende inoltre chiaro cosa serve al server e cosa serve soltanto
+per sviluppare e verificare il progetto.

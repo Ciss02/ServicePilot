@@ -1,0 +1,3 @@
+# Dipendenze necessarie per eseguire ServicePilot
+fastapi==0.141.1
+uvicorn[standard]==0.52.1
