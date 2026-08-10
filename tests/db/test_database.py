@@ -23,6 +23,7 @@ def test_database_creation_is_repeatable(database_engine) -> None:
     create_database(database_engine)
 
     assert set(inspect(database_engine).get_table_names()) == {
+        "auth_sessions",
         "sites",
         "tickets",
         "users",

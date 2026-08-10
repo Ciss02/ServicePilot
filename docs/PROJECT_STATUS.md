@@ -33,6 +33,9 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Modifica, classificazione, assegnazione e ciclo di vita tecnico dei ticket verificati.
 - Account demo configurabili tramite variabili d'ambiente e hash Argon2 nel database.
 - Modulo riutilizzabile per creare e verificare password senza conservarle in chiaro.
+- Login degli account demo con errore uniforme per credenziali non valide.
+- Sessioni autenticate revocabili, conservate nel database soltanto come impronte.
+- Endpoint per leggere l'identità corrente e chiudere la sessione.
 
 ## Milestone attiva
 
@@ -40,21 +43,23 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-030 - Account demo e password sicure**
+**SP-031 - Login, sessione e logout**
 
-I cinque account dimostrativi ricevono password configurate fuori dal repository. Il
-seed valida i tre valori per ruolo e salva soltanto hash Argon2 con dato casuale. I
-database SQLite già creati ricevono la nuova colonna senza perdere utenti o ticket.
+Gli account demo attivi possono accedere con email e password. Il browser riceve un
+cookie protetto e il database conserva soltanto l'impronta del codice casuale per otto
+ore. Sessioni scadute o riferite ad account inattivi vengono rifiutate; il logout revoca
+la sessione e cancella il cookie.
 
 ## Prossima attività
 
-**SP-031 - Login, sessione e logout**
+**SP-032 - Autorizzazione per ruolo**
 
 Risultato atteso:
 
-- permettere l'accesso degli account demo;
-- mantenere l'identità durante la sessione e permettere il logout;
-- verificare accesso valido, credenziali errate e chiusura della sessione.
+- proteggere le API usando l'identità della sessione;
+- mostrare ai dipendenti soltanto i propri ticket;
+- riservare gestione tecnica e operazioni amministrative ai ruoli autorizzati;
+- verificare i principali tentativi di accesso non autorizzato.
 
 ## Blocchi o decisioni aperte
 
@@ -64,11 +69,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-031.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-032.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-031` con il codice dell'attività successiva.
+Sostituire `SP-032` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -146,4 +151,14 @@ Prima di terminare verificare che:
 - Eseguito `python -m app.db seed` con credenziali casuali su SQLite in memoria.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-030.
 - `pytest`: 96 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificato il login valido con un account demo attivo e hash Argon2.
+- Verificato lo stesso errore per password errata, email inesistente e account inattivo.
+- Verificato che il cookie sia `HttpOnly` e `SameSite=Lax` e che il database conservi
+  soltanto l'impronta del codice casuale.
+- Verificato il mantenimento dell'identità tra richieste successive.
+- Verificati rifiuto e rimozione di sessioni scadute o collegate ad account disattivati.
+- Verificato che il logout revochi la sessione, cancelli il cookie e sia ripetibile.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-031.
+- `pytest`: 111 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

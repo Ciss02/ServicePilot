@@ -66,7 +66,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-030 - Account demo e password sicure**
   Preparare gli account dei tre ruoli e memorizzare password protette.
   Verifica: nessuna password in chiaro nel database o nel codice.
-- [ ] **SP-031 - Login, sessione e logout**
+- [x] **SP-031 - Login, sessione e logout**
   Permettere l'accesso degli account demo e la chiusura della sessione.
   Verifica: accesso valido, accesso negato e logout testati.
 - [ ] **SP-032 - Autorizzazione per ruolo**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-031**. La milestone attiva è **Milestone 3**.
+La prossima attività è **SP-032**. La milestone attiva è **Milestone 3**.

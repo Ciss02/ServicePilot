@@ -11,6 +11,7 @@ tra ticket, utenti e sedi.
 ## Tabelle iniziali
 
 - `users`: identità fittizia, nome visibile, ruolo, hash della password e stato attivo;
+- `auth_sessions`: impronta del codice casuale, utente collegato, creazione e scadenza;
 - `sites`: codice, nome e stato attivo di una sede fittizia;
 - `tickets`: dati confermati della richiesta, classificazione facoltativa,
   assegnazione, stato e date.
@@ -40,6 +41,8 @@ modifiche strutturali future.
 
 - email utente e codice sede unici;
 - password degli account demo conservata soltanto come hash Argon2;
+- codici di sessione conservati nel database soltanto come impronte SHA-256;
+- sessioni collegate a utenti esistenti e rimosse con l'utente;
 - ruoli, categorie, stati, impatto, urgenza e priorità limitati al vocabolario;
 - numero di utenti coinvolti compreso tra 1 e 10.000;
 - richiedente, sede e tecnico assegnato collegati a record esistenti;

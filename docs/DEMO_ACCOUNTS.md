@@ -1,7 +1,7 @@
 # Account demo e password sicure
 
-SP-030 prepara i cinque account sintetici per il futuro login senza conservare password
-leggibili nel repository o nel database.
+SP-030 prepara i cinque account sintetici per il login senza conservare password
+leggibili nel repository o nel database. SP-031 aggiunge l'accesso e le sessioni.
 
 ## Account disponibili
 
@@ -41,13 +41,16 @@ di modificare il dataset e indica soltanto il nome della variabile, mai il suo v
 Il backend usa `pwdlib` 0.3.0 e Argon2. La password viene trasformata in un hash con un
 valore casuale incorporato: non è possibile ricavare direttamente la password
 dall'informazione salvata. Lo stesso testo produce hash diversi, ma può essere verificato
-in modo sicuro durante il futuro login.
+in modo sicuro durante il login.
 
 Il seed riutilizza un hash già valido. Se cambia la password configurata, sostituisce
 l'hash dell'account demo. Il testo originale non viene salvato né stampato.
 
-## Limiti attuali
+## Accesso
 
-SP-030 prepara account e verifica delle password, ma non espone ancora un modulo di
-accesso. SP-031 aggiungerà login, sessione e logout; SP-032 applicherà i permessi dei tre
-ruoli alle API.
+Dopo il seed, `POST /auth/login` accetta l'email di uno degli account elencati e la
+password configurata per il suo ruolo. Il flusso completo è descritto in
+[`AUTHENTICATION.md`](AUTHENTICATION.md).
+
+SP-032 applicherà i permessi dei tre ruoli alle API; SP-040 aggiungerà la pagina grafica
+di accesso.
