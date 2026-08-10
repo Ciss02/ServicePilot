@@ -67,9 +67,9 @@ esiste una sessione.
 Una copia del database non contiene quindi né password né codici di sessione direttamente
 utilizzabili.
 
-## Limiti attuali
+## Autorizzazione e limiti attuali
 
-SP-031 autentica l'utente, ma non modifica ancora le regole delle API ticket. SP-032
-userà questa identità per limitare lettura, creazione e modifica in base al ruolo. La
-pagina grafica di accesso appartiene a SP-040; limiti ai tentativi ripetuti e revisione
-finale della sicurezza della demo appartengono a SP-081.
+SP-032 usa questa identità per proteggere le API ticket secondo la matrice descritta in
+[`AUTHORIZATION.md`](AUTHORIZATION.md). La pagina grafica di accesso appartiene a SP-040;
+limiti ai tentativi ripetuti e revisione finale della sicurezza della demo appartengono
+a SP-081.

@@ -10,7 +10,6 @@ def valid_ticket_create_data() -> dict[str, object]:
     return {
         "title": "Accesso VPN non disponibile",
         "description": "La connessione VPN mostra un errore prima dell'accesso.",
-        "requester_id": 12,
         "site_id": 3,
         "service": "Accesso remoto",
         "affected_users": 1,
@@ -33,7 +32,7 @@ def test_ticket_create_accepts_confirmed_valid_data() -> None:
     [
         pytest.param("title", "   ", id="blank-title"),
         pytest.param("description", "Breve", id="short-description"),
-        pytest.param("requester_id", 0, id="invalid-requester"),
+        pytest.param("site_id", 0, id="invalid-site"),
         pytest.param("affected_users", 0, id="no-affected-users"),
         pytest.param("confirmed", False, id="not-confirmed"),
         pytest.param("confirmed", 1, id="confirmation-is-not-boolean"),
@@ -49,9 +48,10 @@ def test_ticket_create_rejects_invalid_data(field: str, invalid_value: object) -
     assert error.value.errors()[0]["loc"] == (field,)
 
 
-def test_ticket_create_rejects_unknown_fields() -> None:
+@pytest.mark.parametrize("field", ["priority", "requester_id"])
+def test_ticket_create_rejects_unknown_fields(field: str) -> None:
     data = valid_ticket_create_data()
-    data["priority"] = "p1"
+    data[field] = "p1" if field == "priority" else 12
 
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         TicketCreate.model_validate(data)
@@ -59,12 +59,12 @@ def test_ticket_create_rejects_unknown_fields() -> None:
 
 def test_ticket_create_rejects_numeric_strings() -> None:
     data = valid_ticket_create_data()
-    data["requester_id"] = "12"
+    data["site_id"] = "3"
 
     with pytest.raises(ValidationError) as error:
         TicketCreate.model_validate(data)
 
-    assert error.value.errors()[0]["loc"] == ("requester_id",)
+    assert error.value.errors()[0]["loc"] == ("site_id",)
 
 
 def test_classification_calculates_priority() -> None:

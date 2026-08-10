@@ -12,7 +12,6 @@ mentre il server è in esecuzione.
 {
   "title": "Accesso VPN non disponibile",
   "description": "La VPN demo mostra un errore prima del collegamento.",
-  "requester_id": 1,
   "site_id": 1,
   "service": "Accesso remoto",
   "affected_users": 1,
@@ -21,15 +20,16 @@ mentre il server è in esecuzione.
 ```
 
 Il backend verifica forma e limiti dei dati, richiede la conferma esplicita e controlla
-che richiedente e sede esistano. Se il salvataggio riesce restituisce `201 Created` con
-ID, stato `new`, date e classificazione inizialmente vuota. `confirmed` non viene
-conservato: è una condizione necessaria per eseguire l'operazione, non una proprietà del
-ticket.
+che la sede esista. Il richiedente è sempre l'utente autenticato: inviare manualmente
+`requester_id` produce `422`. Se il salvataggio riesce restituisce `201 Created` con ID,
+stato `new`, date e classificazione inizialmente vuota. `confirmed` non viene conservato:
+è una condizione necessaria per eseguire l'operazione, non una proprietà del ticket.
 
 ## Lettura
 
-- `GET /tickets` restituisce tutti i ticket dal più recente;
-- `GET /tickets/{ticket_id}` restituisce il dettaglio di un ticket.
+- per `employee`, `GET /tickets` restituisce soltanto i ticket propri;
+- per `technician` e `admin`, `GET /tickets` restituisce l'intera coda;
+- `GET /tickets/{ticket_id}` applica la stessa regola al dettaglio.
 
 La risposta segue `TicketRead` e comprende dati iniziali, classificazione, assegnazione,
 stato, note, soluzione e date. I campi non ancora valorizzati sono `null`.
@@ -46,7 +46,8 @@ stato, note, soluzione e date. I campi non ancora valorizzati sono `null`.
 
 Il tecnico assegnato deve esistere, essere attivo e avere ruolo `technician` o `admin`.
 Il richiedente non è modificabile. Tutti i controlli avvengono prima del salvataggio,
-quindi un errore non lascia modifiche parziali.
+quindi un errore non lascia modifiche parziali. L'endpoint accetta soltanto utenti con
+ruolo `technician` o `admin`.
 
 ## Ciclo di vita
 
@@ -66,17 +67,14 @@ passare a `resolved` o `closed` deve essere disponibile una soluzione testuale.
 
 | Codice | Significato |
 | --- | --- |
-| `404` | Richiedente, sede o ticket non esistente. |
+| `401` | Sessione non valida o assente. |
+| `403` | Ruolo autenticato ma non autorizzato. |
+| `404` | Sede o ticket non esistente; per un dipendente include i ticket altrui. |
 | `409` | Transizione non consentita o riferimenti rifiutati dal database. |
 | `422` | Corpo non valido, tecnico non idoneo o soluzione obbligatoria assente. |
 
 Un errore annulla la transazione e non lascia ticket parziali.
 
-## Limiti attuali
-
-SP-031 permette il login e mantiene l'identità autenticata, ma le API ticket non usano
-ancora tale identità. In particolare, l'elenco non è filtrato per richiedente e `PATCH`
-non limita ancora chi invia la modifica: servono alla costruzione del backend e non
-devono essere esposte come funzioni pubbliche. SP-032 aggiungerà l'autorizzazione. Filtri
-e paginazione appartengono ad attività successive.
+La matrice completa è documentata in [`AUTHORIZATION.md`](AUTHORIZATION.md). Filtri di
+ricerca e paginazione appartengono ad attività successive.
 

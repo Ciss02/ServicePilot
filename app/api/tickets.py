@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.api.dependencies import CurrentUser, TechnicalUser
 from app.db.models import Site, Ticket, User
 from app.db.session import get_session
 from app.domain.ticket_contracts import TicketCreate, TicketRead, TicketUpdate
@@ -25,14 +26,13 @@ TicketId = Annotated[int, Path(gt=0, description="Identificativo positivo del ti
     status_code=status.HTTP_201_CREATED,
     summary="Crea un ticket confermato",
 )
-def create_ticket(payload: TicketCreate, session: DatabaseSession) -> Ticket:
-    """Salva una richiesta confermata collegata a utente e sede esistenti."""
+def create_ticket(
+    payload: TicketCreate,
+    session: DatabaseSession,
+    current_user: CurrentUser,
+) -> Ticket:
+    """Salva una richiesta confermata per l'utente autenticato."""
 
-    if session.get(User, payload.requester_id) is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Richiedente {payload.requester_id} non trovato",
-        )
     if session.get(Site, payload.site_id) is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -42,7 +42,7 @@ def create_ticket(payload: TicketCreate, session: DatabaseSession) -> Ticket:
     ticket = Ticket(
         title=payload.title,
         description=payload.description,
-        requester_id=payload.requester_id,
+        requester_id=current_user.id,
         site_id=payload.site_id,
         service=payload.service,
         affected_users=payload.affected_users,
@@ -65,10 +65,15 @@ def create_ticket(payload: TicketCreate, session: DatabaseSession) -> Ticket:
     response_model=list[TicketRead],
     summary="Elenca i ticket",
 )
-def list_tickets(session: DatabaseSession) -> list[Ticket]:
+def list_tickets(
+    session: DatabaseSession,
+    current_user: CurrentUser,
+) -> list[Ticket]:
     """Restituisce tutti i ticket, dal più recente."""
 
     query = select(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc())
+    if current_user.role is Role.EMPLOYEE:
+        query = query.where(Ticket.requester_id == current_user.id)
     return list(session.scalars(query).all())
 
 
@@ -77,11 +82,18 @@ def list_tickets(session: DatabaseSession) -> list[Ticket]:
     response_model=TicketRead,
     summary="Legge un ticket",
 )
-def get_ticket(ticket_id: TicketId, session: DatabaseSession) -> Ticket:
+def get_ticket(
+    ticket_id: TicketId,
+    session: DatabaseSession,
+    current_user: CurrentUser,
+) -> Ticket:
     """Restituisce il ticket richiesto o un errore chiaro."""
 
     ticket = session.get(Ticket, ticket_id)
-    if ticket is None:
+    if ticket is None or (
+        current_user.role is Role.EMPLOYEE
+        and ticket.requester_id != current_user.id
+    ):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Ticket {ticket_id} non trovato",
@@ -98,6 +110,7 @@ def update_ticket(
     ticket_id: TicketId,
     payload: TicketUpdate,
     session: DatabaseSession,
+    _technical_user: TechnicalUser,
 ) -> Ticket:
     """Modifica soltanto i campi tecnici validati e salva tutto insieme."""
 

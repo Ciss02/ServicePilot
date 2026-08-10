@@ -23,7 +23,8 @@ prima applicazione FastAPI, il vocabolario dei ticket, la matrice della priorit�
 contratti dati validati, il database iniziale, un dataset completamente sintetico e le
 API per creare, leggere e gestire tecnicamente i ticket, oltre agli account demo con
 password protette tramite Argon2. Gli account possono effettuare login, mantenere una
-sessione autenticata e fare logout.
+sessione autenticata e fare logout. Le API applicano inoltre i permessi dei ruoli:
+ticket personali per i dipendenti e gestione completa per tecnico e amministratore.
 
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
@@ -69,7 +70,8 @@ documentazione interattiva delle API è disponibile su `http://127.0.0.1:8000/do
 Le operazioni di accesso sono `POST /auth/login`, `GET /auth/session` e
 `POST /auth/logout`. Sono inoltre disponibili `POST /tickets`, `GET /tickets`,
 `GET /tickets/{ticket_id}` e `PATCH /tickets/{ticket_id}`. Prima di provarle è possibile
-caricare il dataset demo con il comando descritto più sotto.
+caricare il dataset demo con il comando descritto più sotto. Le operazioni sui ticket
+richiedono una sessione autenticata.
 
 Per eseguire i test automatici:
 
@@ -119,6 +121,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Dataset dimostrativo](docs/DEMO_DATA.md)
 - [Account demo e password sicure](docs/DEMO_ACCOUNTS.md)
 - [Login, sessione e logout](docs/AUTHENTICATION.md)
+- [Autorizzazione per ruolo](docs/AUTHORIZATION.md)
 - [API essenziali dei ticket](docs/TICKET_API.md)
 
 ### Avvertenza
@@ -142,7 +145,8 @@ application, ticket vocabulary, priority matrix, validated data contracts, the i
 database, a fully synthetic demo dataset, and APIs to create, read, classify, assign,
 and update tickets are available. Demo accounts store Argon2 password hashes whose
 plain-text values come only from environment variables, and can now log in, keep an
-authenticated session, and log out.
+authenticated session, and log out. Ticket APIs enforce role permissions: employees
+see only their own requests, while technicians and administrators manage the full queue.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
 
@@ -167,7 +171,8 @@ Open `http://127.0.0.1:8000/health` to check the service or
 
 Authentication operations are `POST /auth/login`, `GET /auth/session`, and
 `POST /auth/logout`. Ticket operations are `POST /tickets`, `GET /tickets`,
-`GET /tickets/{ticket_id}`, and `PATCH /tickets/{ticket_id}`.
+`GET /tickets/{ticket_id}`, and `PATCH /tickets/{ticket_id}`. Ticket operations require
+an authenticated session.
 
 Run the automated tests with:
 

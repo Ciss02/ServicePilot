@@ -337,3 +337,30 @@ mentre una copia del database contiene un'impronta che non può essere usata dir
 come cookie. Otto ore coprono una giornata dimostrativa senza creare sessioni permanenti.
 La separazione dall'autorizzazione mantiene SP-031 concentrata sul riconoscimento
 dell'utente e lascia a SP-032 regole di accesso verificabili in modo autonomo.
+
+## D-016 - Autorizzazione backend e proprietà dei ticket
+
+**Data:** 10 agosto 2026
+**Stato:** confermata durante SP-032
+
+**Decisione:**
+
+- richiedere una sessione valida per tutte le API dei ticket;
+- ricavare sempre il richiedente dalla sessione e rifiutare `requester_id` nel corpo;
+- permettere a ogni account attivo di creare soltanto ticket propri;
+- filtrare elenco e dettaglio di `employee` in base alla proprietà;
+- restituire `404` quando un dipendente richiede il dettaglio di un ticket altrui;
+- permettere a `technician` e `admin` di leggere l'intera coda;
+- riservare `PATCH /tickets/{ticket_id}` a `technician` e `admin`;
+- distinguere sessione non valida (`401`) da ruolo insufficiente (`403`);
+- preparare controlli riutilizzabili per utente autenticato, ruolo tecnico e solo admin;
+- non creare endpoint amministrativi fittizi prima delle attività che li richiedono.
+
+**Motivazione:**
+
+I permessi nel backend restano efficaci anche se una persona chiama direttamente l'API.
+Derivare il richiedente dalla sessione elimina la possibilità di dichiarare un'altra
+identità nel corpo della richiesta. Il `404` sui ticket altrui non rivela informazioni
+sulla loro esistenza. Controlli condivisi evitano di riscrivere regole diverse in ogni
+endpoint e preparano le future funzioni amministrative mantenendo SP-032 nel suo
+perimetro.
