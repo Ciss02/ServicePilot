@@ -198,3 +198,29 @@ SQLAlchemy separa il codice applicativo dal database specifico, mentre SQLite co
 di sviluppare la demo senza installare un server. La creazione basata sui metadati è
 ripetibile e sufficiente per la struttura iniziale; un sistema di migrazioni sarà utile
 quando dovremo modificare database già popolati, ma non è necessario per SP-020.
+
+## D-011 - Dataset dimostrativo ripetibile
+
+**Data:** 10 agosto 2026
+**Stato:** confermata durante SP-021
+
+**Decisione:**
+
+- creare 6 sedi sintetiche coerenti con sede centrale, stabilimento, magazzino e tre
+  punti vendita della specifica;
+- creare 5 profili che coprono i ruoli `employee`, `technician` e `admin`, senza
+  password fino a SP-030;
+- creare 6 ticket dimostrativi con scenari, stati e priorità differenti;
+- identificare chiaramente i dati con codici `-DEMO`, email nel dominio riservato
+  `.example` e titoli `[DEMO]`;
+- riconoscere sedi, utenti e ticket tramite chiavi stabili e aggiornare i record demo
+  esistenti senza duplicarli;
+- non cancellare record estranei al dataset;
+- calcolare le priorità con la matrice deterministica già approvata.
+
+**Motivazione:**
+
+Un dataset stabile rende schermate e test riproducibili tra sessioni. L'aggiornamento
+mirato è più sicuro di una cancellazione completa e permette di ricaricare gli esempi
+senza perdere eventuali dati locali non dimostrativi. I marcatori visibili e il dominio
+`.example` evitano di confondere gli esempi con persone o sistemi reali.

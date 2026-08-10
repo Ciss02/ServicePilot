@@ -47,3 +47,14 @@ sistema di migrazioni, che non fa parte di SP-020.
 
 I test usano file SQLite temporanei e non modificano `servicepilot.db`.
 
+## Dati dimostrativi
+
+Il comando seguente crea le tabelle mancanti e carica il dataset sintetico:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.db seed
+```
+
+Contenuto e comportamento sono descritti in
+[`DEMO_DATA.md`](DEMO_DATA.md).
+
