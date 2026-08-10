@@ -46,7 +46,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 **Risultato:** i ticket possono essere salvati e gestiti senza AI.
 
-- [ ] **SP-020 - Database iniziale**
+- [x] **SP-020 - Database iniziale**
   Configurare SQLite e le tabelle per utenti, sedi e ticket.
   Verifica: il database viene creato in modo ripetibile.
 - [ ] **SP-021 - Dataset dimostrativo**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-020**. La milestone attiva è **Milestone 2**.
+La prossima attività è **SP-021**. La milestone attiva è **Milestone 2**.

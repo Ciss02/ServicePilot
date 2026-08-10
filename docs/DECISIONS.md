@@ -174,3 +174,27 @@ la classificazione viene completata successivamente e il tecnico può modificare
 campi esplicitamente previsti. Limiti e tipi rendono gli errori comprensibili prima del
 salvataggio. La priorità resta sotto il controllo della matrice del backend e il
 richiedente non può essere trasferito accidentalmente con una normale modifica.
+
+## D-010 - Persistenza iniziale
+
+**Data:** 10 agosto 2026
+**Stato:** confermata durante SP-020
+
+**Decisione:**
+
+- usare SQLAlchemy 2.0.51 come dipendenza diretta;
+- usare SQLite locale tramite `sqlite:///./servicepilot.db` come configurazione
+  predefinita;
+- permettere la sostituzione dell'indirizzo con `SERVICEPILOT_DATABASE_URL`;
+- creare le tabelle iniziali `users`, `sites` e `tickets`;
+- conservare nel database i codici testuali del vocabolario, per esempio `employee` e
+  `new`, con vincoli sui valori ammessi;
+- mantenere facoltativa la classificazione al momento della nascita del ticket;
+- rinviare migrazioni, password, dati demo, allegati e audit alle attività dedicate.
+
+**Motivazione:**
+
+SQLAlchemy separa il codice applicativo dal database specifico, mentre SQLite consente
+di sviluppare la demo senza installare un server. La creazione basata sui metadati è
+ripetibile e sufficiente per la struttura iniziale; un sistema di migrazioni sarà utile
+quando dovremo modificare database già popolati, ma non è necessario per SP-020.

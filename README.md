@@ -19,8 +19,8 @@ L'obiettivo è mostrare un flusso completo e verificabile:
 ### Stato attuale
 
 Le fondamenta e le regole iniziali del dominio sono complete. Sono disponibili una
-prima applicazione FastAPI, il vocabolario dei ticket, la matrice della priorità e i
-contratti dati validati.
+prima applicazione FastAPI, il vocabolario dei ticket, la matrice della priorità, i
+contratti dati validati e il database iniziale.
 
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
@@ -69,6 +69,16 @@ Per eseguire i test automatici:
 .\.venv\Scripts\python.exe -m pytest
 ```
 
+Per creare il database SQLite locale e le tabelle iniziali:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.db
+```
+
+Il comando può essere ripetuto senza cancellare i dati. La struttura delle tabelle e
+la configurazione sono spiegate in
+[`docs/DATABASE.md`](docs/DATABASE.md).
+
 ### Tecnologie previste
 
 - Python e FastAPI
@@ -87,6 +97,7 @@ Per eseguire i test automatici:
 - [Decisioni di progetto](docs/DECISIONS.md)
 - [Vocabolario del dominio](docs/DOMAIN_VOCABULARY.md)
 - [Contratti dati del ticket](docs/TICKET_CONTRACTS.md)
+- [Database iniziale](docs/DATABASE.md)
 
 ### Avvertenza
 
@@ -105,8 +116,8 @@ knowledge base, human approval of simulated actions, and a complete audit trail.
 ### Current status
 
 The project foundation and initial domain rules are complete. A first FastAPI
-application, ticket vocabulary, priority matrix, and validated data contracts are
-available.
+application, ticket vocabulary, priority matrix, validated data contracts, and the
+initial database are available.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
 
@@ -134,6 +145,15 @@ Run the automated tests with:
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
 ```
+
+Create the local SQLite database and its initial tables with:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.db
+```
+
+The command is repeatable and does not delete existing data. See
+[`docs/DATABASE.md`](docs/DATABASE.md) for the schema and configuration details.
 
 ### Disclaimer
 

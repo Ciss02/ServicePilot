@@ -23,6 +23,8 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Ruoli, categorie, stati, impatto, urgenza e priorità documentati.
 - Matrice deterministica della priorità implementata in `app/domain/priority.py`.
 - Contratti Pydantic per creazione, classificazione e aggiornamento dei ticket.
+- Database SQLite configurato tramite SQLAlchemy.
+- Tabelle iniziali per utenti, sedi e ticket con vincoli e collegamenti essenziali.
 
 ## Milestone attiva
 
@@ -30,21 +32,21 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-012 - Contratti dati del ticket**
+**SP-020 - Database iniziale**
 
-Sono stati definiti contratti separati per creazione confermata, classificazione e
-aggiornamento parziale. I campi vengono ripuliti e validati; valori sconosciuti,
-priorità fornite liberamente e aggiornamenti vuoti vengono rifiutati.
+Sono state definite le tabelle `users`, `sites` e `tickets`, insieme alla connessione
+SQLite e al comando di inizializzazione ripetibile. I riferimenti principali e i valori
+del vocabolario sono protetti anche nel database.
 
 ## Prossima attività
 
-**SP-020 - Database iniziale**
+**SP-021 - Dataset dimostrativo**
 
 Risultato atteso:
 
-- configurazione SQLite e SQLAlchemy;
-- tabelle iniziali per utenti, sedi e ticket;
-- creazione del database ripetibile e verificata.
+- sedi, account e ticket completamente fittizi;
+- caricamento ripetibile dei dati demo;
+- dati coerenti con ruoli, sedi e vocabolario approvati.
 
 ## Blocchi o decisioni aperte
 
@@ -54,7 +56,7 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-020.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-021.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
@@ -94,3 +96,10 @@ Prima di terminare verificare che:
 - Verificati contratti validi per creazione, classificazione e aggiornamento.
 - Verificato il rifiuto di conferma falsa o ambigua, identificativi errati, campi
   sconosciuti, categorie non ammesse, priorità fornite dall'esterno e aggiornamenti vuoti.
+- Verificata SQLAlchemy 2.0.51 nell'ambiente Python 3.13.
+- Verificata la creazione ripetuta delle tabelle `users`, `sites` e `tickets`.
+- Verificato il salvataggio di dati fittizi con stato iniziale `new` e codici stabili.
+- Verificato il rifiuto di un ticket collegato a un richiedente inesistente.
+- Eseguito due volte il comando `python -m app.db` su SQLite in memoria.
+- `pytest`: 44 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
