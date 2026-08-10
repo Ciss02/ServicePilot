@@ -20,7 +20,8 @@ L'obiettivo è mostrare un flusso completo e verificabile:
 
 Le fondamenta e le regole iniziali del dominio sono complete. Sono disponibili una
 prima applicazione FastAPI, il vocabolario dei ticket, la matrice della priorità, i
-contratti dati validati, il database iniziale e un dataset completamente sintetico.
+contratti dati validati, il database iniziale, un dataset completamente sintetico e le
+API essenziali per creare e leggere ticket.
 
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
@@ -62,6 +63,10 @@ Da PowerShell, nella cartella del progetto:
 Il server sarà disponibile all'indirizzo `http://127.0.0.1:8000`. L'endpoint
 `http://127.0.0.1:8000/health` verifica che il servizio risponda, mentre la
 documentazione interattiva delle API è disponibile su `http://127.0.0.1:8000/docs`.
+
+Le prime operazioni disponibili sono `POST /tickets`, `GET /tickets` e
+`GET /tickets/{ticket_id}`. Prima di provarle è possibile caricare il dataset demo con
+il comando descritto più sotto.
 
 Per eseguire i test automatici:
 
@@ -105,6 +110,7 @@ Per caricare o riallineare sedi, profili e ticket dimostrativi:
 - [Contratti dati del ticket](docs/TICKET_CONTRACTS.md)
 - [Database iniziale](docs/DATABASE.md)
 - [Dataset dimostrativo](docs/DEMO_DATA.md)
+- [API essenziali dei ticket](docs/TICKET_API.md)
 
 ### Avvertenza
 
@@ -124,7 +130,8 @@ knowledge base, human approval of simulated actions, and a complete audit trail.
 
 The project foundation and initial domain rules are complete. A first FastAPI
 application, ticket vocabulary, priority matrix, validated data contracts, the initial
-database, and a fully synthetic demo dataset are available.
+database, a fully synthetic demo dataset, and the essential ticket create/read APIs are
+available.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
 
@@ -146,6 +153,9 @@ python -m pip install -r requirements-dev.txt
 
 Open `http://127.0.0.1:8000/health` to check the service or
 `http://127.0.0.1:8000/docs` to view the interactive API documentation.
+
+The first available operations are `POST /tickets`, `GET /tickets`, and
+`GET /tickets/{ticket_id}`.
 
 Run the automated tests with:
 

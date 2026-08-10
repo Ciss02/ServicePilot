@@ -2,7 +2,7 @@
 
 import os
 import sqlite3
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.engine import URL, make_url
@@ -50,4 +50,14 @@ def create_database(target_engine: Engine = engine) -> None:
     """Crea soltanto le tabelle mancanti; può essere richiamata più volte."""
 
     Base.metadata.create_all(target_engine)
+
+
+def get_session() -> Iterator[Session]:
+    """Fornisce una sessione isolata e la chiude dopo ogni richiesta."""
+
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
 

@@ -224,3 +224,29 @@ Un dataset stabile rende schermate e test riproducibili tra sessioni. L'aggiorna
 mirato è più sicuro di una cancellazione completa e permette di ricaricare gli esempi
 senza perdere eventuali dati locali non dimostrativi. I marcatori visibili e il dominio
 `.example` evitano di confondere gli esempi con persone o sistemi reali.
+
+## D-012 - API essenziali dei ticket
+
+**Data:** 10 agosto 2026
+**Stato:** confermata durante SP-022
+
+**Decisione:**
+
+- esporre `POST /tickets`, `GET /tickets` e `GET /tickets/{ticket_id}`;
+- usare `TicketCreate` per l'ingresso e un contratto separato `TicketRead` per la
+  risposta completa;
+- creare un ticket soltanto con `confirmed=true` e con richiedente e sede esistenti;
+- assegnare al backend ID, stato iniziale `new` e date;
+- lasciare vuota la classificazione iniziale, coerentemente con il flusso approvato;
+- restituire `404` per risorse non esistenti, `422` per dati non validi e `409` quando
+  il database rifiuta i riferimenti durante il salvataggio;
+- ordinare l'elenco dal ticket più recente;
+- creare le tabelle mancanti all'avvio dell'applicazione;
+- rinviare autenticazione, autorizzazione, paginazione e modifica alle attività dedicate.
+
+**Motivazione:**
+
+Contratti distinti impediscono al client di scegliere campi gestiti dal backend. Le
+verifiche dei riferimenti producono errori comprensibili prima del vincolo del database,
+mentre la transazione evita salvataggi parziali. L'applicazione è ora utilizzabile per
+il flusso base senza anticipare regole di sicurezza non ancora implementate.

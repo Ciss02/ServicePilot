@@ -52,7 +52,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-021 - Dataset dimostrativo**
   Aggiungere sedi, account e ticket completamente fittizi.
   Verifica: il caricamento produce sempre dati demo coerenti.
-- [ ] **SP-022 - Creazione e lettura dei ticket**
+- [x] **SP-022 - Creazione e lettura dei ticket**
   Implementare le API per creare un ticket e consultarne i dati.
   Verifica: test di creazione, lettura e ticket inesistente.
 - [ ] **SP-023 - Gestione tecnica del ticket**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-022**. La milestone attiva è **Milestone 2**.
+La prossima attività è **SP-023**. La milestone attiva è **Milestone 2**.

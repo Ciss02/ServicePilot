@@ -1,7 +1,8 @@
 # ServicePilot AI - Contratti dati del ticket
 
-I contratti descrivono la forma dei dati accettati dal backend prima che esistano API o
-database. Sono implementati in `app/domain/ticket_contracts.py` usando Pydantic.
+I contratti descrivono la forma dei dati accettati e restituiti dal backend. Sono
+implementati in `app/domain/ticket_contracts.py` usando Pydantic e vengono utilizzati
+dalle API dei ticket.
 
 Questi controlli verificano la forma dei dati. I permessi, per esempio se un dipendente
 può modificare uno specifico ticket, verranno aggiunti nel backend nelle attività
@@ -52,9 +53,15 @@ produrrebbe alcun cambiamento. Il richiedente non è modificabile tramite questo
 un eventuale trasferimento di proprietà richiederebbe una funzione amministrativa
 esplicita, fuori dal perimetro attuale.
 
+## Lettura
+
+`TicketRead` rappresenta un ticket salvato. Oltre ai dati iniziali include ID, stato,
+classificazione facoltativa, assegnazione, note, soluzione e date. Può leggere
+direttamente un modello SQLAlchemy, mantenendo separata la struttura della risposta
+dalla tabella del database.
+
 ## Cosa non viene ancora gestito
 
-- salvataggio nel database;
 - controllo dei permessi per ruolo e proprietà del ticket;
 - allegati;
 - transizioni consentite tra stati;

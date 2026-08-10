@@ -1,5 +1,6 @@
-"""Contratti validati per creare e aggiornare i ticket."""
+"""Contratti validati per creare, aggiornare e leggere i ticket."""
 
+from datetime import datetime
 from typing import Annotated, Self
 
 from pydantic import (
@@ -90,3 +91,33 @@ class TicketUpdate(_ContractModel):
         if not any(getattr(self, field_name) is not None for field_name in field_names):
             raise ValueError("specificare almeno un campo da aggiornare")
         return self
+
+
+class TicketRead(_ContractModel):
+    """Rappresentazione completa restituita dalle API di lettura."""
+
+    model_config = ConfigDict(
+        extra="forbid",
+        from_attributes=True,
+        str_strip_whitespace=True,
+    )
+
+    id: Identifier
+    title: Title
+    description: Description
+    requester_id: Identifier
+    site_id: Identifier
+    service: ShortText
+    affected_users: AffectedUsers
+    category: TicketCategory | None
+    subcategory: ShortText | None
+    impact: Impact | None
+    urgency: Urgency | None
+    priority: Priority | None
+    assigned_group: ShortText | None
+    assigned_technician_id: Identifier | None
+    status: TicketStatus
+    technician_note: Note | None
+    resolution: Description | None
+    created_at: datetime
+    updated_at: datetime
