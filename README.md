@@ -18,8 +18,8 @@ L'obiettivo è mostrare un flusso completo e verificabile:
 
 ### Stato attuale
 
-Il repository è nella fase iniziale. Sono disponibili specifiche, roadmap e piano di
-progetto; il codice dell'applicazione non è ancora stato implementato.
+Le fondamenta del progetto sono complete. È disponibile una prima applicazione FastAPI
+con un endpoint di salute e un test automatico.
 
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
@@ -48,6 +48,24 @@ modificare le impostazioni del sistema:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+```
+
+### Avvio dell'applicazione
+
+Da PowerShell, nella cartella del progetto:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+Il server sarà disponibile all'indirizzo `http://127.0.0.1:8000`. L'endpoint
+`http://127.0.0.1:8000/health` verifica che il servizio risponda, mentre la
+documentazione interattiva delle API è disponibile su `http://127.0.0.1:8000/docs`.
+
+Per eseguire i test automatici:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest
 ```
 
 ### Tecnologie previste
@@ -83,8 +101,8 @@ knowledge base, human approval of simulated actions, and a complete audit trail.
 
 ### Current status
 
-The repository is in its foundation phase. Requirements, roadmap, and project plan are
-available, but the application code has not been implemented yet.
+The project foundation is complete. A first FastAPI application, health endpoint, and
+automated test are available.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
 
@@ -96,6 +114,21 @@ Requirement: Python 3.13.
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
+```
+
+### Run the application
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+Open `http://127.0.0.1:8000/health` to check the service or
+`http://127.0.0.1:8000/docs` to view the interactive API documentation.
+
+Run the automated tests with:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest
 ```
 
 ### Disclaimer
