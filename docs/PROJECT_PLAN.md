@@ -35,7 +35,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-010 - Vocabolario del dominio**
   Definire categorie, stati, ruoli, impatto, urgenza e livelli di priorità.
   Verifica: i valori ammessi sono centralizzati e documentati.
-- [ ] **SP-011 - Matrice della priorità**
+- [x] **SP-011 - Matrice della priorità**
   Implementare il calcolo deterministico da impatto e urgenza.
   Verifica: test per casi P1, P2, P3 e P4.
 - [ ] **SP-012 - Contratti dati del ticket**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-011**. La milestone attiva è **Milestone 1**.
+La prossima attività è **SP-012**. La milestone attiva è **Milestone 1**.

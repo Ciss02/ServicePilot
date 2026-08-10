@@ -8,6 +8,7 @@ from app.domain.vocabulary import (
     TicketStatus,
     Urgency,
 )
+from app.domain.priority import calculate_priority
 
 __all__ = [
     "Impact",
@@ -16,4 +17,5 @@ __all__ = [
     "TicketCategory",
     "TicketStatus",
     "Urgency",
+    "calculate_priority",
 ]
