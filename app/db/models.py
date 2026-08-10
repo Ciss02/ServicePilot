@@ -65,6 +65,21 @@ class User(Base):
     )
 
 
+class AuthSession(Base):
+    """Sessione autenticata; il codice originale resta soltanto nel browser."""
+
+    __tablename__ = "auth_sessions"
+
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    expires_at: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
+    )
+
+
 class Site(Base):
     """Sede fittizia alla quale appartengono utenti e ticket."""
 

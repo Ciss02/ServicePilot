@@ -22,7 +22,8 @@ Le fondamenta e le regole iniziali del dominio sono complete. Sono disponibili u
 prima applicazione FastAPI, il vocabolario dei ticket, la matrice della priorità, i
 contratti dati validati, il database iniziale, un dataset completamente sintetico e le
 API per creare, leggere e gestire tecnicamente i ticket, oltre agli account demo con
-password protette tramite Argon2.
+password protette tramite Argon2. Gli account possono effettuare login, mantenere una
+sessione autenticata e fare logout.
 
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
@@ -65,7 +66,8 @@ Il server sarà disponibile all'indirizzo `http://127.0.0.1:8000`. L'endpoint
 `http://127.0.0.1:8000/health` verifica che il servizio risponda, mentre la
 documentazione interattiva delle API è disponibile su `http://127.0.0.1:8000/docs`.
 
-Le operazioni disponibili sono `POST /tickets`, `GET /tickets`,
+Le operazioni di accesso sono `POST /auth/login`, `GET /auth/session` e
+`POST /auth/logout`. Sono inoltre disponibili `POST /tickets`, `GET /tickets`,
 `GET /tickets/{ticket_id}` e `PATCH /tickets/{ticket_id}`. Prima di provarle è possibile
 caricare il dataset demo con il comando descritto più sotto.
 
@@ -116,6 +118,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Database iniziale](docs/DATABASE.md)
 - [Dataset dimostrativo](docs/DEMO_DATA.md)
 - [Account demo e password sicure](docs/DEMO_ACCOUNTS.md)
+- [Login, sessione e logout](docs/AUTHENTICATION.md)
 - [API essenziali dei ticket](docs/TICKET_API.md)
 
 ### Avvertenza
@@ -137,8 +140,9 @@ knowledge base, human approval of simulated actions, and a complete audit trail.
 The project foundation and initial domain rules are complete. A first FastAPI
 application, ticket vocabulary, priority matrix, validated data contracts, the initial
 database, a fully synthetic demo dataset, and APIs to create, read, classify, assign,
-and update tickets are available. Demo accounts now store Argon2 password hashes whose
-plain-text values come only from environment variables.
+and update tickets are available. Demo accounts store Argon2 password hashes whose
+plain-text values come only from environment variables, and can now log in, keep an
+authenticated session, and log out.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
 
@@ -161,7 +165,8 @@ python -m pip install -r requirements-dev.txt
 Open `http://127.0.0.1:8000/health` to check the service or
 `http://127.0.0.1:8000/docs` to view the interactive API documentation.
 
-The available operations are `POST /tickets`, `GET /tickets`,
+Authentication operations are `POST /auth/login`, `GET /auth/session`, and
+`POST /auth/logout`. Ticket operations are `POST /tickets`, `GET /tickets`,
 `GET /tickets/{ticket_id}`, and `PATCH /tickets/{ticket_id}`.
 
 Run the automated tests with:

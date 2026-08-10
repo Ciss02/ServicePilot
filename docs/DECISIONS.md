@@ -308,3 +308,32 @@ mentre `pwdlib` offre un'interfaccia moderna compatibile con Python 3.13. Le var
 d'ambiente separano i segreti dal codice pubblico. Il controllo prima della transazione
 evita dataset parziali e l'aggiornamento mirato della tabella preserva il lavoro locale
 senza introdurre in questa fase un intero sistema di migrazioni.
+
+## D-015 - Sessioni autenticate revocabili
+
+**Data:** 10 agosto 2026
+**Stato:** confermata durante SP-031
+
+**Decisione:**
+
+- esporre `POST /auth/login`, `GET /auth/session` e `POST /auth/logout`;
+- accettare soltanto account esistenti e attivi con password Argon2 valida;
+- restituire lo stesso errore per email sconosciuta, password errata e account inattivo;
+- generare per ogni login un codice casuale valido otto ore;
+- inviare il codice in un cookie `HttpOnly` e `SameSite=Lax`, attivando `Secure` tramite
+  `SERVICEPILOT_SECURE_COOKIES=true` negli ambienti HTTPS;
+- conservare in `auth_sessions` soltanto l'impronta SHA-256 del codice, l'utente e la
+  scadenza;
+- rimuovere dal database sessioni scadute, riferite ad account inattivi o chiuse con il
+  logout;
+- mantenere il logout ripetibile anche quando la sessione manca;
+- rinviare l'uso dell'identità per proteggere le API a SP-032 e la pagina login a SP-040.
+
+**Motivazione:**
+
+Una sessione conservata lato server può essere revocata immediatamente al logout e non
+richiede una chiave di firma aggiuntiva. Il browser possiede il solo codice utilizzabile,
+mentre una copia del database contiene un'impronta che non può essere usata direttamente
+come cookie. Otto ore coprono una giornata dimostrativa senza creare sessioni permanenti.
+La separazione dall'autorizzazione mantiene SP-031 concentrata sul riconoscimento
+dell'utente e lascia a SP-032 regole di accesso verificabili in modo autonomo.

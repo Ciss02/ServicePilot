@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.auth import router as auth_router
 from app.api.tickets import router as tickets_router
 from app.db.session import create_database
 
@@ -23,6 +24,7 @@ def create_app(database_initializer: Callable[[], None] = create_database) -> Fa
         version="0.1.0",
         lifespan=lifespan,
     )
+    application.include_router(auth_router)
     application.include_router(tickets_router)
 
     @application.get(
