@@ -12,6 +12,7 @@ from app.domain.priority import calculate_priority
 from app.domain.ticket_contracts import (
     TicketClassification,
     TicketCreate,
+    TicketRead,
     TicketUpdate,
 )
 
@@ -22,6 +23,7 @@ __all__ = [
     "TicketCategory",
     "TicketClassification",
     "TicketCreate",
+    "TicketRead",
     "TicketStatus",
     "TicketUpdate",
     "Urgency",

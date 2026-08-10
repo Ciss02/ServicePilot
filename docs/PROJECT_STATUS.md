@@ -27,6 +27,8 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Tabelle iniziali per utenti, sedi e ticket con vincoli e collegamenti essenziali.
 - Dataset sintetico con 6 sedi, 5 profili e 6 ticket dimostrativi.
 - Comando ripetibile per creare o riallineare i dati demo senza duplicarli.
+- API `POST /tickets`, `GET /tickets` e `GET /tickets/{ticket_id}` disponibili.
+- Contratto di risposta completo e gestione esplicita delle risorse inesistenti.
 
 ## Milestone attiva
 
@@ -34,21 +36,21 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-021 - Dataset dimostrativo**
+**SP-022 - Creazione e lettura dei ticket**
 
-Sono stati aggiunti sedi, profili e scenari ticket completamente fittizi. Il comando di
-caricamento aggiorna i record demo esistenti, evita duplicati, conserva dati estranei e
-calcola le priorità usando la matrice del backend.
+È possibile creare un ticket confermato e leggere elenco o dettaglio tramite API REST.
+Il backend controlla richiedente e sede, assegna stato e date, chiude correttamente le
+sessioni del database e restituisce errori chiari per dati o risorse non validi.
 
 ## Prossima attività
 
-**SP-022 - Creazione e lettura dei ticket**
+**SP-023 - Gestione tecnica del ticket**
 
 Risultato atteso:
 
-- API per creare un ticket confermato;
-- API per leggere elenco e dettaglio dei ticket;
-- gestione chiara del ticket inesistente.
+- API per modificare i campi consentiti di un ticket;
+- assegnazione a gruppo o tecnico e cambio di stato;
+- gestione di modifiche, riferimenti e transizioni non valide.
 
 ## Blocchi o decisioni aperte
 
@@ -58,11 +60,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-022.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-023.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-021` con il codice dell'attività successiva.
+Sostituire `SP-022` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -112,4 +114,11 @@ Prima di terminare verificare che:
 - Verificata la corrispondenza tra impatto, urgenza e priorità di ogni ticket demo.
 - Eseguito il comando `python -m app.db seed` su SQLite in memoria.
 - `pytest`: 48 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificata la creazione di un ticket confermato con risposta `201` e persistenza.
+- Verificato che una conferma falsa non produca alcun ticket.
+- Verificati errori `404` per richiedente, sede e ticket inesistenti.
+- Verificato l'elenco dei ticket dal più recente e il dettaglio coerente con la creazione.
+- Verificata la creazione automatica delle tabelle all'avvio dell'applicazione.
+- `pytest`: 55 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
