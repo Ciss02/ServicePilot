@@ -124,3 +124,29 @@ La specifica stabilisce ruoli, categorie e priorità, ma non elenca tutti gli st
 livelli di impatto e urgenza. Un insieme piccolo copre il flusso MVP senza introdurre
 complessità non ancora necessaria. I codici stabili potranno essere riutilizzati da API
 e database, mentre l'interfaccia continuerà a mostrare termini italiani comprensibili.
+
+## D-008 - Matrice deterministica della priorità
+
+**Data:** 10 agosto 2026
+**Stato:** confermata durante SP-011
+
+**Decisione:**
+
+Usare la seguente matrice per calcolare la priorità:
+
+| Impatto / Urgenza | Bassa | Media | Alta |
+| --- | --- | --- | --- |
+| Basso | P4 | P4 | P3 |
+| Medio | P4 | P3 | P2 |
+| Alto | P3 | P2 | P1 |
+
+La funzione di calcolo accetta soltanto i valori `Impact` e `Urgency` già validati. Non
+consulta il modello AI e non usa dati esterni.
+
+**Motivazione:**
+
+La matrice rende il risultato ripetibile e verificabile. P1 richiede contemporaneamente
+impatto e urgenza alti; P2 rappresenta combinazioni alte e medie; P3 copre i casi
+intermedi; P4 resta per richieste limitate o pianificabili. Questa scelta rispetta il
+vincolo della specifica secondo cui l'AI può suggerire impatto e urgenza, ma non decide
+liberamente la priorità.

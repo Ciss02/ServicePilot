@@ -76,5 +76,22 @@ L'urgenza misura quanto rapidamente è necessario intervenire.
 | `p3` | P3 - Media | Problema con impatto lavorativo ma gestibile temporaneamente. |
 | `p4` | P4 - Bassa | Richiesta informativa o attività pianificabile. |
 
-La priorità non viene scelta liberamente dall'AI. La futura attività SP-011 definirà la
-matrice deterministica che combina impatto e urgenza.
+La priorità non viene scelta liberamente dall'AI. Il backend usa la seguente matrice
+deterministica, implementata in `app/domain/priority.py`:
+
+| Impatto / Urgenza | Bassa | Media | Alta |
+| --- | --- | --- | --- |
+| Basso | P4 | P4 | P3 |
+| Medio | P4 | P3 | P2 |
+| Alto | P3 | P2 | P1 |
+
+Esempi collegati alla specifica:
+
+- impatto alto e urgenza alta producono P1 per un blocco esteso e immediato;
+- impatto medio e urgenza alta producono P2 per un servizio essenziale bloccato;
+- impatto medio e urgenza media producono P3 per un problema lavorativo gestibile
+  temporaneamente;
+- impatto basso e urgenza bassa producono P4 per una richiesta pianificabile.
+
+Prima del calcolo, impatto e urgenza devono essere convertiti nei valori controllati del
+vocabolario. La funzione rifiuta testi liberi e non consulta né AI né database.
