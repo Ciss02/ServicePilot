@@ -1,14 +1,12 @@
 """API per accesso, lettura della sessione e logout."""
 
 import os
-from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Response, status
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
 
+from app.api.dependencies import CurrentUser, DatabaseSession, SessionCookie
 from app.db.models import AuthSession, User
-from app.db.session import get_session
 from app.domain.auth_contracts import AuthenticatedUser, LoginRequest
 from app.security.passwords import verify_password
 from app.security.sessions import (
@@ -17,15 +15,11 @@ from app.security.sessions import (
     generate_session_token,
     hash_session_token,
     session_expiry,
-    session_is_expired,
 )
 
 
 router = APIRouter(prefix="/auth", tags=["accesso"])
-DatabaseSession = Annotated[Session, Depends(get_session)]
-SessionCookie = Annotated[str | None, Cookie(alias=SESSION_COOKIE_NAME)]
 INVALID_CREDENTIALS = "Email o password non validi"
-INVALID_SESSION = "Sessione non valida o scaduta"
 SECURE_COOKIES_ENV = "SERVICEPILOT_SECURE_COOKIES"
 
 
@@ -59,15 +53,6 @@ def _delete_session_cookie(response: Response) -> None:
         samesite="lax",
         path="/",
     )
-
-
-def _reject_invalid_session(session: Session, auth_session: AuthSession | None) -> None:
-    """Rimuove una sessione inutilizzabile prima di restituire un errore uniforme."""
-
-    if auth_session is not None:
-        session.delete(auth_session)
-        session.commit()
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=INVALID_SESSION)
 
 
 @router.post(
@@ -114,22 +99,11 @@ def login(
     summary="Legge l'identita autenticata",
 )
 def read_session(
-    session: DatabaseSession,
-    session_token: SessionCookie = None,
+    current_user: CurrentUser,
 ) -> User:
     """Riconosce il browser tramite una sessione valida e non scaduta."""
 
-    if not session_token:
-        _reject_invalid_session(session, None)
-
-    auth_session = session.get(AuthSession, hash_session_token(session_token))
-    if auth_session is None or session_is_expired(auth_session.expires_at):
-        _reject_invalid_session(session, auth_session)
-
-    user = session.get(User, auth_session.user_id)
-    if user is None or not user.is_active:
-        _reject_invalid_session(session, auth_session)
-    return user
+    return current_user
 
 
 @router.post(

@@ -1,22 +1,27 @@
 """Test HTTP delle API essenziali dei ticket."""
 
+import secrets
 from collections.abc import Iterator
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, func, select
 from sqlalchemy.orm import Session
 
 from app.db import Site, Ticket, User, build_engine, create_database, get_session
+from app.api.dependencies import require_roles
 from app.domain.vocabulary import Role
 from app.main import create_app
+from app.security.passwords import hash_password
 
 
 @pytest.fixture
-def api_client(tmp_path) -> Iterator[tuple[TestClient, Engine]]:
+def api_client(tmp_path) -> Iterator[tuple[TestClient, Engine, str]]:
     """Avvia l'app con dati minimi in un database temporaneo."""
 
     database_engine = build_engine(f"sqlite:///{tmp_path / 'ticket-api-test.db'}")
+    password = secrets.token_urlsafe(18)
 
     def initialize_test_database() -> None:
         create_database(database_engine)
@@ -27,22 +32,32 @@ def api_client(tmp_path) -> Iterator[tuple[TestClient, Engine]]:
                         email="richiedente@servicepilot.example",
                         display_name="Richiedente API Demo",
                         role=Role.EMPLOYEE,
+                        password_hash=hash_password(password),
                     ),
                     User(
                         email="tecnico@servicepilot.example",
                         display_name="Tecnico API Demo",
                         role=Role.TECHNICIAN,
+                        password_hash=hash_password(password),
                     ),
                     User(
                         email="admin@servicepilot.example",
                         display_name="Admin API Demo",
                         role=Role.ADMIN,
+                        password_hash=hash_password(password),
                     ),
                     User(
                         email="tecnico.inattivo@servicepilot.example",
                         display_name="Tecnico inattivo Demo",
                         role=Role.TECHNICIAN,
+                        password_hash=hash_password(password),
                         is_active=False,
+                    ),
+                    User(
+                        email="altro.dipendente@servicepilot.example",
+                        display_name="Altro dipendente API Demo",
+                        role=Role.EMPLOYEE,
+                        password_hash=hash_password(password),
                     ),
                     Site(code="API-DEMO", name="Sede API Demo"),
                     Site(code="API-DEMO-2", name="Seconda sede API Demo"),
@@ -58,7 +73,15 @@ def api_client(tmp_path) -> Iterator[tuple[TestClient, Engine]]:
     test_app.dependency_overrides[get_session] = override_session
 
     with TestClient(test_app) as client:
-        yield client, database_engine
+        login_response = client.post(
+            "/auth/login",
+            json={
+                "email": "richiedente@servicepilot.example",
+                "password": password,
+            },
+        )
+        assert login_response.status_code == 200
+        yield client, database_engine, password
 
     database_engine.dispose()
 
@@ -67,7 +90,6 @@ def valid_ticket_payload() -> dict[str, object]:
     return {
         "title": "Accesso VPN non disponibile",
         "description": "La VPN demo mostra un errore prima del collegamento.",
-        "requester_id": 1,
         "site_id": 1,
         "service": "Accesso remoto",
         "affected_users": 1,
@@ -75,8 +97,20 @@ def valid_ticket_payload() -> dict[str, object]:
     }
 
 
+def login_as(client: TestClient, email: str, password: str) -> None:
+    response = client.post(
+        "/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert response.status_code == 200
+
+
+def login_as_technician(client: TestClient, password: str) -> None:
+    login_as(client, "tecnico@servicepilot.example", password)
+
+
 def test_create_ticket_saves_confirmed_request(api_client) -> None:
-    client, database_engine = api_client
+    client, database_engine, _ = api_client
 
     response = client.post("/tickets", json=valid_ticket_payload())
 
@@ -94,7 +128,7 @@ def test_create_ticket_saves_confirmed_request(api_client) -> None:
 
 
 def test_create_ticket_requires_confirmation(api_client) -> None:
-    client, database_engine = api_client
+    client, database_engine, _ = api_client
     payload = valid_ticket_payload()
     payload["confirmed"] = False
 
@@ -107,10 +141,7 @@ def test_create_ticket_requires_confirmation(api_client) -> None:
 
 @pytest.mark.parametrize(
     ("field", "missing_id", "expected_detail"),
-    [
-        ("requester_id", 999, "Richiedente 999 non trovato"),
-        ("site_id", 999, "Sede 999 non trovata"),
-    ],
+    [("site_id", 999, "Sede 999 non trovata")],
 )
 def test_create_ticket_rejects_unknown_references(
     api_client,
@@ -118,7 +149,7 @@ def test_create_ticket_rejects_unknown_references(
     missing_id: int,
     expected_detail: str,
 ) -> None:
-    client, database_engine = api_client
+    client, database_engine, _ = api_client
     payload = valid_ticket_payload()
     payload[field] = missing_id
 
@@ -131,7 +162,7 @@ def test_create_ticket_rejects_unknown_references(
 
 
 def test_list_tickets_returns_newest_first(api_client) -> None:
-    client, _ = api_client
+    client, _, _ = api_client
     first_payload = valid_ticket_payload()
     second_payload = valid_ticket_payload()
     second_payload["title"] = "Stampante demo non disponibile"
@@ -147,7 +178,7 @@ def test_list_tickets_returns_newest_first(api_client) -> None:
 
 
 def test_get_ticket_returns_saved_detail(api_client) -> None:
-    client, _ = api_client
+    client, _, _ = api_client
     created = client.post("/tickets", json=valid_ticket_payload()).json()
 
     response = client.get(f"/tickets/{created['id']}")
@@ -157,7 +188,7 @@ def test_get_ticket_returns_saved_detail(api_client) -> None:
 
 
 def test_get_ticket_returns_404_when_missing(api_client) -> None:
-    client, _ = api_client
+    client, _, _ = api_client
 
     response = client.get("/tickets/999")
 
@@ -166,8 +197,9 @@ def test_get_ticket_returns_404_when_missing(api_client) -> None:
 
 
 def test_update_ticket_saves_allowed_fields(api_client) -> None:
-    client, database_engine = api_client
+    client, database_engine, password = api_client
     created = client.post("/tickets", json=valid_ticket_payload()).json()
+    login_as_technician(client, password)
 
     response = client.patch(
         f"/tickets/{created['id']}",
@@ -194,8 +226,9 @@ def test_update_ticket_saves_allowed_fields(api_client) -> None:
 
 
 def test_update_ticket_recalculates_priority_from_classification(api_client) -> None:
-    client, _ = api_client
+    client, _, password = api_client
     ticket_id = client.post("/tickets", json=valid_ticket_payload()).json()["id"]
+    login_as_technician(client, password)
 
     response = client.patch(
         f"/tickets/{ticket_id}",
@@ -218,8 +251,9 @@ def test_update_ticket_recalculates_priority_from_classification(api_client) -> 
 def test_update_ticket_assigns_active_technician_and_starts_work(
     api_client, assignee_id: int
 ) -> None:
-    client, _ = api_client
+    client, _, password = api_client
     ticket_id = client.post("/tickets", json=valid_ticket_payload()).json()["id"]
+    login_as_technician(client, password)
 
     response = client.patch(
         f"/tickets/{ticket_id}",
@@ -237,8 +271,9 @@ def test_update_ticket_assigns_active_technician_and_starts_work(
 
 
 def test_update_ticket_resolves_and_closes_with_a_solution(api_client) -> None:
-    client, _ = api_client
+    client, _, password = api_client
     ticket_id = client.post("/tickets", json=valid_ticket_payload()).json()["id"]
+    login_as_technician(client, password)
     assert client.patch(
         f"/tickets/{ticket_id}", json={"status": "in_progress"}
     ).status_code == 200
@@ -277,8 +312,9 @@ def test_update_ticket_rejects_unknown_references(
     payload: dict[str, object],
     expected_detail: str,
 ) -> None:
-    client, _ = api_client
+    client, _, password = api_client
     ticket_id = client.post("/tickets", json=valid_ticket_payload()).json()["id"]
+    login_as_technician(client, password)
 
     response = client.patch(f"/tickets/{ticket_id}", json=payload)
 
@@ -288,8 +324,9 @@ def test_update_ticket_rejects_unknown_references(
 
 @pytest.mark.parametrize("user_id", [1, 4], ids=["employee", "inactive-technician"])
 def test_update_ticket_rejects_ineligible_assignee(api_client, user_id: int) -> None:
-    client, _ = api_client
+    client, _, password = api_client
     ticket_id = client.post("/tickets", json=valid_ticket_payload()).json()["id"]
+    login_as_technician(client, password)
 
     response = client.patch(
         f"/tickets/{ticket_id}", json={"assigned_technician_id": user_id}
@@ -304,8 +341,9 @@ def test_update_ticket_rejects_ineligible_assignee(api_client, user_id: int) -> 
 def test_update_ticket_rejects_forbidden_transition_without_partial_save(
     api_client,
 ) -> None:
-    client, _ = api_client
+    client, _, password = api_client
     created = client.post("/tickets", json=valid_ticket_payload()).json()
+    login_as_technician(client, password)
 
     response = client.patch(
         f"/tickets/{created['id']}",
@@ -325,8 +363,9 @@ def test_update_ticket_rejects_forbidden_transition_without_partial_save(
 
 
 def test_update_ticket_treats_closed_status_as_final(api_client) -> None:
-    client, _ = api_client
+    client, _, password = api_client
     ticket_id = client.post("/tickets", json=valid_ticket_payload()).json()["id"]
+    login_as_technician(client, password)
     client.patch(f"/tickets/{ticket_id}", json={"status": "in_progress"})
     client.patch(
         f"/tickets/{ticket_id}",
@@ -348,9 +387,154 @@ def test_update_ticket_treats_closed_status_as_final(api_client) -> None:
 
 
 def test_update_ticket_returns_404_when_missing(api_client) -> None:
-    client, _ = api_client
+    client, _, password = api_client
+    login_as_technician(client, password)
 
     response = client.patch("/tickets/999", json={"status": "in_progress"})
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Ticket 999 non trovato"}
+
+
+@pytest.mark.parametrize(
+    ("method", "path", "payload"),
+    [
+        ("post", "/tickets", valid_ticket_payload()),
+        ("get", "/tickets", None),
+        ("get", "/tickets/1", None),
+        ("patch", "/tickets/1", {"title": "Titolo tecnico aggiornato"}),
+    ],
+    ids=["create", "list", "detail", "update"],
+)
+def test_ticket_endpoints_require_an_authenticated_session(
+    api_client,
+    method: str,
+    path: str,
+    payload: dict[str, object] | None,
+) -> None:
+    client, _, _ = api_client
+    client.post("/auth/logout")
+
+    response = client.request(method, path, json=payload)
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Sessione non valida o scaduta"}
+
+
+def test_requester_is_always_taken_from_the_authenticated_session(api_client) -> None:
+    client, database_engine, _ = api_client
+    payload = valid_ticket_payload()
+    payload["requester_id"] = 5
+
+    response = client.post("/tickets", json=payload)
+
+    assert response.status_code == 422
+    with Session(database_engine) as session:
+        assert session.scalar(select(func.count()).select_from(Ticket)) == 0
+
+
+@pytest.mark.parametrize(
+    ("email", "expected_requester_id"),
+    [
+        ("tecnico@servicepilot.example", 2),
+        ("admin@servicepilot.example", 3),
+    ],
+    ids=["technician", "admin"],
+)
+def test_each_role_can_create_only_its_own_ticket(
+    api_client,
+    email: str,
+    expected_requester_id: int,
+) -> None:
+    client, _, password = api_client
+    login_as(client, email, password)
+
+    response = client.post("/tickets", json=valid_ticket_payload())
+
+    assert response.status_code == 201
+    assert response.json()["requester_id"] == expected_requester_id
+
+
+def test_employee_lists_only_own_tickets_and_cannot_read_another_one(
+    api_client,
+) -> None:
+    client, _, password = api_client
+    own_ticket = client.post("/tickets", json=valid_ticket_payload()).json()
+    login_as(client, "altro.dipendente@servicepilot.example", password)
+    other_payload = valid_ticket_payload()
+    other_payload["title"] = "Ticket del secondo dipendente demo"
+    other_ticket = client.post("/tickets", json=other_payload).json()
+
+    ticket_list = client.get("/tickets")
+    hidden_detail = client.get(f"/tickets/{own_ticket['id']}")
+
+    assert ticket_list.status_code == 200
+    assert [ticket["id"] for ticket in ticket_list.json()] == [other_ticket["id"]]
+    assert hidden_detail.status_code == 404
+    assert hidden_detail.json() == {
+        "detail": f"Ticket {own_ticket['id']} non trovato"
+    }
+
+
+def test_employee_cannot_use_technical_update(api_client) -> None:
+    client, _, _ = api_client
+    ticket = client.post("/tickets", json=valid_ticket_payload()).json()
+
+    response = client.patch(
+        f"/tickets/{ticket['id']}",
+        json={"technician_note": "Nota che il dipendente non può aggiungere"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "detail": "Operazione non consentita per il ruolo corrente"
+    }
+
+
+@pytest.mark.parametrize(
+    "email",
+    ["tecnico@servicepilot.example", "admin@servicepilot.example"],
+    ids=["technician", "admin"],
+)
+def test_technical_roles_can_read_and_update_the_full_queue(
+    api_client,
+    email: str,
+) -> None:
+    client, _, password = api_client
+    ticket = client.post("/tickets", json=valid_ticket_payload()).json()
+    login_as(client, email, password)
+
+    ticket_list = client.get("/tickets")
+    ticket_detail = client.get(f"/tickets/{ticket['id']}")
+    updated = client.patch(
+        f"/tickets/{ticket['id']}",
+        json={"technician_note": "Verifica autorizzata del ruolo tecnico"},
+    )
+
+    assert ticket_list.status_code == 200
+    assert [item["id"] for item in ticket_list.json()] == [ticket["id"]]
+    assert ticket_detail.status_code == 200
+    assert updated.status_code == 200
+
+
+def test_admin_only_control_accepts_admin_and_rejects_technician() -> None:
+    admin_only = require_roles(Role.ADMIN)
+    admin = User(
+        id=1,
+        email="admin.controllo@servicepilot.example",
+        display_name="Admin Controllo Demo",
+        role=Role.ADMIN,
+    )
+    technician = User(
+        id=2,
+        email="tecnico.controllo@servicepilot.example",
+        display_name="Tecnico Controllo Demo",
+        role=Role.TECHNICIAN,
+    )
+
+    assert admin_only(admin) is admin
+    with pytest.raises(HTTPException) as error:
+        admin_only(technician)
+
+    assert error.value.status_code == 403
+    assert error.value.detail == "Operazione non consentita per il ruolo corrente"

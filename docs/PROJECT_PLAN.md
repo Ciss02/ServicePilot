@@ -69,7 +69,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-031 - Login, sessione e logout**
   Permettere l'accesso degli account demo e la chiusura della sessione.
   Verifica: accesso valido, accesso negato e logout testati.
-- [ ] **SP-032 - Autorizzazione per ruolo**
+- [x] **SP-032 - Autorizzazione per ruolo**
   Proteggere ticket personali, funzioni tecniche e funzioni amministrative.
   Verifica: test dei principali tentativi di accesso non autorizzato.
 
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-032**. La milestone attiva è **Milestone 3**.
+La prossima attività è **SP-040**. La milestone attiva è **Milestone 4**.

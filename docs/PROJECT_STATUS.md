@@ -36,30 +36,32 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Login degli account demo con errore uniforme per credenziali non valide.
 - Sessioni autenticate revocabili, conservate nel database soltanto come impronte.
 - Endpoint per leggere l'identità corrente e chiudere la sessione.
+- API ticket protette da sessione autenticata e permessi applicati nel backend.
+- Dipendenti limitati ai propri ticket; tecnico e admin abilitati alla gestione completa.
+- Controlli riutilizzabili per funzioni tecniche e amministrative.
 
 ## Milestone attiva
 
-**Milestone 3 - Accesso e permessi**
+**Milestone 4 - Interfaccia completa senza AI**
 
 ## Ultima attività completata
 
-**SP-031 - Login, sessione e logout**
+**SP-032 - Autorizzazione per ruolo**
 
-Gli account demo attivi possono accedere con email e password. Il browser riceve un
-cookie protetto e il database conserva soltanto l'impronta del codice casuale per otto
-ore. Sessioni scadute o riferite ad account inattivi vengono rifiutate; il logout revoca
-la sessione e cancella il cookie.
+Le API ticket richiedono una sessione valida. Il richiedente viene ricavato dalla
+sessione, i dipendenti vedono soltanto i propri ticket e non possono usare la gestione
+tecnica; tecnico e amministratore consultano e modificano l'intera coda. È disponibile
+anche il controllo riutilizzabile riservato alle future funzioni amministrative.
 
 ## Prossima attività
 
-**SP-032 - Autorizzazione per ruolo**
+**SP-040 - Layout e pagina di accesso**
 
 Risultato atteso:
 
-- proteggere le API usando l'identità della sessione;
-- mostrare ai dipendenti soltanto i propri ticket;
-- riservare gestione tecnica e operazioni amministrative ai ruoli autorizzati;
-- verificare i principali tentativi di accesso non autorizzato.
+- creare la base grafica responsive dell'applicazione;
+- aggiungere una pagina di accesso collegata alle API esistenti;
+- rendere le pagine utilizzabili da computer e schermo piccolo.
 
 ## Blocchi o decisioni aperte
 
@@ -69,11 +71,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-032.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-040.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-032` con il codice dell'attività successiva.
+Sostituire `SP-040` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -161,4 +163,14 @@ Prima di terminare verificare che:
 - Verificato che il logout revochi la sessione, cancelli il cookie e sia ripetibile.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-031.
 - `pytest`: 111 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificato che tutte le API ticket rifiutino sessioni assenti con `401`.
+- Verificato che il richiedente venga ricavato dalla sessione e non sia accettato come
+  dato libero nel corpo della creazione.
+- Verificati elenco personale e dettaglio altrui nascosto per `employee`.
+- Verificato il rifiuto con `403` della gestione tecnica da parte di `employee`.
+- Verificate lettura e modifica dell'intera coda per `technician` e `admin`.
+- Verificato il controllo amministrativo: `admin` accettato e `technician` rifiutato.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-032.
+- `pytest`: 123 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

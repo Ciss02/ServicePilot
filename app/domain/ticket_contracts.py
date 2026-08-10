@@ -36,7 +36,6 @@ class TicketCreate(_ContractModel):
 
     title: Title
     description: Description
-    requester_id: Identifier
     site_id: Identifier
     service: ShortText
     affected_users: AffectedUsers
