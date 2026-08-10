@@ -49,7 +49,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-020 - Database iniziale**
   Configurare SQLite e le tabelle per utenti, sedi e ticket.
   Verifica: il database viene creato in modo ripetibile.
-- [ ] **SP-021 - Dataset dimostrativo**
+- [x] **SP-021 - Dataset dimostrativo**
   Aggiungere sedi, account e ticket completamente fittizi.
   Verifica: il caricamento produce sempre dati demo coerenti.
 - [ ] **SP-022 - Creazione e lettura dei ticket**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-021**. La milestone attiva è **Milestone 2**.
+La prossima attività è **SP-022**. La milestone attiva è **Milestone 2**.

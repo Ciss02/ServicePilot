@@ -25,6 +25,8 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Contratti Pydantic per creazione, classificazione e aggiornamento dei ticket.
 - Database SQLite configurato tramite SQLAlchemy.
 - Tabelle iniziali per utenti, sedi e ticket con vincoli e collegamenti essenziali.
+- Dataset sintetico con 6 sedi, 5 profili e 6 ticket dimostrativi.
+- Comando ripetibile per creare o riallineare i dati demo senza duplicarli.
 
 ## Milestone attiva
 
@@ -32,21 +34,21 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-020 - Database iniziale**
+**SP-021 - Dataset dimostrativo**
 
-Sono state definite le tabelle `users`, `sites` e `tickets`, insieme alla connessione
-SQLite e al comando di inizializzazione ripetibile. I riferimenti principali e i valori
-del vocabolario sono protetti anche nel database.
+Sono stati aggiunti sedi, profili e scenari ticket completamente fittizi. Il comando di
+caricamento aggiorna i record demo esistenti, evita duplicati, conserva dati estranei e
+calcola le priorità usando la matrice del backend.
 
 ## Prossima attività
 
-**SP-021 - Dataset dimostrativo**
+**SP-022 - Creazione e lettura dei ticket**
 
 Risultato atteso:
 
-- sedi, account e ticket completamente fittizi;
-- caricamento ripetibile dei dati demo;
-- dati coerenti con ruoli, sedi e vocabolario approvati.
+- API per creare un ticket confermato;
+- API per leggere elenco e dettaglio dei ticket;
+- gestione chiara del ticket inesistente.
 
 ## Blocchi o decisioni aperte
 
@@ -56,11 +58,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-021.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-022.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-020` con il codice dell'attività successiva.
+Sostituire `SP-021` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -102,4 +104,12 @@ Prima di terminare verificare che:
 - Verificato il rifiuto di un ticket collegato a un richiedente inesistente.
 - Eseguito due volte il comando `python -m app.db` su SQLite in memoria.
 - `pytest`: 44 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificato il caricamento di 6 sedi, 5 profili e 6 ticket sintetici.
+- Verificato che due caricamenti consecutivi non creino duplicati.
+- Verificato che un nuovo caricamento ripristini i valori demo modificati.
+- Verificato che record estranei al dataset non vengano cancellati.
+- Verificata la corrispondenza tra impatto, urgenza e priorità di ogni ticket demo.
+- Eseguito il comando `python -m app.db seed` su SQLite in memoria.
+- `pytest`: 48 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

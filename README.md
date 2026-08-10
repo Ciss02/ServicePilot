@@ -20,7 +20,7 @@ L'obiettivo è mostrare un flusso completo e verificabile:
 
 Le fondamenta e le regole iniziali del dominio sono complete. Sono disponibili una
 prima applicazione FastAPI, il vocabolario dei ticket, la matrice della priorità, i
-contratti dati validati e il database iniziale.
+contratti dati validati, il database iniziale e un dataset completamente sintetico.
 
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
@@ -79,6 +79,12 @@ Il comando può essere ripetuto senza cancellare i dati. La struttura delle tabe
 la configurazione sono spiegate in
 [`docs/DATABASE.md`](docs/DATABASE.md).
 
+Per caricare o riallineare sedi, profili e ticket dimostrativi:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.db seed
+```
+
 ### Tecnologie previste
 
 - Python e FastAPI
@@ -98,6 +104,7 @@ la configurazione sono spiegate in
 - [Vocabolario del dominio](docs/DOMAIN_VOCABULARY.md)
 - [Contratti dati del ticket](docs/TICKET_CONTRACTS.md)
 - [Database iniziale](docs/DATABASE.md)
+- [Dataset dimostrativo](docs/DEMO_DATA.md)
 
 ### Avvertenza
 
@@ -116,8 +123,8 @@ knowledge base, human approval of simulated actions, and a complete audit trail.
 ### Current status
 
 The project foundation and initial domain rules are complete. A first FastAPI
-application, ticket vocabulary, priority matrix, validated data contracts, and the
-initial database are available.
+application, ticket vocabulary, priority matrix, validated data contracts, the initial
+database, and a fully synthetic demo dataset are available.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
 
@@ -154,6 +161,12 @@ Create the local SQLite database and its initial tables with:
 
 The command is repeatable and does not delete existing data. See
 [`docs/DATABASE.md`](docs/DATABASE.md) for the schema and configuration details.
+
+Load or realign the synthetic sites, profiles, and tickets with:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.db seed
+```
 
 ### Disclaimer
 
