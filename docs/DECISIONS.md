@@ -93,7 +93,9 @@ permetterà di usare issue e milestone come tasklist operativa del portfolio.
 - usare Python 3.13 per lo sviluppo dell'MVP;
 - separare le dipendenze dell'applicazione in `requirements.txt` dagli strumenti di
   sviluppo in `requirements-dev.txt`;
-- usare versioni esplicite delle dipendenze dirette.
+- usare versioni esplicite delle dipendenze dirette;
+- usare `httpx2` soltanto nello sviluppo per eseguire i test HTTP compatibili con la
+  versione corrente di Starlette inclusa da FastAPI.
 
 **Motivazione:**
 

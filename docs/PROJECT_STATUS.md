@@ -16,29 +16,31 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Documentazione raccolta nella cartella `docs/`.
 - Python 3.13.15 installato e ambiente locale `.venv` creato.
 - Dipendenze iniziali definite e verificate.
-- Nessun codice applicativo ancora implementato.
+- Prima applicazione FastAPI disponibile in `app/`.
+- Endpoint `GET /health` implementato e verificato.
+- Primo test automatico disponibile in `tests/`.
 
 ## Milestone attiva
 
-**Milestone 0 - Fondamenta del progetto**
+**Milestone 1 - Regole e dati del ticket**
 
 ## Ultima attività completata
 
-**SP-002 - Ambiente Python locale**
+**SP-003 - Prima applicazione FastAPI**
 
-Python 3.13.15 è stato installato. L'ambiente `.venv` è stato creato da zero usando le
-istruzioni del README e le dipendenze sono risultate compatibili.
+È stata creata la struttura iniziale `app/` con l'endpoint `GET /health`. Il primo test
+automatico verifica sia la risposta HTTP sia il contenuto restituito. Il server è stato
+avviato localmente e ha risposto correttamente.
 
 ## Prossima attività
 
-**SP-003 - Prima applicazione FastAPI**
+**SP-010 - Vocabolario del dominio**
 
 Risultato atteso:
 
-- struttura iniziale `app/`;
-- endpoint `/health`;
-- primo test automatico;
-- server locale avviabile seguendo il README.
+- valori ammessi per categorie, stati e ruoli centralizzati;
+- valori di impatto, urgenza e priorità definiti;
+- vocabolario documentato e verificato da test.
 
 ## Blocchi o decisioni aperte
 
@@ -48,7 +50,7 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-003.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-010.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
@@ -73,5 +75,10 @@ Prima di terminare verificare che:
 - Verificati Python 3.13.15, pip 26.2.1 e il percorso utente di Python.
 - Ricreato `.venv` da zero e installate le dipendenze da `requirements-dev.txt`.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
-- Verificate FastAPI 0.141.1, Uvicorn 0.52.1, HTTPX 0.28.1 e pytest 9.1.1.
-- Nessun test applicativo ancora disponibile perché verrà creato in SP-003.
+- Verificate FastAPI 0.141.1, Uvicorn 0.52.1, HTTPX2 2.7.0 e pytest 9.1.1.
+- Verificata la sintassi dei file in `app/` e `tests/`.
+- `pytest`: 1 test superato senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Avviato Uvicorn su `127.0.0.1:8000` e verificato `GET /health`: risposta `200 OK`
+  con `{"status":"ok"}`.
+- Arrestato il server locale dopo il controllo.
