@@ -19,6 +19,8 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Prima applicazione FastAPI disponibile in `app/`.
 - Endpoint `GET /health` implementato e verificato.
 - Primo test automatico disponibile in `tests/`.
+- Vocabolario del dominio centralizzato in `app/domain/vocabulary.py`.
+- Ruoli, categorie, stati, impatto, urgenza e priorità documentati.
 
 ## Milestone attiva
 
@@ -26,21 +28,21 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-003 - Prima applicazione FastAPI**
+**SP-010 - Vocabolario del dominio**
 
-È stata creata la struttura iniziale `app/` con l'endpoint `GET /health`. Il primo test
-automatico verifica sia la risposta HTTP sia il contenuto restituito. Il server è stato
-avviato localmente e ha risposto correttamente.
+Sono stati definiti in un unico punto i valori ammessi per ruoli, categorie, stati del
+ticket, impatto, urgenza e priorità. I codici interni sono separati dalle spiegazioni
+italiane raccolte in `docs/DOMAIN_VOCABULARY.md`.
 
 ## Prossima attività
 
-**SP-010 - Vocabolario del dominio**
+**SP-011 - Matrice della priorità**
 
 Risultato atteso:
 
-- valori ammessi per categorie, stati e ruoli centralizzati;
-- valori di impatto, urgenza e priorità definiti;
-- vocabolario documentato e verificato da test.
+- funzione deterministica che combina impatto e urgenza;
+- risultato limitato alle priorità P1, P2, P3 e P4;
+- test dei casi principali e dei confini della matrice.
 
 ## Blocchi o decisioni aperte
 
@@ -50,11 +52,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-010.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-011.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-003` con il codice dell'attività successiva.
+Sostituire `SP-011` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -77,8 +79,11 @@ Prima di terminare verificare che:
 - `pip check`: nessuna dipendenza mancante o incompatibile.
 - Verificate FastAPI 0.141.1, Uvicorn 0.52.1, HTTPX2 2.7.0 e pytest 9.1.1.
 - Verificata la sintassi dei file in `app/` e `tests/`.
-- `pytest`: 1 test superato senza avvisi.
+- `pytest`: 13 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
 - Avviato Uvicorn su `127.0.0.1:8000` e verificato `GET /health`: risposta `200 OK`
   con `{"status":"ok"}`.
 - Arrestato il server locale dopo il controllo.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-010.
+- Verificati 3 ruoli, 10 categorie, 6 stati, 3 livelli di impatto, 3 livelli di
+  urgenza e 4 priorità.
