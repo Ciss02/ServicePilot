@@ -64,9 +64,9 @@ dalla tabella del database.
 
 - controllo dei permessi per ruolo e proprietà del ticket;
 - allegati;
-- transizioni consentite tra stati;
 - date, cronologia e audit trail;
 - azioni dell'agente e fonti della knowledge base.
 
-Queste responsabilità appartengono alle successive attività del piano e non vengono
-simulate nei contratti.
+Le transizioni consentite sono controllate dal dominio e dall'API di aggiornamento,
+perché dipendono anche dallo stato già salvato. Le responsabilità elencate sopra
+appartengono alle successive attività del piano e non vengono simulate nei contratti.

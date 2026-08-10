@@ -250,3 +250,31 @@ Contratti distinti impediscono al client di scegliere campi gestiti dal backend.
 verifiche dei riferimenti producono errori comprensibili prima del vincolo del database,
 mentre la transazione evita salvataggi parziali. L'applicazione è ora utilizzabile per
 il flusso base senza anticipare regole di sicurezza non ancora implementate.
+
+## D-013 - Gestione tecnica e ciclo di vita del ticket
+
+**Data:** 10 agosto 2026
+**Stato:** confermata durante SP-023
+
+**Decisione:**
+
+- esporre `PATCH /tickets/{ticket_id}` per aggiornamenti parziali validati;
+- permettere la correzione dei dati tecnici previsti da `TicketUpdate`, mantenendo il
+  richiedente non modificabile;
+- ricalcolare sempre la priorità da impatto e urgenza quando cambia la classificazione;
+- accettare come assegnatari soltanto utenti attivi con ruolo `technician` o `admin`;
+- usare il percorso `new → in_progress → attesa o resolved → closed`, permettendo il
+  ritorno a `in_progress` dagli stati di attesa e da `resolved`;
+- considerare `closed` uno stato finale e richiedere una soluzione prima di risolvere o
+  chiudere un ticket;
+- restituire `404` per riferimenti assenti, `409` per transizioni in conflitto e `422`
+  per dati validi nella forma ma non utilizzabili nella gestione tecnica;
+- rinviare il controllo di chi può chiamare l'endpoint a SP-032.
+
+**Motivazione:**
+
+Un ciclo di vita esplicito impedisce salti accidentali e rende ogni comportamento
+testabile. La soluzione obbligatoria conserva l'esito prima della chiusura. I controlli
+eseguiti prima di modificare il modello e il commit unico evitano dati salvati a metà.
+La separazione dall'autorizzazione mantiene SP-023 concentrata sulle regole del ticket,
+mentre la milestone successiva proteggerà le operazioni in base all'utente autenticato.

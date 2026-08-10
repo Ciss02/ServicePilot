@@ -15,9 +15,11 @@ from app.domain.ticket_contracts import (
     TicketRead,
     TicketUpdate,
 )
+from app.domain.ticket_workflow import ALLOWED_STATUS_TRANSITIONS, can_transition_status
 
 __all__ = [
     "Impact",
+    "ALLOWED_STATUS_TRANSITIONS",
     "Priority",
     "Role",
     "TicketCategory",
@@ -28,4 +30,5 @@ __all__ = [
     "TicketUpdate",
     "Urgency",
     "calculate_priority",
+    "can_transition_status",
 ]
