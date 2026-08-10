@@ -11,8 +11,8 @@ Il dataset comprende:
 - 5 profili: tre dipendenti, un tecnico IT e un amministratore;
 - 6 ticket che rappresentano produzione, rete, VPN, software, stampa e sicurezza.
 
-I profili non hanno ancora password. SP-030 aggiungerà credenziali demo memorizzate in
-modo sicuro.
+I profili ricevono credenziali configurate esternamente e nel database conservano
+soltanto hash Argon2. Le istruzioni sono in [`DEMO_ACCOUNTS.md`](DEMO_ACCOUNTS.md).
 
 ## Come riconoscere i dati fittizi
 
@@ -23,7 +23,8 @@ modo sicuro.
 
 ## Caricamento
 
-Dopo aver preparato l'ambiente locale, eseguire:
+Dopo aver preparato l'ambiente locale e impostato le tre variabili descritte in
+[`DEMO_ACCOUNTS.md`](DEMO_ACCOUNTS.md), eseguire:
 
 ```powershell
 .\.venv\Scripts\python.exe -m app.db seed
@@ -37,6 +38,11 @@ valori approvati e non vengono creati duplicati.
 Il caricamento non elimina righe estranee al dataset. Tutte le modifiche demo vengono
 salvate insieme; in caso di errore la transazione viene annullata per non lasciare dati
 parziali.
+
+Le password non fanno parte del dataset versionato. Se una variabile manca o è troppo
+corta, il caricamento viene rifiutato prima di aprire la transazione. Ripetere il comando
+mantiene gli hash validi; cambiare una credenziale esterna aggiorna soltanto il relativo
+hash.
 
 ## Coerenza dei ticket
 

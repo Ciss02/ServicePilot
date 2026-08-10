@@ -278,3 +278,33 @@ testabile. La soluzione obbligatoria conserva l'esito prima della chiusura. I co
 eseguiti prima di modificare il modello e il commit unico evitano dati salvati a metà.
 La separazione dall'autorizzazione mantiene SP-023 concentrata sulle regole del ticket,
 mentre la milestone successiva proteggerà le operazioni in base all'utente autenticato.
+
+## D-014 - Credenziali demo e hashing delle password
+
+**Data:** 10 agosto 2026
+**Stato:** confermata durante SP-030
+
+**Decisione:**
+
+- usare `pwdlib` 0.3.0 con l'algoritmo raccomandato Argon2;
+- isolare creazione e verifica degli hash in `app/security/passwords.py`;
+- richiedere una password di almeno 12 caratteri per ciascun ruolo demo tramite le
+  variabili `SERVICEPILOT_DEMO_EMPLOYEE_PASSWORD`,
+  `SERVICEPILOT_DEMO_TECHNICIAN_PASSWORD` e `SERVICEPILOT_DEMO_ADMIN_PASSWORD`;
+- lasciare vuoti i valori in `.env.example` e non inserire password predefinite nel
+  repository;
+- condividere la credenziale `employee` tra i tre dipendenti sintetici e usare valori
+  separati per tecnico e amministratore;
+- conservare nel database soltanto `password_hash`, rigenerandolo solo quando la
+  credenziale configurata non corrisponde più;
+- mantenere temporaneamente facoltativa la colonna per i record locali precedenti e
+  aggiungerla in modo compatibile ai database SQLite già creati;
+- rinviare autenticazione e sessioni a SP-031.
+
+**Motivazione:**
+
+Argon2 è progettato per rendere costosi i tentativi ripetuti di indovinare una password,
+mentre `pwdlib` offre un'interfaccia moderna compatibile con Python 3.13. Le variabili
+d'ambiente separano i segreti dal codice pubblico. Il controllo prima della transazione
+evita dataset parziali e l'aggiornamento mirato della tabella preserva il lavoro locale
+senza introdurre in questa fase un intero sistema di migrazioni.

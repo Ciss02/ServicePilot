@@ -31,6 +31,8 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
   `PATCH /tickets/{ticket_id}` disponibili.
 - Contratto di risposta completo e gestione esplicita delle risorse inesistenti.
 - Modifica, classificazione, assegnazione e ciclo di vita tecnico dei ticket verificati.
+- Account demo configurabili tramite variabili d'ambiente e hash Argon2 nel database.
+- Modulo riutilizzabile per creare e verificare password senza conservarle in chiaro.
 
 ## Milestone attiva
 
@@ -38,22 +40,21 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-023 - Gestione tecnica del ticket**
+**SP-030 - Account demo e password sicure**
 
-È possibile correggere i dati e la classificazione, ricalcolare la priorità, assegnare
-gruppo e tecnico e avanzare il ticket attraverso stati controllati. Le verifiche su
-riferimenti, tecnico attivo, transizioni e soluzione obbligatoria avvengono prima del
-salvataggio, evitando aggiornamenti parziali.
+I cinque account dimostrativi ricevono password configurate fuori dal repository. Il
+seed valida i tre valori per ruolo e salva soltanto hash Argon2 con dato casuale. I
+database SQLite già creati ricevono la nuova colonna senza perdere utenti o ticket.
 
 ## Prossima attività
 
-**SP-030 - Account demo e password sicure**
+**SP-031 - Login, sessione e logout**
 
 Risultato atteso:
 
-- aggiungere credenziali agli account dimostrativi;
-- salvare soltanto password protette da hashing;
-- verificare che nessuna password in chiaro finisca nel database o nel codice.
+- permettere l'accesso degli account demo;
+- mantenere l'identità durante la sessione e permettere il logout;
+- verificare accesso valido, credenziali errate e chiusura della sessione.
 
 ## Blocchi o decisioni aperte
 
@@ -63,11 +64,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-030.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-031.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-030` con il codice dell'attività successiva.
+Sostituire `SP-031` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -133,4 +134,16 @@ Prima di terminare verificare che:
   aggiornamenti parziali.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-023.
 - `pytest`: 84 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificati `pwdlib` 0.3.0 e Argon2 nell'ambiente Python 3.13.
+- Verificato che la stessa password produca hash diversi e resti comunque verificabile.
+- Verificato il rifiuto di credenziali demo mancanti o più corte di 12 caratteri senza
+  mostrarne i valori negli errori.
+- Verificato che tutti i 5 account demo conservino soltanto hash Argon2 e che un nuovo
+  seed non rigeneri hash ancora validi.
+- Verificata l'aggiunta ripetibile di `password_hash` a un vecchio database SQLite senza
+  perdere il profilo già presente.
+- Eseguito `python -m app.db seed` con credenziali casuali su SQLite in memoria.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-030.
+- `pytest`: 96 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

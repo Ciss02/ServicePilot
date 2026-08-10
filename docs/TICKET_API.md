@@ -77,6 +77,6 @@ Un errore annulla la transazione e non lascia ticket parziali.
 Le API non sono ancora protette da login e permessi. In particolare, l'elenco non è
 filtrato per richiedente e `PATCH` non identifica ancora chi invia la modifica: servono
 alla costruzione del backend e non devono essere esposti come funzioni pubbliche.
-SP-030, SP-031 e SP-032 aggiungeranno account sicuri, sessioni e autorizzazione. Filtri
-e paginazione appartengono ad attività successive.
+SP-030 ha preparato gli account sicuri; SP-031 e SP-032 aggiungeranno sessioni e
+autorizzazione. Filtri e paginazione appartengono ad attività successive.
 

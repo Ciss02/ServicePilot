@@ -63,7 +63,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 **Risultato:** ogni ruolo può vedere ed eseguire soltanto le operazioni consentite.
 
-- [ ] **SP-030 - Account demo e password sicure**
+- [x] **SP-030 - Account demo e password sicure**
   Preparare gli account dei tre ruoli e memorizzare password protette.
   Verifica: nessuna password in chiaro nel database o nel codice.
 - [ ] **SP-031 - Login, sessione e logout**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-030**. La milestone attiva è **Milestone 3**.
+La prossima attività è **SP-031**. La milestone attiva è **Milestone 3**.

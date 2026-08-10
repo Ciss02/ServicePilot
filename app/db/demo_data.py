@@ -1,5 +1,6 @@
 """Dataset sintetico e caricamento ripetibile per la demo."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import Engine, select
@@ -15,6 +16,8 @@ from app.domain.vocabulary import (
     TicketStatus,
     Urgency,
 )
+from app.security.demo_credentials import load_demo_passwords, validate_demo_passwords
+from app.security.passwords import hash_password, verify_password
 
 
 @dataclass(frozen=True)
@@ -27,7 +30,7 @@ class SiteSeed:
 
 @dataclass(frozen=True)
 class UserSeed:
-    """Profilo dimostrativo senza credenziali di accesso."""
+    """Account dimostrativo collegato a una credenziale configurata per ruolo."""
 
     email: str
     display_name: str
@@ -227,7 +230,10 @@ def _upsert_sites(session: Session) -> dict[str, Site]:
     return sites_by_code
 
 
-def _upsert_users(session: Session) -> dict[str, User]:
+def _upsert_users(
+    session: Session,
+    demo_passwords: Mapping[Role, str],
+) -> dict[str, User]:
     users_by_email: dict[str, User] = {}
 
     for seed in DEMO_USERS:
@@ -243,6 +249,9 @@ def _upsert_users(session: Session) -> dict[str, User]:
             user.display_name = seed.display_name
             user.role = seed.role
             user.is_active = True
+        password = demo_passwords[seed.role]
+        if not verify_password(password, user.password_hash):
+            user.password_hash = hash_password(password)
         users_by_email[seed.email] = user
 
     session.flush()
@@ -290,11 +299,14 @@ def _upsert_tickets(
                 setattr(ticket, field_name, value)
 
 
-def seed_demo_data(session: Session) -> SeedSummary:
+def seed_demo_data(
+    session: Session,
+    demo_passwords: Mapping[Role, str],
+) -> SeedSummary:
     """Inserisce o riallinea i record demo senza eseguire il commit."""
 
     sites_by_code = _upsert_sites(session)
-    users_by_email = _upsert_users(session)
+    users_by_email = _upsert_users(session, demo_passwords)
     _upsert_tickets(session, sites_by_code, users_by_email)
     session.flush()
 
@@ -305,13 +317,21 @@ def seed_demo_data(session: Session) -> SeedSummary:
     )
 
 
-def load_demo_data(target_engine: Engine = engine) -> SeedSummary:
+def load_demo_data(
+    target_engine: Engine = engine,
+    demo_passwords: Mapping[Role, str] | None = None,
+) -> SeedSummary:
     """Crea le tabelle e salva l'intero dataset in una singola transazione."""
 
+    passwords = (
+        load_demo_passwords()
+        if demo_passwords is None
+        else validate_demo_passwords(demo_passwords)
+    )
     create_database(target_engine)
     with Session(target_engine) as session:
         try:
-            summary = seed_demo_data(session)
+            summary = seed_demo_data(session, passwords)
             session.commit()
         except Exception:
             session.rollback()

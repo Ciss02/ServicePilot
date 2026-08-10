@@ -4,7 +4,7 @@ import os
 import sqlite3
 from collections.abc import Callable, Iterator
 
-from sqlalchemy import Engine, create_engine, event
+from sqlalchemy import Engine, create_engine, event, inspect, text
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -47,9 +47,17 @@ SessionLocal: Callable[[], Session] = sessionmaker(
 
 
 def create_database(target_engine: Engine = engine) -> None:
-    """Crea soltanto le tabelle mancanti; può essere richiamata più volte."""
+    """Crea le tabelle e applica i piccoli aggiornamenti compatibili previsti."""
 
     Base.metadata.create_all(target_engine)
+    user_columns = {
+        column["name"] for column in inspect(target_engine).get_columns("users")
+    }
+    if "password_hash" not in user_columns:
+        with target_engine.begin() as connection:
+            connection.execute(
+                text("ALTER TABLE users ADD COLUMN password_hash VARCHAR(255)")
+            )
 
 
 def get_session() -> Iterator[Session]:

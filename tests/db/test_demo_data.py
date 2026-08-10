@@ -1,12 +1,19 @@
 """Verifiche del dataset dimostrativo ripetibile."""
 
+import secrets
+
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, inspect, select
 from sqlalchemy.orm import Session
 
 from app.db import Site, Ticket, User, build_engine, create_database, load_demo_data
 from app.domain.priority import calculate_priority
 from app.domain.vocabulary import Priority, Role
+from app.security.demo_credentials import (
+    DEMO_PASSWORD_ENV_BY_ROLE,
+    DemoCredentialsError,
+)
+from app.security.passwords import verify_password
 
 
 @pytest.fixture
@@ -16,6 +23,18 @@ def database_engine(tmp_path):
     engine = build_engine(f"sqlite:///{tmp_path / 'demo-data-test.db'}")
     yield engine
     engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def demo_passwords(monkeypatch) -> dict[Role, str]:
+    """Configura credenziali casuali che non vengono salvate nel repository."""
+
+    passwords = {
+        role: secrets.token_urlsafe(24) for role in DEMO_PASSWORD_ENV_BY_ROLE
+    }
+    for role, variable_name in DEMO_PASSWORD_ENV_BY_ROLE.items():
+        monkeypatch.setenv(variable_name, passwords[role])
+    return passwords
 
 
 def _count(session: Session, model: type[Site] | type[User] | type[Ticket]) -> int:
@@ -37,6 +56,59 @@ def test_demo_data_load_is_repeatable(database_engine) -> None:
         assert _count(session, Site) == 6
         assert _count(session, User) == 5
         assert _count(session, Ticket) == 6
+
+
+def test_missing_credentials_stop_before_database_changes(
+    database_engine,
+    monkeypatch,
+) -> None:
+    for variable_name in DEMO_PASSWORD_ENV_BY_ROLE.values():
+        monkeypatch.delenv(variable_name, raising=False)
+
+    with pytest.raises(DemoCredentialsError):
+        load_demo_data(database_engine)
+
+    assert inspect(database_engine).get_table_names() == []
+
+
+def test_demo_users_store_only_verifiable_hashes(
+    database_engine,
+    demo_passwords: dict[Role, str],
+) -> None:
+    load_demo_data(database_engine)
+
+    with Session(database_engine) as session:
+        users = session.scalars(select(User)).all()
+        hashes = [user.password_hash for user in users]
+
+    assert len(users) == 5
+    assert all(encoded_hash is not None for encoded_hash in hashes)
+    assert all(
+        verify_password(demo_passwords[user.role], user.password_hash)
+        for user in users
+    )
+    assert all(
+        password not in encoded_hash
+        for password in demo_passwords.values()
+        for encoded_hash in hashes
+        if encoded_hash is not None
+    )
+
+
+def test_reload_keeps_valid_password_hashes(database_engine) -> None:
+    load_demo_data(database_engine)
+    with Session(database_engine) as session:
+        first_hashes = {
+            user.email: user.password_hash for user in session.scalars(select(User))
+        }
+
+    load_demo_data(database_engine)
+    with Session(database_engine) as session:
+        second_hashes = {
+            user.email: user.password_hash for user in session.scalars(select(User))
+        }
+
+    assert second_hashes == first_hashes
 
 
 def test_reload_restores_expected_demo_values(database_engine) -> None:
