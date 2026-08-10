@@ -24,6 +24,32 @@ progetto; il codice dell'applicazione non è ancora stato implementato.
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
 
+### Preparazione dell'ambiente locale
+
+Requisito: Python 3.13.
+
+Da PowerShell, nella cartella del progetto:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+```
+
+L'attivazione fa sì che i comandi `python` e `pip` usino le librerie isolate di
+ServicePilot. Per uscire dall'ambiente:
+
+```powershell
+deactivate
+```
+
+Se PowerShell impedisce l'attivazione, è possibile usare direttamente Python senza
+modificare le impostazioni del sistema:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+```
+
 ### Tecnologie previste
 
 - Python e FastAPI
@@ -61,6 +87,16 @@ The repository is in its foundation phase. Requirements, roadmap, and project pl
 available, but the application code has not been implemented yet.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
+
+### Local environment setup
+
+Requirement: Python 3.13.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+```
 
 ### Disclaimer
 

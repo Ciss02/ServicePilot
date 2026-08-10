@@ -1,0 +1,6 @@
+# Include le dipendenze dell'applicazione
+-r requirements.txt
+
+# Strumenti usati soltanto durante lo sviluppo
+httpx==0.28.1
+pytest==9.1.1
