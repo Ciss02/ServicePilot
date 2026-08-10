@@ -22,28 +22,29 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Vocabolario del dominio centralizzato in `app/domain/vocabulary.py`.
 - Ruoli, categorie, stati, impatto, urgenza e priorità documentati.
 - Matrice deterministica della priorità implementata in `app/domain/priority.py`.
+- Contratti Pydantic per creazione, classificazione e aggiornamento dei ticket.
 
 ## Milestone attiva
 
-**Milestone 1 - Regole e dati del ticket**
+**Milestone 2 - Database e API essenziali**
 
 ## Ultima attività completata
 
-**SP-011 - Matrice della priorità**
+**SP-012 - Contratti dati del ticket**
 
-È stata implementata una funzione pura che combina impatto e urgenza usando una matrice
-3×3. Tutte le nove combinazioni sono documentate e verificate; la funzione accetta solo
-i valori controllati del vocabolario e non dipende da AI o database.
+Sono stati definiti contratti separati per creazione confermata, classificazione e
+aggiornamento parziale. I campi vengono ripuliti e validati; valori sconosciuti,
+priorità fornite liberamente e aggiornamenti vuoti vengono rifiutati.
 
 ## Prossima attività
 
-**SP-012 - Contratti dati del ticket**
+**SP-020 - Database iniziale**
 
 Risultato atteso:
 
-- struttura validata dei dati necessari per creare e aggiornare un ticket;
-- input validi accettati e valori errati rifiutati chiaramente;
-- utilizzo del vocabolario e della matrice già implementati.
+- configurazione SQLite e SQLAlchemy;
+- tabelle iniziali per utenti, sedi e ticket;
+- creazione del database ripetibile e verificata.
 
 ## Blocchi o decisioni aperte
 
@@ -53,11 +54,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-012.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-020.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-012` con il codice dell'attività successiva.
+Sostituire `SP-020` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -80,7 +81,7 @@ Prima di terminare verificare che:
 - `pip check`: nessuna dipendenza mancante o incompatibile.
 - Verificate FastAPI 0.141.1, Uvicorn 0.52.1, HTTPX2 2.7.0 e pytest 9.1.1.
 - Verificata la sintassi dei file in `app/` e `tests/`.
-- `pytest`: 24 test superati senza avvisi.
+- `pytest`: 41 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
 - Avviato Uvicorn su `127.0.0.1:8000` e verificato `GET /health`: risposta `200 OK`
   con `{"status":"ok"}`.
@@ -90,3 +91,6 @@ Prima di terminare verificare che:
   urgenza e 4 priorità.
 - Verificate tutte le 9 combinazioni della matrice impatto × urgenza.
 - Verificato che input non convertiti nel vocabolario vengano rifiutati chiaramente.
+- Verificati contratti validi per creazione, classificazione e aggiornamento.
+- Verificato il rifiuto di conferma falsa o ambigua, identificativi errati, campi
+  sconosciuti, categorie non ammesse, priorità fornite dall'esterno e aggiornamenti vuoti.

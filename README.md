@@ -18,8 +18,9 @@ L'obiettivo è mostrare un flusso completo e verificabile:
 
 ### Stato attuale
 
-Le fondamenta del progetto sono complete. È disponibile una prima applicazione FastAPI
-con un endpoint di salute e un test automatico.
+Le fondamenta e le regole iniziali del dominio sono complete. Sono disponibili una
+prima applicazione FastAPI, il vocabolario dei ticket, la matrice della priorità e i
+contratti dati validati.
 
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
@@ -85,6 +86,7 @@ Per eseguire i test automatici:
 - [Stato corrente](docs/PROJECT_STATUS.md)
 - [Decisioni di progetto](docs/DECISIONS.md)
 - [Vocabolario del dominio](docs/DOMAIN_VOCABULARY.md)
+- [Contratti dati del ticket](docs/TICKET_CONTRACTS.md)
 
 ### Avvertenza
 
@@ -102,8 +104,9 @@ knowledge base, human approval of simulated actions, and a complete audit trail.
 
 ### Current status
 
-The project foundation is complete. A first FastAPI application, health endpoint, and
-automated test are available.
+The project foundation and initial domain rules are complete. A first FastAPI
+application, ticket vocabulary, priority matrix, and validated data contracts are
+available.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
 
