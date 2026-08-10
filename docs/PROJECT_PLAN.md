@@ -38,7 +38,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-011 - Matrice della priorità**
   Implementare il calcolo deterministico da impatto e urgenza.
   Verifica: test per casi P1, P2, P3 e P4.
-- [ ] **SP-012 - Contratti dati del ticket**
+- [x] **SP-012 - Contratti dati del ticket**
   Definire e validare i dati necessari per creare e aggiornare un ticket.
   Verifica: input validi accettati e input errati rifiutati chiaramente.
 
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-012**. La milestone attiva è **Milestone 1**.
+La prossima attività è **SP-020**. La milestone attiva è **Milestone 2**.

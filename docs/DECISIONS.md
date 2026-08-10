@@ -150,3 +150,27 @@ impatto e urgenza alti; P2 rappresenta combinazioni alte e medie; P3 copre i cas
 intermedi; P4 resta per richieste limitate o pianificabili. Questa scelta rispetta il
 vincolo della specifica secondo cui l'AI può suggerire impatto e urgenza, ma non decide
 liberamente la priorità.
+
+## D-009 - Contratti dati del ticket
+
+**Data:** 10 agosto 2026
+**Stato:** confermata durante SP-012
+
+**Decisione:**
+
+- usare Pydantic 2.13.4 come dipendenza diretta per i contratti applicativi;
+- separare creazione, classificazione e aggiornamento in tre modelli;
+- richiedere `confirmed=true` come valore booleano esplicito per la creazione;
+- usare identificativi interi positivi per i riferimenti iniziali a richiedente, sede e
+  tecnico;
+- calcolare la priorità dalla classificazione senza accettarla come input;
+- rifiutare campi sconosciuti e aggiornamenti senza valori;
+- non permettere la modifica del richiedente tramite l'aggiornamento ordinario.
+
+**Motivazione:**
+
+La separazione segue il flusso della specifica: il dipendente conferma i dati essenziali,
+la classificazione viene completata successivamente e il tecnico può modificare soltanto
+campi esplicitamente previsti. Limiti e tipi rendono gli errori comprensibili prima del
+salvataggio. La priorità resta sotto il controllo della matrice del backend e il
+richiedente non può essere trasferito accidentalmente con una normale modifica.
