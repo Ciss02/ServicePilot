@@ -27,30 +27,33 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Tabelle iniziali per utenti, sedi e ticket con vincoli e collegamenti essenziali.
 - Dataset sintetico con 6 sedi, 5 profili e 6 ticket dimostrativi.
 - Comando ripetibile per creare o riallineare i dati demo senza duplicarli.
-- API `POST /tickets`, `GET /tickets` e `GET /tickets/{ticket_id}` disponibili.
+- API `POST /tickets`, `GET /tickets`, `GET /tickets/{ticket_id}` e
+  `PATCH /tickets/{ticket_id}` disponibili.
 - Contratto di risposta completo e gestione esplicita delle risorse inesistenti.
+- Modifica, classificazione, assegnazione e ciclo di vita tecnico dei ticket verificati.
 
 ## Milestone attiva
 
-**Milestone 2 - Database e API essenziali**
+**Milestone 3 - Accesso e permessi**
 
 ## Ultima attività completata
 
-**SP-022 - Creazione e lettura dei ticket**
+**SP-023 - Gestione tecnica del ticket**
 
-È possibile creare un ticket confermato e leggere elenco o dettaglio tramite API REST.
-Il backend controlla richiedente e sede, assegna stato e date, chiude correttamente le
-sessioni del database e restituisce errori chiari per dati o risorse non validi.
+È possibile correggere i dati e la classificazione, ricalcolare la priorità, assegnare
+gruppo e tecnico e avanzare il ticket attraverso stati controllati. Le verifiche su
+riferimenti, tecnico attivo, transizioni e soluzione obbligatoria avvengono prima del
+salvataggio, evitando aggiornamenti parziali.
 
 ## Prossima attività
 
-**SP-023 - Gestione tecnica del ticket**
+**SP-030 - Account demo e password sicure**
 
 Risultato atteso:
 
-- API per modificare i campi consentiti di un ticket;
-- assegnazione a gruppo o tecnico e cambio di stato;
-- gestione di modifiche, riferimenti e transizioni non valide.
+- aggiungere credenziali agli account dimostrativi;
+- salvare soltanto password protette da hashing;
+- verificare che nessuna password in chiaro finisca nel database o nel codice.
 
 ## Blocchi o decisioni aperte
 
@@ -60,11 +63,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-023.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-030.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-022` con il codice dell'attività successiva.
+Sostituire `SP-030` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -121,4 +124,13 @@ Prima di terminare verificare che:
 - Verificato l'elenco dei ticket dal più recente e il dettaglio coerente con la creazione.
 - Verificata la creazione automatica delle tabelle all'avvio dell'applicazione.
 - `pytest`: 55 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificata la modifica parziale dei campi consentiti senza cambiare il richiedente.
+- Verificati classificazione e ricalcolo deterministico della priorità.
+- Verificate assegnazioni soltanto a tecnici o amministratori attivi.
+- Verificati avanzamento, attese, risoluzione, riapertura e chiusura finale del ticket.
+- Verificato che soluzione assente, riferimenti errati e transizioni vietate non lascino
+  aggiornamenti parziali.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-023.
+- `pytest`: 84 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

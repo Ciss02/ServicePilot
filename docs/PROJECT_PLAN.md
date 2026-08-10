@@ -55,7 +55,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-022 - Creazione e lettura dei ticket**
   Implementare le API per creare un ticket e consultarne i dati.
   Verifica: test di creazione, lettura e ticket inesistente.
-- [ ] **SP-023 - Gestione tecnica del ticket**
+- [x] **SP-023 - Gestione tecnica del ticket**
   Implementare modifica, assegnazione e cambio di stato.
   Verifica: modifiche valide salvate ed errori gestiti.
 
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-023**. La milestone attiva è **Milestone 2**.
+La prossima attività è **SP-030**. La milestone attiva è **Milestone 3**.

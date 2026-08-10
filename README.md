@@ -21,7 +21,7 @@ L'obiettivo è mostrare un flusso completo e verificabile:
 Le fondamenta e le regole iniziali del dominio sono complete. Sono disponibili una
 prima applicazione FastAPI, il vocabolario dei ticket, la matrice della priorità, i
 contratti dati validati, il database iniziale, un dataset completamente sintetico e le
-API essenziali per creare e leggere ticket.
+API per creare, leggere e gestire tecnicamente i ticket.
 
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
@@ -64,9 +64,9 @@ Il server sarà disponibile all'indirizzo `http://127.0.0.1:8000`. L'endpoint
 `http://127.0.0.1:8000/health` verifica che il servizio risponda, mentre la
 documentazione interattiva delle API è disponibile su `http://127.0.0.1:8000/docs`.
 
-Le prime operazioni disponibili sono `POST /tickets`, `GET /tickets` e
-`GET /tickets/{ticket_id}`. Prima di provarle è possibile caricare il dataset demo con
-il comando descritto più sotto.
+Le operazioni disponibili sono `POST /tickets`, `GET /tickets`,
+`GET /tickets/{ticket_id}` e `PATCH /tickets/{ticket_id}`. Prima di provarle è possibile
+caricare il dataset demo con il comando descritto più sotto.
 
 Per eseguire i test automatici:
 
@@ -130,8 +130,8 @@ knowledge base, human approval of simulated actions, and a complete audit trail.
 
 The project foundation and initial domain rules are complete. A first FastAPI
 application, ticket vocabulary, priority matrix, validated data contracts, the initial
-database, a fully synthetic demo dataset, and the essential ticket create/read APIs are
-available.
+database, a fully synthetic demo dataset, and APIs to create, read, classify, assign,
+and update tickets are available.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
 
@@ -154,8 +154,8 @@ python -m pip install -r requirements-dev.txt
 Open `http://127.0.0.1:8000/health` to check the service or
 `http://127.0.0.1:8000/docs` to view the interactive API documentation.
 
-The first available operations are `POST /tickets`, `GET /tickets`, and
-`GET /tickets/{ticket_id}`.
+The available operations are `POST /tickets`, `GET /tickets`,
+`GET /tickets/{ticket_id}`, and `PATCH /tickets/{ticket_id}`.
 
 Run the automated tests with:
 
