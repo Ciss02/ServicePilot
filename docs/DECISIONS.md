@@ -103,3 +103,24 @@ Python 3.13 offre una base recente e stabile, con maggiore probabilità di compa
 con le future librerie AI rispetto all'adozione immediata della serie più nuova. La
 separazione dei requisiti rende inoltre chiaro cosa serve al server e cosa serve soltanto
 per sviluppare e verificare il progetto.
+
+## D-007 - Vocabolario iniziale dei ticket
+
+**Data:** 10 agosto 2026
+**Stato:** confermata durante SP-010
+
+**Decisione:**
+
+- usare codici interni in inglese, minuscoli e stabili, separati dalle etichette italiane;
+- adottare gli stati `new`, `in_progress`, `waiting_for_requester`,
+  `waiting_for_vendor`, `resolved` e `closed`;
+- usare tre livelli sia per l'impatto sia per l'urgenza: `low`, `medium` e `high`;
+- mantenere le quattro priorità `p1`, `p2`, `p3` e `p4` previste dalla specifica;
+- definire in attività successive le transizioni tra stati e la matrice della priorità.
+
+**Motivazione:**
+
+La specifica stabilisce ruoli, categorie e priorità, ma non elenca tutti gli stati o i
+livelli di impatto e urgenza. Un insieme piccolo copre il flusso MVP senza introdurre
+complessità non ancora necessaria. I codici stabili potranno essere riutilizzati da API
+e database, mentre l'interfaccia continuerà a mostrare termini italiani comprensibili.

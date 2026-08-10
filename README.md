@@ -84,6 +84,7 @@ Per eseguire i test automatici:
 - [Piano e tasklist](docs/PROJECT_PLAN.md)
 - [Stato corrente](docs/PROJECT_STATUS.md)
 - [Decisioni di progetto](docs/DECISIONS.md)
+- [Vocabolario del dominio](docs/DOMAIN_VOCABULARY.md)
 
 ### Avvertenza
 
