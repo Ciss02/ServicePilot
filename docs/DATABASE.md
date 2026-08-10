@@ -10,15 +10,14 @@ tra ticket, utenti e sedi.
 
 ## Tabelle iniziali
 
-- `users`: identità fittizia, nome visibile, ruolo e stato attivo;
+- `users`: identità fittizia, nome visibile, ruolo, hash della password e stato attivo;
 - `sites`: codice, nome e stato attivo di una sede fittizia;
 - `tickets`: dati confermati della richiesta, classificazione facoltativa,
   assegnazione, stato e date.
 
 La classificazione può essere vuota quando il ticket nasce perché, nel flusso MVP,
 viene proposta dopo la conferma. La priorità sarà sempre calcolata dal backend prima
-di essere salvata. Password, allegati, cronologia e audit richiederanno attività
-dedicate.
+di essere salvata. Allegati, cronologia e audit richiederanno attività dedicate.
 
 ## Configurazione
 
@@ -32,13 +31,15 @@ Per creare le tabelle mancanti:
 .\.venv\Scripts\python.exe -m app.db
 ```
 
-Il comando può essere eseguito più volte: SQLAlchemy crea soltanto ciò che manca e non
-cancella i dati esistenti. Le modifiche future alla struttura richiederanno invece un
-sistema di migrazioni, che non fa parte di SP-020.
+Il comando può essere eseguito più volte e non cancella i dati esistenti. SP-030 include
+un aggiornamento compatibile che aggiunge `password_hash` alle tabelle `users` create
+nelle sessioni precedenti. Un sistema generale di migrazioni resta necessario per
+modifiche strutturali future.
 
 ## Controlli applicati
 
 - email utente e codice sede unici;
+- password degli account demo conservata soltanto come hash Argon2;
 - ruoli, categorie, stati, impatto, urgenza e priorità limitati al vocabolario;
 - numero di utenti coinvolti compreso tra 1 e 10.000;
 - richiedente, sede e tecnico assegnato collegati a record esistenti;

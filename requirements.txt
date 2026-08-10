@@ -1,5 +1,6 @@
 # Dipendenze necessarie per eseguire ServicePilot
 fastapi==0.141.1
 pydantic==2.13.4
+pwdlib[argon2]==0.3.0
 SQLAlchemy==2.0.51
 uvicorn[standard]==0.52.1

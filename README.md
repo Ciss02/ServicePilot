@@ -21,7 +21,8 @@ L'obiettivo è mostrare un flusso completo e verificabile:
 Le fondamenta e le regole iniziali del dominio sono complete. Sono disponibili una
 prima applicazione FastAPI, il vocabolario dei ticket, la matrice della priorità, i
 contratti dati validati, il database iniziale, un dataset completamente sintetico e le
-API per creare, leggere e gestire tecnicamente i ticket.
+API per creare, leggere e gestire tecnicamente i ticket, oltre agli account demo con
+password protette tramite Argon2.
 
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
@@ -90,6 +91,10 @@ Per caricare o riallineare sedi, profili e ticket dimostrativi:
 .\.venv\Scripts\python.exe -m app.db seed
 ```
 
+Prima del comando vanno configurate le tre password demo come variabili d'ambiente,
+seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password predefinita
+è presente nel repository.
+
 ### Tecnologie previste
 
 - Python e FastAPI
@@ -110,6 +115,7 @@ Per caricare o riallineare sedi, profili e ticket dimostrativi:
 - [Contratti dati del ticket](docs/TICKET_CONTRACTS.md)
 - [Database iniziale](docs/DATABASE.md)
 - [Dataset dimostrativo](docs/DEMO_DATA.md)
+- [Account demo e password sicure](docs/DEMO_ACCOUNTS.md)
 - [API essenziali dei ticket](docs/TICKET_API.md)
 
 ### Avvertenza
@@ -131,7 +137,8 @@ knowledge base, human approval of simulated actions, and a complete audit trail.
 The project foundation and initial domain rules are complete. A first FastAPI
 application, ticket vocabulary, priority matrix, validated data contracts, the initial
 database, a fully synthetic demo dataset, and APIs to create, read, classify, assign,
-and update tickets are available.
+and update tickets are available. Demo accounts now store Argon2 password hashes whose
+plain-text values come only from environment variables.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
 
@@ -177,6 +184,10 @@ Load or realign the synthetic sites, profiles, and tickets with:
 ```powershell
 .\.venv\Scripts\python.exe -m app.db seed
 ```
+
+Configure the three demo password environment variables first, as explained in
+[`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). The repository contains no default
+password.
 
 ### Disclaimer
 
