@@ -43,6 +43,8 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Area di base protetta e uscita dal browser collegate alle sessioni esistenti.
 - Area dipendente con riepilogo filtrabile, elenco e dettaglio dei ticket personali.
 - Query di visibilità condivise tra API e pagine web, con proprietà filtrata nel backend.
+- Raccolta guidata deterministica con descrizione libera e richiesta dei dati mancanti.
+- Bozza temporanea validata senza creazione del ticket prima della conferma.
 
 ## Milestone attiva
 
@@ -50,24 +52,23 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-041 - Area del dipendente**
+**SP-042 - Raccolta guidata dei dati**
 
-Il dipendente vede in `/app` conteggi ed elenco delle sole richieste associate alla
-propria sessione e può aprirne il dettaglio. Il filtro di proprietà avviene nella query
-del backend ed è condiviso con le API. Ticket inesistenti e ticket altrui restituiscono
-la stessa pagina `404` senza rivelare dati. Tecnico e amministratore restano sulla base
-protetta in attesa della coda prevista da SP-044. I tre conteggi permettono di filtrare
-l'elenco per richieste attive, in attesa del dipendente o completate.
+Il dipendente apre `/app/new-ticket`, descrive liberamente il problema e riceve una
+seconda domanda per titolo, sede, servizio e numero di persone coinvolte. Tutti i dati
+vengono controllati nel backend e la sede deve essere attiva. La bozza resta temporanea
+nei moduli e nessun ticket viene ancora salvato. Tecnico e amministratore non possono
+usare il percorso.
 
 ## Prossima attività
 
-**SP-042 - Raccolta guidata dei dati**
+**SP-043 - Riepilogo e conferma**
 
 Risultato atteso:
 
-- creare una conversazione inizialmente deterministica per descrivere il problema;
-- chiedere in modo sintetico i dati essenziali ancora mancanti;
-- non creare ancora il ticket prima del riepilogo e della conferma di SP-043.
+- mostrare in modo chiaro tutti i dati raccolti;
+- permettere al dipendente di correggere o annullare;
+- creare un solo ticket soltanto dopo una conferma esplicita.
 
 ## Blocchi o decisioni aperte
 
@@ -77,11 +78,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-042.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-043.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-042` con il codice dell'attività successiva.
+Sostituire `SP-043` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -203,4 +204,15 @@ Prima di terminare verificare che:
   l'estrazione delle query condivise.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-041.
 - `pytest`: 140 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificato che la raccolta chieda prima la descrizione e poi soltanto titolo, sede,
+  servizio e numero di persone coinvolte.
+- Verificati limiti dei campi, messaggi di errore e nuovo controllo dei dati trasportati
+  tra i passaggi.
+- Verificato che sedi disattivate non compaiano nell'elenco e siano rifiutate anche se
+  inviate manualmente.
+- Verificato che visitatori anonimi e tecnici non accedano al percorso dipendente.
+- Verificato che una raccolta valida non crei alcun ticket prima di SP-043.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-042.
+- `pytest`: 149 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

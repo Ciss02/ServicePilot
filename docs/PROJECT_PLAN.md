@@ -83,7 +83,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-041 - Area del dipendente**
   Mostrare i ticket personali e il relativo dettaglio.
   Verifica: un dipendente non vede ticket di altri utenti.
-- [ ] **SP-042 - Raccolta guidata dei dati**
+- [x] **SP-042 - Raccolta guidata dei dati**
   Creare una conversazione inizialmente deterministica per descrivere il problema.
   Verifica: vengono richiesti i dati mancanti essenziali.
 - [ ] **SP-043 - Riepilogo e conferma**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-042**. La milestone attiva è **Milestone 4**.
+La prossima attività è **SP-043**. La milestone attiva è **Milestone 4**.

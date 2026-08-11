@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% set active_section = "new-ticket" %}
+{% block app_navigation %}{% include "_employee_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <section class="ticket-intake shell" aria-labelledby="intake-title">
+    <header class="intake-heading">
+      <div>
+        <p class="eyebrow">Nuova richiesta</p>
+        <h1 id="intake-title">Raccontaci cosa non funziona.</h1>
+        <p>Ti faremo poche domande, una alla volta, per raccogliere le informazioni utili al supporto.</p>
+      </div>
+      <ol class="intake-progress" aria-label="Avanzamento della richiesta">
+        <li class="is-complete"><span>1</span>Problema</li>
+        <li {% if step in ["details", "complete"] %}class="is-complete"{% endif %}><span>2</span>Dettagli</li>
+        <li><span>3</span>Conferma</li>
+      </ol>
+    </header>
+
+    <div class="conversation-panel">
+      <div class="message message-assistant">
+        <span class="message-avatar" aria-hidden="true">SP</span>
+        <div>
+          <strong>ServicePilot</strong>
+          <p>Ciao {{ current_user.display_name }}. Descrivi liberamente il problema: cosa stavi cercando di fare e cosa è successo?</p>
+        </div>
+      </div>
+
+      {% if step in ["details", "complete"] %}
+        <div class="message message-user">
+          <div>
+            <strong>Tu</strong>
+            <p>{{ values.description }}</p>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if step == "problem" %}
+        <form class="intake-form" method="post" action="/app/new-ticket/problem">
+          {% if errors.description %}
+            <div class="form-alert" role="alert">
+              <strong>Serve qualche dettaglio in più</strong>
+              <span>{{ errors.description }}</span>
+            </div>
+          {% endif %}
+          <div class="field-group">
+            <div class="label-row">
+              <label for="description">Descrizione del problema</label>
+              <span>Da 10 a 4.000 caratteri</span>
+            </div>
+            <textarea id="description" name="description" rows="6" minlength="10" maxlength="4000" required aria-describedby="description-help{% if errors.description %} description-error{% endif %}" {% if errors.description %}aria-invalid="true"{% endif %} placeholder="Esempio: da questa mattina non riesco a collegarmi alla VPN; dopo l'accesso compare un errore.">{{ values.description | default("") }}</textarea>
+            <small id="description-help">Non inserire password, dati personali o informazioni riservate.</small>
+            {% if errors.description %}<small class="field-error" id="description-error">{{ errors.description }}</small>{% endif %}
+          </div>
+          <button class="primary-button" type="submit">Continua <span aria-hidden="true">→</span></button>
+        </form>
+      {% elif step == "details" %}
+        <div class="message message-assistant">
+          <span class="message-avatar" aria-hidden="true">SP</span>
+          <div>
+            <strong>ServicePilot</strong>
+            <p>Grazie. Per indirizzare bene la richiesta mi mancano quattro informazioni essenziali.</p>
+          </div>
+        </div>
+
+        <form class="intake-form intake-details-form" method="post" action="/app/new-ticket/details">
+          <input type="hidden" name="description" value="{{ values.description }}">
+          {% if errors %}
+            <div class="form-alert" role="alert">
+              <strong>Controlla i campi indicati</strong>
+              <span>La richiesta non è stata salvata. Correggi i dati e riprova.</span>
+            </div>
+          {% endif %}
+          <div class="field-group">
+            <div class="label-row">
+              <label for="title">Titolo breve</label>
+              <span>Da 5 a 120 caratteri</span>
+            </div>
+            <input id="title" name="title" value="{{ values.title | default("") }}" minlength="5" maxlength="120" required {% if errors.title %}aria-invalid="true" aria-describedby="title-error"{% endif %} placeholder="Esempio: Accesso VPN non disponibile">
+            {% if errors.title %}<small class="field-error" id="title-error">{{ errors.title }}</small>{% endif %}
+          </div>
+          <div class="intake-field-grid">
+            <div class="field-group">
+              <label for="site_id">Sede interessata</label>
+              <select id="site_id" name="site_id" required {% if errors.site_id %}aria-invalid="true" aria-describedby="site-error"{% endif %}>
+                <option value="">Seleziona una sede</option>
+                {% for site in sites %}
+                  <option value="{{ site.id }}" {% if values.site_id | string == site.id | string %}selected{% endif %}>{{ site.name }}</option>
+                {% endfor %}
+              </select>
+              {% if errors.site_id %}<small class="field-error" id="site-error">{{ errors.site_id }}</small>{% endif %}
+            </div>
+            <div class="field-group">
+              <label for="affected_users">Persone coinvolte</label>
+              <input id="affected_users" name="affected_users" type="number" min="1" max="10000" value="{{ values.affected_users | default("") }}" required {% if errors.affected_users %}aria-invalid="true" aria-describedby="users-error"{% endif %} placeholder="1">
+              {% if errors.affected_users %}<small class="field-error" id="users-error">{{ errors.affected_users }}</small>{% endif %}
+            </div>
+          </div>
+          <div class="field-group">
+            <label for="service">Servizio o strumento coinvolto</label>
+            <input id="service" name="service" value="{{ values.service | default("") }}" minlength="2" maxlength="100" required {% if errors.service %}aria-invalid="true" aria-describedby="service-error"{% endif %} placeholder="Esempio: VPN, posta elettronica, stampante etichette">
+            {% if errors.service %}<small class="field-error" id="service-error">{{ errors.service }}</small>{% endif %}
+          </div>
+          <div class="intake-actions">
+            <a class="back-link" href="/app/new-ticket">Ricomincia</a>
+            <button class="primary-button" type="submit">Completa la raccolta <span aria-hidden="true">→</span></button>
+          </div>
+        </form>
+      {% else %}
+        <div class="message message-assistant message-success" role="status">
+          <span class="message-avatar" aria-hidden="true">✓</span>
+          <div>
+            <strong>Dati essenziali raccolti</strong>
+            <p>Abbiamo descrizione, titolo, sede, servizio e numero di persone coinvolte. Il ticket non è ancora stato creato.</p>
+          </div>
+        </div>
+        <div class="intake-complete-card">
+          <p class="eyebrow">Prossimo passaggio</p>
+          <h2>Controllo e conferma</h2>
+          <p>Con SP-043 potrai rivedere questi dati, correggerli e decidere se creare davvero la richiesta.</p>
+          <a class="primary-link-button" href="/app/new-ticket">Apri un'altra raccolta <span aria-hidden="true">→</span></a>
+        </div>
+      {% endif %}
+    </div>
+
+    <aside class="privacy-note" role="note">
+      <span aria-hidden="true">i</span>
+      <p><strong>Nessun ticket creato</strong>I dati raccolti non vengono salvati nel database finché non saranno mostrati e confermati nel passaggio successivo.</p>
+    </aside>
+  </section>
+{% endblock %}
