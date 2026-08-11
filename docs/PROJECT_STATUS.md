@@ -243,5 +243,6 @@ Prima di terminare verificare che:
 - Verificato dal browser il percorso `new → in_progress → resolved → closed` con
   soluzione obbligatoria e senza aggiornamenti parziali in caso di errore.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-044.
-- `pytest`: 167 test superati senza avvisi.
+- Verificata l'evidenziazione visiva del riepilogo tecnico realmente selezionato.
+- `pytest`: 171 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

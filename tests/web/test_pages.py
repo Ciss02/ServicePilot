@@ -464,6 +464,9 @@ def test_technician_queue_lists_all_tickets_and_operational_filters(web_client) 
     assert "4 di 4" in response.text
     assert 'href="/app?status=open&sort=priority#technical-ticket-list"' in response.text
     assert 'href="/app?status=completed&sort=updated#technical-ticket-list"' in response.text
+    assert '.technical-summary a[aria-current="true"]' in client.get(
+        "/static/styles.css"
+    ).text
 
     filtered = client.get("/app?status=new&assignment=unassigned&priority=pending")
 
@@ -471,6 +474,34 @@ def test_technician_queue_lists_all_tickets_and_operational_filters(web_client) 
     assert "Ticket riservato a un altro dipendente" in filtered.text
     assert "VPN demo in attesa di informazioni" not in filtered.text
     assert "1 di 4" in filtered.text
+
+
+@pytest.mark.parametrize(
+    ("query", "active_label"),
+    [
+        ("status=open&sort=priority", "ticket aperti"),
+        ("assignment=unassigned&sort=priority", "ticket da assegnare"),
+        ("status=waiting&sort=priority", "ticket in attesa"),
+        ("status=completed&sort=updated", "ticket completati"),
+    ],
+)
+def test_technical_summary_highlights_the_selected_filter(
+    web_client,
+    query: str,
+    active_label: str,
+) -> None:
+    client, _, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+
+    response = client.get(f"/app?{query}")
+    current_link = re.search(
+        rf'<a\s+href="[^"]+"\s+aria-current="true"\s+'
+        rf'aria-label="[^"]*{active_label}[^"]*"',
+        response.text,
+    )
+
+    assert response.status_code == 200
+    assert current_link is not None
 
 
 def test_admin_can_use_the_same_technical_queue(web_client) -> None:

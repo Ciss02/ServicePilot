@@ -18,10 +18,34 @@
     </header>
 
     <div class="technical-summary" aria-label="Riepilogo della coda">
-      <a href="/app?status=open&sort=priority#technical-ticket-list"><span>Aperti</span><strong>{{ summary.open }}</strong><small>Richiedono lavoro</small></a>
-      <a href="/app?assignment=unassigned&sort=priority#technical-ticket-list"><span>Da assegnare</span><strong>{{ summary.unassigned }}</strong><small>Senza responsabile</small></a>
-      <a href="/app?status=waiting&sort=priority#technical-ticket-list"><span>In attesa</span><strong>{{ summary.waiting }}</strong><small>Utente o fornitore</small></a>
-      <a href="/app?status=completed&sort=updated#technical-ticket-list"><span>Completati</span><strong>{{ summary.completed }}</strong><small>Risolti o chiusi</small></a>
+      <a
+        href="/app?status=open&sort=priority#technical-ticket-list"
+        {% if technical_status == "open" %}aria-current="true"{% endif %}
+        aria-label="Filtra e mostra {{ summary.open }} ticket aperti"
+      >
+        <span>Aperti</span><strong>{{ summary.open }}</strong><small>Richiedono lavoro</small>
+      </a>
+      <a
+        href="/app?assignment=unassigned&sort=priority#technical-ticket-list"
+        {% if assignment == "unassigned" %}aria-current="true"{% endif %}
+        aria-label="Filtra e mostra {{ summary.unassigned }} ticket da assegnare"
+      >
+        <span>Da assegnare</span><strong>{{ summary.unassigned }}</strong><small>Senza responsabile</small>
+      </a>
+      <a
+        href="/app?status=waiting&sort=priority#technical-ticket-list"
+        {% if technical_status == "waiting" %}aria-current="true"{% endif %}
+        aria-label="Filtra e mostra {{ summary.waiting }} ticket in attesa"
+      >
+        <span>In attesa</span><strong>{{ summary.waiting }}</strong><small>Utente o fornitore</small>
+      </a>
+      <a
+        href="/app?status=completed&sort=updated#technical-ticket-list"
+        {% if technical_status == "completed" %}aria-current="true"{% endif %}
+        aria-label="Filtra e mostra {{ summary.completed }} ticket completati"
+      >
+        <span>Completati</span><strong>{{ summary.completed }}</strong><small>Risolti o chiusi</small>
+      </a>
     </div>
 
     <form class="queue-filters" method="get" action="/app" aria-label="Filtra e ordina la coda">
