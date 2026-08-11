@@ -89,7 +89,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-043 - Riepilogo e conferma**
   Mostrare i dati raccolti e creare il ticket solo dopo conferma.
   Verifica: annullare non crea nulla; confermare crea un solo ticket.
-- [ ] **SP-044 - Coda del tecnico**
+- [x] **SP-044 - Coda del tecnico**
   Creare elenco, filtri, dettaglio, assegnazione e aggiornamento.
   Verifica: il tecnico completa manualmente un ticket demo.
 
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-044**. La milestone attiva è **Milestone 4**.
+La prossima attività è **SP-050**. La milestone attiva è **Milestone 5**.

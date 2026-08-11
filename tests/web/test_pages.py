@@ -66,9 +66,22 @@ def web_client(tmp_path) -> Iterator[tuple[TestClient, Engine, str]]:
                     role=Role.TECHNICIAN,
                     password_hash=hash_password(password),
                 )
+                admin = User(
+                    email="admin.web@servicepilot.example",
+                    display_name="Amministratore Web Demo",
+                    role=Role.ADMIN,
+                    password_hash=hash_password(password),
+                )
                 site = Site(code="WEB-DEMO", name="Sede Web Demo")
                 session.add_all(
-                    [employee, other_employee, empty_employee, technician, site]
+                    [
+                        employee,
+                        other_employee,
+                        empty_employee,
+                        technician,
+                        admin,
+                        site,
+                    ]
                 )
                 session.flush()
                 session.add_all(
@@ -436,7 +449,7 @@ def test_employee_without_tickets_sees_an_empty_state(web_client) -> None:
     assert "0 richieste" in response.text
 
 
-def test_technician_keeps_placeholder_until_technical_queue_issue(web_client) -> None:
+def test_technician_queue_lists_all_tickets_and_operational_filters(web_client) -> None:
     client, _, password = web_client
     login_web(client, "tecnico.web@servicepilot.example", password)
 
@@ -444,7 +457,188 @@ def test_technician_keeps_placeholder_until_technical_queue_issue(web_client) ->
 
     assert response.status_code == 200
     assert "Coda tecnica" in response.text
-    assert "VPN demo in attesa di informazioni" not in response.text
+    assert "VPN demo in attesa di informazioni" in response.text
+    assert "Ticket riservato a un altro dipendente" in response.text
+    assert "Applica filtri" in response.text
+    assert "Da assegnare" in response.text
+    assert "4 di 4" in response.text
+    assert 'href="/app?status=open&sort=priority#technical-ticket-list"' in response.text
+    assert 'href="/app?status=completed&sort=updated#technical-ticket-list"' in response.text
+
+    filtered = client.get("/app?status=new&assignment=unassigned&priority=pending")
+
+    assert filtered.status_code == 200
+    assert "Ticket riservato a un altro dipendente" in filtered.text
+    assert "VPN demo in attesa di informazioni" not in filtered.text
+    assert "1 di 4" in filtered.text
+
+
+def test_admin_can_use_the_same_technical_queue(web_client) -> None:
+    client, _, password = web_client
+    login_web(client, "admin.web@servicepilot.example", password)
+
+    response = client.get("/app?assignment=unassigned")
+
+    assert response.status_code == 200
+    assert "Area tecnica" in response.text
+    assert "Ticket riservato a un altro dipendente" in response.text
+
+
+def test_technician_can_open_full_ticket_detail(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        ticket_id = session.scalar(
+            select(Ticket.id).where(
+                Ticket.title == "Ticket riservato a un altro dipendente"
+            )
+        )
+
+    response = client.get(f"/app/tickets/{ticket_id}")
+
+    assert response.status_code == 200
+    assert "Pannello operativo" in response.text
+    assert "Altro Dipendente Web Demo" in response.text
+    assert "Questa descrizione fittizia" in response.text
+    assert 'action="/app/tickets/' in response.text
+    assert 'value="in_progress"' in response.text
+    assert 'value="resolved"' not in response.text
+    assert "built-in method update" not in response.text
+
+
+def test_technician_completes_a_ticket_lifecycle_from_the_web(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        ticket_id = session.scalar(
+            select(Ticket.id).where(
+                Ticket.title == "Ticket riservato a un altro dipendente"
+            )
+        )
+        technician_id = session.scalar(
+            select(User.id).where(User.email == "tecnico.web@servicepilot.example")
+        )
+
+    in_progress = client.post(
+        f"/app/tickets/{ticket_id}/update",
+        data={
+            "status": "in_progress",
+            "assigned_technician_id": str(technician_id),
+            "assigned_group": "Supporto workplace",
+            "category": "devices_and_hardware",
+            "subcategory": "Postazione demo",
+            "impact": "high",
+            "urgency": "high",
+            "technician_note": "Presa in carico dal tecnico demo.",
+            "resolution": "",
+        },
+        follow_redirects=False,
+    )
+
+    assert in_progress.status_code == 303
+    assert in_progress.headers["location"].endswith("?updated=true")
+    with Session(database_engine) as session:
+        ticket = session.get(Ticket, ticket_id)
+        assert ticket is not None
+        assert ticket.status is TicketStatus.IN_PROGRESS
+        assert ticket.assigned_technician_id == technician_id
+        assert ticket.priority is Priority.P1
+
+    resolved = client.post(
+        f"/app/tickets/{ticket_id}/update",
+        data={
+            "status": "resolved",
+            "assigned_technician_id": str(technician_id),
+            "assigned_group": "Supporto workplace",
+            "category": "devices_and_hardware",
+            "subcategory": "Postazione demo",
+            "impact": "high",
+            "urgency": "high",
+            "technician_note": "Verifica completata sul dispositivo fittizio.",
+            "resolution": "Configurazione demo ripristinata e collaudo completato.",
+        },
+        follow_redirects=False,
+    )
+
+    assert resolved.status_code == 303
+    with Session(database_engine) as session:
+        ticket = session.get(Ticket, ticket_id)
+        assert ticket is not None
+        assert ticket.status is TicketStatus.RESOLVED
+        assert "collaudo completato" in (ticket.resolution or "")
+
+    closed = client.post(
+        f"/app/tickets/{ticket_id}/update",
+        data={
+            "status": "closed",
+            "assigned_technician_id": str(technician_id),
+            "assigned_group": "Supporto workplace",
+            "category": "devices_and_hardware",
+            "subcategory": "Postazione demo",
+            "impact": "high",
+            "urgency": "high",
+            "technician_note": "Verifica completata sul dispositivo fittizio.",
+            "resolution": "Configurazione demo ripristinata e collaudo completato.",
+        },
+        follow_redirects=False,
+    )
+
+    assert closed.status_code == 303
+    with Session(database_engine) as session:
+        ticket = session.get(Ticket, ticket_id)
+        assert ticket is not None
+        assert ticket.status is TicketStatus.CLOSED
+
+
+def test_technician_cannot_resolve_without_a_solution(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        ticket_id = session.scalar(
+            select(Ticket.id).where(Ticket.title == "Postazione demo in lavorazione")
+        )
+
+    response = client.post(
+        f"/app/tickets/{ticket_id}/update",
+        data={"status": "resolved"},
+    )
+
+    assert response.status_code == 422
+    assert "Scrivi la soluzione" in response.text
+    with Session(database_engine) as session:
+        ticket = session.get(Ticket, ticket_id)
+        assert ticket is not None
+        assert ticket.status is TicketStatus.IN_PROGRESS
+
+
+def test_employee_cannot_submit_technical_update(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        ticket_id = session.scalar(select(Ticket.id).limit(1))
+        original_status = session.get(Ticket, ticket_id).status
+
+    response = client.post(
+        f"/app/tickets/{ticket_id}/update",
+        data={"status": "in_progress"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/app"
+    with Session(database_engine) as session:
+        assert session.get(Ticket, ticket_id).status is original_status
+
+
+def test_missing_technical_ticket_has_a_safe_not_found_page(web_client) -> None:
+    client, _, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+
+    response = client.get("/app/tickets/999")
+
+    assert response.status_code == 404
+    assert "Ticket non trovato" in response.text
+    assert "Torna alla coda" in response.text
 
 
 def test_ticket_detail_redirects_anonymous_visitor_to_login(web_client) -> None:

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% set active_section = "queue" %}
+{% block app_navigation %}{% include "_technical_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <section class="technician-dashboard shell" aria-labelledby="queue-title">
+    <header class="technical-heading">
+      <div>
+        <p class="eyebrow">Area tecnica</p>
+        <h1 id="queue-title">La coda, in ordine<br>di intervento.</h1>
+        <p>Trova le richieste più urgenti, prendile in carico e accompagna ogni ticket fino alla chiusura.</p>
+      </div>
+      <div class="dashboard-guide" role="note">
+        <span aria-hidden="true">i</span>
+        <p><strong>Priorità verificabile</strong>Deriva sempre da impatto e urgenza, anche dopo una correzione manuale.</p>
+      </div>
+    </header>
+
+    <div class="technical-summary" aria-label="Riepilogo della coda">
+      <a href="/app?status=open&sort=priority#technical-ticket-list"><span>Aperti</span><strong>{{ summary.open }}</strong><small>Richiedono lavoro</small></a>
+      <a href="/app?assignment=unassigned&sort=priority#technical-ticket-list"><span>Da assegnare</span><strong>{{ summary.unassigned }}</strong><small>Senza responsabile</small></a>
+      <a href="/app?status=waiting&sort=priority#technical-ticket-list"><span>In attesa</span><strong>{{ summary.waiting }}</strong><small>Utente o fornitore</small></a>
+      <a href="/app?status=completed&sort=updated#technical-ticket-list"><span>Completati</span><strong>{{ summary.completed }}</strong><small>Risolti o chiusi</small></a>
+    </div>
+
+    <form class="queue-filters" method="get" action="/app" aria-label="Filtra e ordina la coda">
+      <div class="field-group">
+        <label for="status">Stato</label>
+        <select id="status" name="status">
+          <option value="all" {% if technical_status == "all" %}selected{% endif %}>Tutti gli stati</option>
+          <option value="open" {% if technical_status == "open" %}selected{% endif %}>Tutti gli aperti</option>
+          <option value="waiting" {% if technical_status == "waiting" %}selected{% endif %}>Tutti quelli in attesa</option>
+          <option value="completed" {% if technical_status == "completed" %}selected{% endif %}>Tutti i completati</option>
+          <option value="new" {% if technical_status == "new" %}selected{% endif %}>Aperto</option>
+          <option value="in_progress" {% if technical_status == "in_progress" %}selected{% endif %}>In lavorazione</option>
+          <option value="waiting_for_requester" {% if technical_status == "waiting_for_requester" %}selected{% endif %}>In attesa del richiedente</option>
+          <option value="waiting_for_vendor" {% if technical_status == "waiting_for_vendor" %}selected{% endif %}>In attesa del fornitore</option>
+          <option value="resolved" {% if technical_status == "resolved" %}selected{% endif %}>Risolto</option>
+          <option value="closed" {% if technical_status == "closed" %}selected{% endif %}>Chiuso</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="assignment">Assegnazione</label>
+        <select id="assignment" name="assignment">
+          <option value="all" {% if assignment == "all" %}selected{% endif %}>Tutti i ticket</option>
+          <option value="mine" {% if assignment == "mine" %}selected{% endif %}>Assegnati a me</option>
+          <option value="unassigned" {% if assignment == "unassigned" %}selected{% endif %}>Non assegnati</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="priority">Priorità</label>
+        <select id="priority" name="priority">
+          <option value="all" {% if priority == "all" %}selected{% endif %}>Tutte</option>
+          <option value="p1" {% if priority == "p1" %}selected{% endif %}>P1 · Critica</option>
+          <option value="p2" {% if priority == "p2" %}selected{% endif %}>P2 · Alta</option>
+          <option value="p3" {% if priority == "p3" %}selected{% endif %}>P3 · Media</option>
+          <option value="p4" {% if priority == "p4" %}selected{% endif %}>P4 · Bassa</option>
+          <option value="pending" {% if priority == "pending" %}selected{% endif %}>Da calcolare</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="sort">Ordina per</label>
+        <select id="sort" name="sort">
+          <option value="priority" {% if sort_by == "priority" %}selected{% endif %}>Priorità</option>
+          <option value="newest" {% if sort_by == "newest" %}selected{% endif %}>Più recenti</option>
+          <option value="oldest" {% if sort_by == "oldest" %}selected{% endif %}>Più vecchi</option>
+          <option value="updated" {% if sort_by == "updated" %}selected{% endif %}>Ultimo aggiornamento</option>
+        </select>
+      </div>
+      <button class="primary-button" type="submit">Applica filtri</button>
+      <a class="clear-filter" href="/app#technical-ticket-list">Azzera</a>
+    </form>
+
+    <section class="technical-tickets" id="technical-ticket-list" aria-labelledby="technical-list-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Vista operativa</p>
+          <h2 id="technical-list-title">Ticket disponibili</h2>
+        </div>
+        <span class="result-count">{{ tickets | length }} di {{ total_tickets }}</span>
+      </div>
+
+      {% if tickets %}
+        <div class="technical-ticket-list">
+          {% for ticket in tickets %}
+            <article class="technical-ticket-row">
+              <div class="technical-priority priority-block-{{ ticket.priority_code }}">
+                <strong>{{ ticket.priority_label.split(' · ')[0] }}</strong>
+                <small>{{ ticket.priority_label.split(' · ')[1] if ' · ' in ticket.priority_label else 'Da calcolare' }}</small>
+              </div>
+              <div class="technical-ticket-main">
+                <div class="ticket-row-meta">
+                  <span class="ticket-code">{{ ticket.code }}</span>
+                  <span class="status-badge status-{{ ticket.status_code }}">{{ ticket.status_label }}</span>
+                </div>
+                <h3><a href="/app/tickets/{{ ticket.id }}">{{ ticket.title }}</a></h3>
+                <p>{{ ticket.site_name }} · {{ ticket.service }} · {{ ticket.requester_name }}</p>
+              </div>
+              <div class="technical-owner">
+                <span>Assegnato a</span>
+                <strong>{{ ticket.technician_name }}</strong>
+                <small>Aggiornato {{ ticket.updated_at }}</small>
+              </div>
+              <a class="detail-link" href="/app/tickets/{{ ticket.id }}" aria-label="Gestisci {{ ticket.code }}">Gestisci <span aria-hidden="true">→</span></a>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <span class="empty-state-mark" aria-hidden="true">✓</span>
+          <h3>Nessun ticket corrisponde ai filtri</h3>
+          <p>La coda completa è ancora disponibile: azzera i filtri per rivederla.</p>
+          <a class="clear-filter" href="/app#technical-ticket-list">Mostra tutta la coda</a>
+        </div>
+      {% endif %}
+    </section>
+  </section>
+{% endblock %}

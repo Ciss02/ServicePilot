@@ -473,3 +473,28 @@ Il riepilogo rende consapevole la decisione del dipendente e rispetta il vincolo
 impedisce al sistema di creare richieste autonomamente. La funzione condivisa evita
 regole diverse tra pagina e API. Il codice univoco protegge dai duplicati causati da un
 doppio clic o dal reinvio del modulo, senza salvare bozze non confermate.
+
+## D-021 - Coda tecnica e gestione web condivisa
+
+**Data:** 11 agosto 2026
+**Stato:** confermata durante SP-044
+
+**Decisione:**
+
+- mostrare a `technician` e `admin` l'intera coda in `/app`;
+- offrire filtri server-side per stato, assegnazione e priorità e ordinamenti per
+  priorità, data di apertura o ultimo aggiornamento;
+- riutilizzare `/app/tickets/{ticket_id}` con una vista diversa in base al ruolo;
+- mantenere nel dettaglio tecnico assegnazione, classificazione, stato, nota e soluzione;
+- mostrare soltanto i passaggi di stato consentiti dal punto corrente;
+- calcolare sempre la priorità a partire da impatto e urgenza;
+- usare una singola funzione di aggiornamento per API e pagine web;
+- non aggiungere JavaScript, nuove dipendenze o nuove tabelle.
+
+**Motivazione:**
+
+Una coda ordinata per priorità porta subito l'attenzione sui ticket più importanti,
+mentre i filtri permettono di isolare il proprio lavoro o le richieste ancora senza
+responsabile. La pagina del ticket concentra tutte le operazioni manuali necessarie al
+ciclo di vita MVP. La funzione condivisa impedisce che browser e API applichino regole
+diverse; i controlli nel backend restano efficaci anche se il modulo viene alterato.
