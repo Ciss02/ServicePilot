@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block header_actions %}
+  <div class="account-actions">
+    <span class="signed-user">
+      <strong>{{ current_user.display_name }}</strong>
+      <small>{{ role_label }}</small>
+    </span>
+    <form method="post" action="/logout">
+      <button class="secondary-button" type="submit">Esci</button>
+    </form>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <section class="workspace shell" aria-labelledby="workspace-title">
+    <div class="workspace-heading">
+      <div>
+        <p class="eyebrow">Area autenticata</p>
+        <h1 id="workspace-title">Buon lavoro, {{ current_user.display_name }}.</h1>
+        <p>La base del portale è pronta. Le prossime attività aggiungeranno gli strumenti del tuo ruolo.</p>
+      </div>
+      <span class="role-badge">{{ role_label }}</span>
+    </div>
+
+    <div class="workspace-grid">
+      <article class="status-card status-card-primary">
+        <span class="card-number">01</span>
+        <p class="card-label">Stato accesso</p>
+        <h2>Sessione attiva</h2>
+        <p>Il backend ha riconosciuto la tua identità e applicherà i permessi del ruolo.</p>
+        <span class="status-pill"><span></span> Operativo</span>
+      </article>
+
+      <article class="status-card">
+        <span class="card-number">02</span>
+        <p class="card-label">Prossimo modulo</p>
+        <h2>Area personale</h2>
+        <p>SP-041 mostrerà i ticket del dipendente mantenendo i controlli già presenti nel backend.</p>
+        <span class="coming-soon">In preparazione</span>
+      </article>
+
+      <aside class="identity-card" aria-label="Identità della sessione">
+        <p class="card-label">Identità corrente</p>
+        <dl>
+          <div><dt>Nome</dt><dd>{{ current_user.display_name }}</dd></div>
+          <div><dt>Email</dt><dd>{{ current_user.email }}</dd></div>
+          <div><dt>Ruolo</dt><dd>{{ role_label }}</dd></div>
+        </dl>
+      </aside>
+    </div>
+  </section>
+{% endblock %}

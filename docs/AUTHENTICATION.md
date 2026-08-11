@@ -1,7 +1,7 @@
 # Login, sessione e logout
 
 SP-031 permette agli account demo di autenticarsi tramite API e di mantenere la propria
-identità tra richieste successive.
+identità tra richieste successive. SP-040 usa lo stesso meccanismo nell'interfaccia web.
 
 ## Perché esiste
 
@@ -19,6 +19,10 @@ login è già avvenuto, senza reinviare continuamente la password.
 6. `GET /auth/session` restituisce l'identità quando cookie, sessione e account sono
    ancora validi.
 7. `POST /auth/logout` elimina la sessione dal database e il cookie dal browser.
+
+La pagina `GET /login` invia gli stessi dati tramite `POST /login`. In caso di successo
+porta la persona a `/app`; `POST /logout` revoca la stessa sessione e torna al modulo.
+Le rotte API restano disponibili per client che scambiano JSON.
 
 Il cookie usa `HttpOnly`, quindi il normale codice JavaScript della pagina non può
 leggerlo, e `SameSite=Lax`, che limita l'invio da siti esterni. In locale può viaggiare
@@ -70,6 +74,6 @@ utilizzabili.
 ## Autorizzazione e limiti attuali
 
 SP-032 usa questa identità per proteggere le API ticket secondo la matrice descritta in
-[`AUTHORIZATION.md`](AUTHORIZATION.md). La pagina grafica di accesso appartiene a SP-040;
-limiti ai tentativi ripetuti e revisione finale della sicurezza della demo appartengono
-a SP-081.
+[`AUTHORIZATION.md`](AUTHORIZATION.md). SP-040 aggiunge la pagina grafica descritta in
+[`WEB_INTERFACE.md`](WEB_INTERFACE.md). Limiti ai tentativi ripetuti e revisione finale
+della sicurezza della demo appartengono a SP-081.

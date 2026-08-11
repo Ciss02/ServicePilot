@@ -2,12 +2,18 @@
 
 from collections.abc import Callable
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.api.auth import router as auth_router
 from app.api.tickets import router as tickets_router
 from app.db.session import create_database
+from app.web.routes import router as web_router
+
+
+STATIC_DIRECTORY = Path(__file__).resolve().parent / "static"
 
 
 def create_app(database_initializer: Callable[[], None] = create_database) -> FastAPI:
@@ -24,6 +30,8 @@ def create_app(database_initializer: Callable[[], None] = create_database) -> Fa
         version="0.1.0",
         lifespan=lifespan,
     )
+    application.mount("/static", StaticFiles(directory=STATIC_DIRECTORY), name="static")
+    application.include_router(web_router)
     application.include_router(auth_router)
     application.include_router(tickets_router)
 

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="login-shell shell" aria-labelledby="login-title">
+    <div class="login-story">
+      <p class="eyebrow">Supporto IT, senza rumore</p>
+      <h1>Il punto unico per ogni richiesta IT.</h1>
+      <p class="story-copy">
+        Segnala un problema, segui gli aggiornamenti e collabora con il team tecnico
+        attraverso un flusso chiaro e verificabile.
+      </p>
+
+      <ol class="workflow-list" aria-label="Come funziona ServicePilot">
+        <li><span>01</span><strong>Segnala</strong><small>Descrivi cosa ti blocca.</small></li>
+        <li><span>02</span><strong>Segui</strong><small>Controlla stato e richieste.</small></li>
+        <li><span>03</span><strong>Risolvi</strong><small>Ritrova soluzione e cronologia.</small></li>
+      </ol>
+
+      <div class="trust-note">
+        <span class="trust-icon" aria-hidden="true">✓</span>
+        <span><strong>Accesso controllato</strong>Account demo, sessioni protette e permessi per ruolo.</span>
+      </div>
+    </div>
+
+    <div class="login-panel">
+      <div class="login-card">
+        <p class="panel-kicker">Portale interno</p>
+        <h2 id="login-title">Bentornato</h2>
+        <p class="panel-intro">Accedi con uno degli account dimostrativi configurati.</p>
+
+        {% if error %}
+          <div class="form-alert" id="login-error" role="alert">
+            <strong>Accesso non riuscito</strong>
+            <span>{{ error }}</span>
+          </div>
+        {% endif %}
+
+        <form class="login-form" method="post" action="/login">
+          <div class="field-group">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value="{{ email }}"
+              autocomplete="username"
+              placeholder="nome@servicepilot.example"
+              maxlength="254"
+              {% if error %}aria-describedby="login-error"{% endif %}
+              required
+            >
+          </div>
+
+          <div class="field-group">
+            <div class="label-row">
+              <label for="password">Password</label>
+              <span>Minimo 12 caratteri nella demo</span>
+            </div>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Inserisci la password demo"
+              maxlength="1024"
+              {% if error %}aria-describedby="login-error"{% endif %}
+              required
+            >
+          </div>
+
+          <button class="primary-button" type="submit">
+            Entra in ServicePilot
+            <span aria-hidden="true">→</span>
+          </button>
+        </form>
+
+        <div class="demo-accounts" aria-label="Esempi di account demo">
+          <p>Profili disponibili</p>
+          <div class="account-list">
+            <span><strong>Dipendente</strong>dipendente.hq@servicepilot.example</span>
+            <span><strong>Tecnico</strong>tecnico@servicepilot.example</span>
+            <span><strong>Admin</strong>admin@servicepilot.example</span>
+          </div>
+          <small>Le password restano fuori dal repository e sono configurate nell'ambiente locale.</small>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
