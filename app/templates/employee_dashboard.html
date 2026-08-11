@@ -10,6 +10,7 @@
         <p class="eyebrow">Area dipendente</p>
         <h1 id="dashboard-title">Le tue richieste,<br>sotto controllo.</h1>
         <p>Consulta stato, aggiornamenti e soluzione dei ticket aperti con il supporto IT.</p>
+        <a class="primary-link-button" href="/app/new-ticket">Apri una nuova richiesta <span aria-hidden="true">→</span></a>
       </div>
       <div class="dashboard-guide" role="note">
         <span aria-hidden="true">i</span>
@@ -102,7 +103,7 @@
           {% else %}
             <h3>Nessuna richiesta presente</h3>
             <p>Quando aprirai un ticket, potrai seguirne qui stato e aggiornamenti.</p>
-            <small>La creazione guidata arriverà con SP-042.</small>
+            <a class="clear-filter" href="/app/new-ticket">Apri la prima richiesta</a>
           {% endif %}
         </div>
       {% endif %}

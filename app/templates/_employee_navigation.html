@@ -4,10 +4,9 @@
       <span aria-hidden="true">◎</span>
       I miei ticket
     </a>
-    <span class="app-nav-link app-nav-link-disabled" aria-disabled="true">
+    <a class="app-nav-link" href="/app/new-ticket" {% if active_section == "new-ticket" %}aria-current="page"{% endif %}>
       <span aria-hidden="true">＋</span>
       Nuova richiesta
-      <small>Presto</small>
-    </span>
+    </a>
   </div>
 </nav>

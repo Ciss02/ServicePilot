@@ -17,8 +17,9 @@ aggiornamenti del supporto e soluzione finale in una vista leggibile e responsiv
 - `GET /app/tickets/{ticket_id}` mostra il dettaglio di una richiesta personale;
 - tecnico e amministratore conservano la pagina provvisoria fino alla coda di SP-044.
 
-La voce “Nuova richiesta” è visibile ma non attiva: la raccolta guidata dei dati
-appartiene a SP-042 e la conferma a SP-043.
+La voce “Nuova richiesta” apre ora il percorso deterministico di SP-042, descritto in
+[`GUIDED_TICKET_INTAKE.md`](GUIDED_TICKET_INTAKE.md). Il riepilogo e la conferma
+appartengono a SP-043.
 
 ## Dati ricevuti e controlli
 

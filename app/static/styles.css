@@ -1292,6 +1292,223 @@ main {
   color: var(--ink-soft);
 }
 
+.ticket-intake {
+  padding-block: 58px 88px;
+}
+
+.intake-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 340px);
+  align-items: end;
+  gap: 48px;
+}
+
+.intake-heading h1 {
+  max-width: 780px;
+  font-size: clamp(2.65rem, 5.6vw, 5rem);
+  line-height: 0.96;
+  letter-spacing: -0.058em;
+}
+
+.intake-heading > div > p:last-child {
+  max-width: 650px;
+  margin: 22px 0 0;
+  color: var(--ink-soft);
+  font-size: 1.03rem;
+}
+
+.intake-progress {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.intake-progress li {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  align-items: center;
+  gap: 11px;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.intake-progress span {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.intake-progress .is-complete {
+  color: var(--ink);
+}
+
+.intake-progress .is-complete span {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: var(--accent);
+}
+
+.conversation-panel {
+  display: grid;
+  gap: 22px;
+  max-width: 880px;
+  margin-top: 54px;
+}
+
+.message {
+  display: flex;
+  gap: 14px;
+  align-items: start;
+}
+
+.message > div {
+  max-width: 720px;
+  padding: 17px 20px;
+  border: 1px solid var(--line);
+  border-radius: 5px 17px 17px 17px;
+  background: var(--surface);
+}
+
+.message strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.76rem;
+}
+
+.message p {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.message-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--navy);
+  color: var(--accent);
+  font-size: 0.69rem;
+  font-weight: 900;
+}
+
+.message-user {
+  justify-content: end;
+}
+
+.message-user > div {
+  border-radius: 17px 5px 17px 17px;
+  background: var(--surface-muted);
+}
+
+.message-success > div {
+  border-color: #9bc2ae;
+  background: #edf7f0;
+}
+
+.intake-form,
+.intake-complete-card {
+  display: grid;
+  gap: 21px;
+  margin-left: 50px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: 0 16px 45px rgba(34, 51, 46, 0.07);
+}
+
+.field-group textarea,
+.field-group select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #aeb9b1;
+  border-radius: 11px;
+  outline: 0;
+  background: #fff;
+  color: var(--ink);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.field-group textarea {
+  min-height: 150px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.field-group select {
+  min-height: 52px;
+}
+
+.field-group textarea:focus,
+.field-group select:focus {
+  border-color: var(--navy-light);
+  box-shadow: 0 0 0 4px rgba(26, 66, 64, 0.12);
+}
+
+.field-group > small:not(.field-error) {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+[aria-invalid="true"] {
+  border-color: var(--danger) !important;
+}
+
+.intake-field-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(150px, 0.5fr);
+  gap: 18px;
+}
+
+.intake-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.intake-actions .primary-button {
+  min-width: 250px;
+}
+
+.intake-complete-card h2 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.intake-complete-card > p:not(.eyebrow) {
+  max-width: 610px;
+  margin: -10px 0 0;
+  color: var(--ink-soft);
+}
+
+.intake-complete-card .primary-link-button {
+  justify-self: start;
+  margin-top: 0;
+}
+
+.ticket-intake > .privacy-note {
+  max-width: 830px;
+  margin: 28px 0 0 50px;
+}
+
 .primary-link-button {
   display: inline-flex;
   align-items: center;
@@ -1362,6 +1579,15 @@ main {
 
   .ticket-detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .intake-heading {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .intake-progress {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -1478,6 +1704,46 @@ main {
 
   .ticket-detail-heading h1 {
     font-size: clamp(2.4rem, 12vw, 3.5rem);
+  }
+
+  .ticket-intake {
+    padding-block: 40px 66px;
+  }
+
+  .intake-heading h1 {
+    font-size: clamp(2.45rem, 12vw, 3.5rem);
+  }
+
+  .intake-progress {
+    grid-template-columns: 1fr;
+  }
+
+  .conversation-panel {
+    margin-top: 38px;
+  }
+
+  .intake-form,
+  .intake-complete-card {
+    margin-left: 0;
+    padding: 22px;
+  }
+
+  .intake-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .intake-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .intake-actions .primary-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .ticket-intake > .privacy-note {
+    margin-left: 0;
   }
 
   .detail-priority {

@@ -128,6 +128,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Login, sessione e logout](docs/AUTHENTICATION.md)
 - [Interfaccia web iniziale](docs/WEB_INTERFACE.md)
 - [Area del dipendente](docs/EMPLOYEE_AREA.md)
+- [Raccolta guidata dei dati](docs/GUIDED_TICKET_INTAKE.md)
 - [Autorizzazione per ruolo](docs/AUTHORIZATION.md)
 - [API essenziali dei ticket](docs/TICKET_API.md)
 

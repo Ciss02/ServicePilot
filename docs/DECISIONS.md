@@ -422,3 +422,30 @@ risposta `404` non conferma l'esistenza di ticket altrui, mentre la separazione 
 grafici dai codici persistenti conserva stabile il vocabolario del dominio. La pagina
 resta concentrata sulla consultazione richiesta da SP-041 senza anticipare raccolta,
 conferma o coda tecnica.
+
+## D-019 - Bozza temporanea e raccolta guidata deterministica
+
+**Data:** 11 agosto 2026
+**Stato:** confermata durante SP-042
+
+**Decisione:**
+
+- esporre il percorso dipendente in `/app/new-ticket` con due invii successivi;
+- chiedere prima una descrizione libera e poi titolo, sede, servizio e persone coinvolte;
+- applicare nel backend gli stessi limiti dei contratti del ticket;
+- accettare soltanto sedi attive lette dal database;
+- ricontrollare anche i valori trasportati in campi nascosti;
+- mantenere la bozza soltanto nei moduli tra un passaggio e il successivo;
+- non creare né salvare ticket durante SP-042;
+- riservare il percorso al ruolo `employee`;
+- non introdurre JavaScript, HTMX, nuove dipendenze o nuove tabelle;
+- rinviare riepilogo, correzione, conferma e persistenza a SP-043.
+
+**Motivazione:**
+
+La sequenza rende il modulo più facile da completare e dimostra già il comportamento
+conversazionale senza simulare capacità AI non ancora presenti. Una bozza temporanea è
+sufficiente per due richieste consecutive e impedisce di confonderla con un ticket
+ufficiale. La validazione ripetuta evita di fidarsi dei dati modificabili nel browser;
+la persistenza verrà introdotta soltanto insieme alla conferma esplicita prevista dalla
+specifica.

@@ -57,7 +57,7 @@ un beneficio reale.
 ## Limiti attuali
 
 SP-041 estende `/app` con l'elenco e il riepilogo del dipendente e aggiunge il dettaglio
-personale descritto in [`EMPLOYEE_AREA.md`](EMPLOYEE_AREA.md). Tecnico e amministratore
-mantengono una base protetta fino alla coda di SP-044. Raccolta guidata e conferma
-appartengono a SP-042 e SP-043. Limiti ai tentativi ripetuti e revisione finale della
-sicurezza sono previsti in SP-081.
+personale descritto in [`EMPLOYEE_AREA.md`](EMPLOYEE_AREA.md). SP-042 aggiunge la
+[`raccolta guidata`](GUIDED_TICKET_INTAKE.md), mentre riepilogo e conferma appartengono a
+SP-043. Tecnico e amministratore mantengono una base protetta fino alla coda di SP-044.
+Limiti ai tentativi ripetuti e revisione finale della sicurezza sono previsti in SP-081.
