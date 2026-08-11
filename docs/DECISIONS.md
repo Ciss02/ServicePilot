@@ -498,3 +498,30 @@ mentre i filtri permettono di isolare il proprio lavoro o le richieste ancora se
 responsabile. La pagina del ticket concentra tutte le operazioni manuali necessarie al
 ciclo di vita MVP. La funzione condivisa impedisce che browser e API applichino regole
 diverse; i controlli nel backend restano efficaci anche se il modulo viene alterato.
+
+## D-022 - Adapter AI sostituibile e disattivato per impostazione predefinita
+
+**Data:** 11 agosto 2026
+**Stato:** confermata durante SP-050
+
+**Decisione:**
+
+- usare `google-genai` 2.13.0, SDK ufficiale compatibile con Python 3.13;
+- usare `gemini-3.5-flash-lite` come modello predefinito configurabile;
+- esporre al progetto un solo contratto per generare risposte strutturate;
+- richiedere sempre uno schema Pydantic e ricontrollare la risposta nel backend;
+- leggere provider, modello, chiave e limiti soltanto dalle variabili d'ambiente;
+- mantenere l'AI disattivata quando il provider non viene scelto esplicitamente;
+- limitare timeout, tentativi e lunghezza massima della risposta;
+- usare client simulati nei test senza chiamate Gemini reali;
+- non collegare ancora l'adapter alla raccolta guidata o alla persistenza.
+
+**Motivazione:**
+
+Il contratto comune separa le regole del portale dal servizio esterno e permette test
+veloci, gratuiti e ripetibili. La risposta strutturata riduce l'ambiguità, ma il controllo
+Pydantic resta necessario perché il modello può comunque produrre valori non validi.
+La configurazione disattivata mantiene il portale avviabile senza segreti o rete, mentre
+i limiti impediscono attese e tentativi eccessivi. Il collegamento al flusso utente viene
+rinviato alle issue che definiscono dati estratti, classificazione e gestione visibile
+degli errori.

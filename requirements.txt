@@ -1,5 +1,6 @@
 # Dipendenze necessarie per eseguire ServicePilot
 fastapi==0.141.1
+google-genai==2.13.0
 Jinja2==3.1.6
 pydantic==2.13.4
 python-multipart==0.0.32
