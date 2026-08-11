@@ -26,7 +26,9 @@ password protette tramite Argon2. Gli account possono effettuare login, mantener
 sessione autenticata e fare logout. Le API applicano inoltre i permessi dei ruoli:
 ticket personali per i dipendenti e gestione completa per tecnico e amministratore. È
 ora disponibile anche una pagina di accesso responsive collegata alla sessione e una
-base protetta per le prossime schermate dell'applicazione.
+base protetta per le prossime schermate dell'applicazione. Il dipendente dispone inoltre
+di un riepilogo dei propri ticket e del relativo dettaglio, senza poter consultare le
+richieste di altri account.
 
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
@@ -125,6 +127,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Account demo e password sicure](docs/DEMO_ACCOUNTS.md)
 - [Login, sessione e logout](docs/AUTHENTICATION.md)
 - [Interfaccia web iniziale](docs/WEB_INTERFACE.md)
+- [Area del dipendente](docs/EMPLOYEE_AREA.md)
 - [Autorizzazione per ruolo](docs/AUTHORIZATION.md)
 - [API essenziali dei ticket](docs/TICKET_API.md)
 
@@ -152,7 +155,9 @@ plain-text values come only from environment variables, and can now log in, keep
 authenticated session, and log out. Ticket APIs enforce role permissions: employees
 see only their own requests, while technicians and administrators manage the full queue.
 A responsive sign-in page now connects the browser to the same session mechanism and
-provides the protected foundation for the next application screens.
+provides the protected foundation for the next application screens. Employees can also
+review their own ticket summary and details without accessing requests owned by other
+accounts.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
 

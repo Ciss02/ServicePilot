@@ -3,17 +3,29 @@
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    Form,
+    HTTPException,
+    Path as PathParameter,
+    Query,
+    Request,
+    Response,
+    status,
+)
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.api.dependencies import (
     DatabaseSession,
     SessionCookie,
     get_current_user,
 )
-from app.db.models import User
+from app.db.models import Site, Ticket, User
 from app.domain.auth_contracts import LoginRequest
 from app.domain.vocabulary import Role
 from app.security.authentication import (
@@ -22,6 +34,14 @@ from app.security.authentication import (
     start_user_session,
 )
 from app.security.session_cookie import delete_session_cookie, set_session_cookie
+from app.tickets.queries import get_visible_ticket, list_visible_tickets
+from app.web.ticket_presenters import (
+    EmployeeTicketFilter,
+    EmployeeTicketView,
+    filter_employee_tickets,
+    present_employee_ticket,
+    summarize_employee_tickets,
+)
 
 
 TEMPLATES_DIRECTORY = Path(__file__).resolve().parents[1] / "templates"
@@ -54,6 +74,11 @@ def get_web_user(
 
 
 WebUser = Annotated[User, Depends(get_web_user)]
+WebTicketId = Annotated[int, PathParameter(gt=0)]
+EmployeeTicketFilterParameter = Annotated[
+    EmployeeTicketFilter,
+    Query(alias="filter"),
+]
 
 
 def _login_context(email: str = "", error: str | None = None) -> dict[str, object]:
@@ -63,6 +88,59 @@ def _login_context(email: str = "", error: str | None = None) -> dict[str, objec
         "email": email,
         "error": error,
     }
+
+
+def _workspace_context(current_user: User, page_title: str) -> dict[str, object]:
+    """Prepara identità e titolo condivisi dalle pagine autenticate."""
+
+    return {
+        "page_title": page_title,
+        "body_class": "workspace-page",
+        "current_user": current_user,
+        "role_label": ROLE_LABELS[current_user.role],
+    }
+
+
+def _present_tickets(
+    session: Session,
+    tickets: list[Ticket],
+) -> list[EmployeeTicketView]:
+    """Carica in gruppo i nomi collegati e prepara i ticket per i template."""
+
+    site_ids = {ticket.site_id for ticket in tickets}
+    technician_ids = {
+        ticket.assigned_technician_id
+        for ticket in tickets
+        if ticket.assigned_technician_id is not None
+    }
+    sites = (
+        list(session.scalars(select(Site).where(Site.id.in_(site_ids))).all())
+        if site_ids
+        else []
+    )
+    technicians = (
+        list(session.scalars(select(User).where(User.id.in_(technician_ids))).all())
+        if technician_ids
+        else []
+    )
+    sites_by_id = {site.id: site.name for site in sites}
+    technicians_by_id = {user.id: user.display_name for user in technicians}
+
+    return [
+        present_employee_ticket(
+            ticket,
+            site_name=sites_by_id.get(ticket.site_id, "Sede non disponibile"),
+            technician_name=(
+                technicians_by_id.get(
+                    ticket.assigned_technician_id,
+                    "Tecnico non disponibile",
+                )
+                if ticket.assigned_technician_id is not None
+                else "Non ancora assegnato"
+            ),
+        )
+        for ticket in tickets
+    ]
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -129,18 +207,69 @@ def submit_login(
 
 
 @router.get("/app", response_class=HTMLResponse)
-def app_home(request: Request, current_user: WebUser) -> HTMLResponse:
-    """Mostra la base protetta che verrà estesa dalle prossime attività."""
+def app_home(
+    request: Request,
+    session: DatabaseSession,
+    current_user: WebUser,
+    selected_filter: EmployeeTicketFilterParameter = "all",
+) -> HTMLResponse:
+    """Mostra l'area personale del dipendente o la base degli altri ruoli."""
+
+    if current_user.role is Role.EMPLOYEE:
+        tickets = list_visible_tickets(session, current_user)
+        filtered_tickets = filter_employee_tickets(tickets, selected_filter)
+        context = _workspace_context(current_user, "I miei ticket")
+        context.update(
+            {
+                "tickets": _present_tickets(session, filtered_tickets),
+                "summary": summarize_employee_tickets(tickets),
+                "selected_filter": selected_filter,
+                "total_tickets": len(tickets),
+            }
+        )
+        return templates.TemplateResponse(
+            request=request,
+            name="employee_dashboard.html",
+            context=context,
+            headers={"Cache-Control": "no-store"},
+        )
 
     return templates.TemplateResponse(
         request=request,
         name="app_home.html",
-        context={
-            "page_title": "Area di lavoro",
-            "body_class": "workspace-page",
-            "current_user": current_user,
-            "role_label": ROLE_LABELS[current_user.role],
-        },
+        context=_workspace_context(current_user, "Area di lavoro"),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.get("/app/tickets/{ticket_id}", response_class=HTMLResponse)
+def employee_ticket_detail(
+    request: Request,
+    ticket_id: WebTicketId,
+    session: DatabaseSession,
+    current_user: WebUser,
+) -> Response:
+    """Mostra al dipendente soltanto il dettaglio di una propria richiesta."""
+
+    if current_user.role is not Role.EMPLOYEE:
+        return RedirectResponse(url="/app", status_code=status.HTTP_303_SEE_OTHER)
+
+    ticket = get_visible_ticket(session, current_user, ticket_id)
+    if ticket is None:
+        return templates.TemplateResponse(
+            request=request,
+            name="employee_ticket_not_found.html",
+            context=_workspace_context(current_user, "Ticket non trovato"),
+            status_code=status.HTTP_404_NOT_FOUND,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    context = _workspace_context(current_user, f"Ticket SP-{ticket.id:04d}")
+    context["ticket"] = _present_tickets(session, [ticket])[0]
+    return templates.TemplateResponse(
+        request=request,
+        name="employee_ticket_detail.html",
+        context=context,
         headers={"Cache-Control": "no-store"},
     )
 

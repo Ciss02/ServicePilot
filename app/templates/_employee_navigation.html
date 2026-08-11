@@ -1,0 +1,13 @@
+<nav class="app-navigation" aria-label="Navigazione area dipendente">
+  <div class="shell app-navigation-inner">
+    <a class="app-nav-link" href="/app" {% if active_section == "tickets" %}aria-current="page"{% endif %}>
+      <span aria-hidden="true">◎</span>
+      I miei ticket
+    </a>
+    <span class="app-nav-link app-nav-link-disabled" aria-disabled="true">
+      <span aria-hidden="true">＋</span>
+      Nuova richiesta
+      <small>Presto</small>
+    </span>
+  </div>
+</nav>

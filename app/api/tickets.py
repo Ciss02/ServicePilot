@@ -3,7 +3,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, status
-from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -13,6 +12,7 @@ from app.db.session import get_session
 from app.domain.ticket_contracts import TicketCreate, TicketRead, TicketUpdate
 from app.domain.ticket_workflow import can_transition_status
 from app.domain.vocabulary import Role, TicketStatus
+from app.tickets.queries import get_visible_ticket, list_visible_tickets
 
 
 router = APIRouter(prefix="/tickets", tags=["ticket"])
@@ -71,10 +71,7 @@ def list_tickets(
 ) -> list[Ticket]:
     """Restituisce tutti i ticket, dal più recente."""
 
-    query = select(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc())
-    if current_user.role is Role.EMPLOYEE:
-        query = query.where(Ticket.requester_id == current_user.id)
-    return list(session.scalars(query).all())
+    return list_visible_tickets(session, current_user)
 
 
 @router.get(
@@ -89,11 +86,8 @@ def get_ticket(
 ) -> Ticket:
     """Restituisce il ticket richiesto o un errore chiaro."""
 
-    ticket = session.get(Ticket, ticket_id)
-    if ticket is None or (
-        current_user.role is Role.EMPLOYEE
-        and ticket.requester_id != current_user.id
-    ):
+    ticket = get_visible_ticket(session, current_user, ticket_id)
+    if ticket is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Ticket {ticket_id} non trovato",

@@ -1,24 +1,12 @@
 {% extends "base.html" %}
 
-{% block header_actions %}
-  <div class="account-actions">
-    <span class="signed-user">
-      <strong>{{ current_user.display_name }}</strong>
-      <small>{{ role_label }}</small>
-    </span>
-    <form method="post" action="/logout">
-      <button class="secondary-button" type="submit">Esci</button>
-    </form>
-  </div>
-{% endblock %}
-
 {% block content %}
   <section class="workspace shell" aria-labelledby="workspace-title">
     <div class="workspace-heading">
       <div>
         <p class="eyebrow">Area autenticata</p>
         <h1 id="workspace-title">Buon lavoro, {{ current_user.display_name }}.</h1>
-        <p>La base del portale è pronta. Le prossime attività aggiungeranno gli strumenti del tuo ruolo.</p>
+        <p>La tua sessione è attiva. La coda tecnica verrà aggiunta con SP-044.</p>
       </div>
       <span class="role-badge">{{ role_label }}</span>
     </div>
@@ -35,8 +23,8 @@
       <article class="status-card">
         <span class="card-number">02</span>
         <p class="card-label">Prossimo modulo</p>
-        <h2>Area personale</h2>
-        <p>SP-041 mostrerà i ticket del dipendente mantenendo i controlli già presenti nel backend.</p>
+        <h2>Coda tecnica</h2>
+        <p>SP-044 aggiungerà elenco, filtri e strumenti di gestione per tecnico e amministratore.</p>
         <span class="coming-soon">In preparazione</span>
       </article>
 

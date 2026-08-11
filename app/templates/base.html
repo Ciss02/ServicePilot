@@ -26,11 +26,23 @@
             <small>AI service desk</small>
           </span>
         </a>
-        {% block header_actions %}
+        {% if current_user is defined %}
+          <div class="account-actions">
+            <span class="signed-user">
+              <strong>{{ current_user.display_name }}</strong>
+              <small>{{ role_label }}</small>
+            </span>
+            <form method="post" action="/logout">
+              <button class="secondary-button" type="submit">Esci</button>
+            </form>
+          </div>
+        {% else %}
           <span class="environment-chip">Portfolio MVP</span>
-        {% endblock %}
+        {% endif %}
       </div>
     </header>
+
+    {% block app_navigation %}{% endblock %}
 
     <main id="contenuto">
       {% block content %}{% endblock %}

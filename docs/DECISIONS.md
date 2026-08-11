@@ -392,3 +392,33 @@ senza duplicare nel browser le regole di autenticazione. I servizi condivisi imp
 che API e pagine applichino controlli differenti. HTML semantico, uso da tastiera e
 adattamento allo schermo piccolo rendono la base riutilizzabile per le prossime pagine,
 mentre l'assenza di JavaScript evita complessità che il modulo di accesso non richiede.
+
+## D-018 - Visibilità condivisa e area personale dei ticket
+
+**Data:** 11 agosto 2026
+**Stato:** confermata durante SP-041
+
+**Decisione:**
+
+- estrarre le query di elenco e dettaglio in un modulo condiviso da API e pagine web;
+- aggiungere sempre il richiedente alla query quando il ruolo è `employee`;
+- restituire la stessa pagina `404` per ticket inesistente e ticket di un altro
+  dipendente;
+- mostrare in `/app` conteggi ed elenco personale ordinato dal più recente;
+- esporre `/app/tickets/{ticket_id}` come dettaglio di sola lettura;
+- rendere i tre conteggi filtri server-side tramite il parametro `filter`, mantenendo
+  invariati i conteggi complessivi e senza aggiungere stato nel browser;
+- caricare in gruppo i nomi di sedi e tecnici necessari alla presentazione;
+- convertire codici di stato, categoria e priorità in etichette italiane fuori dai
+  modelli persistenti;
+- mantenere tecnico e amministratore sulla base provvisoria fino a SP-044;
+- non aggiungere tabelle, dipendenze, JavaScript o funzioni di creazione ticket.
+
+**Motivazione:**
+
+Filtrare direttamente nel database evita che dati non autorizzati raggiungano il
+template. La query condivisa mantiene identica la regola tra API e interfaccia. La
+risposta `404` non conferma l'esistenza di ticket altrui, mentre la separazione dei testi
+grafici dai codici persistenti conserva stabile il vocabolario del dominio. La pagina
+resta concentrata sulla consultazione richiesta da SP-041 senza anticipare raccolta,
+conferma o coda tecnica.

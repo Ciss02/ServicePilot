@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% set active_section = "tickets" %}
+{% block app_navigation %}{% include "_employee_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <section class="employee-dashboard shell" aria-labelledby="dashboard-title">
+    <header class="dashboard-heading">
+      <div>
+        <p class="eyebrow">Area dipendente</p>
+        <h1 id="dashboard-title">Le tue richieste,<br>sotto controllo.</h1>
+        <p>Consulta stato, aggiornamenti e soluzione dei ticket aperti con il supporto IT.</p>
+      </div>
+      <div class="dashboard-guide" role="note">
+        <span aria-hidden="true">i</span>
+        <p><strong>Vista personale</strong>Qui compaiono soltanto le richieste associate al tuo account.</p>
+      </div>
+    </header>
+
+    <div class="summary-grid" aria-label="Riepilogo dei ticket">
+      <a
+        class="summary-card summary-card-active"
+        href="/app?filter=active#ticket-list-title"
+        {% if selected_filter == "active" %}aria-current="true"{% endif %}
+        aria-label="Filtra e mostra {{ summary.active }} richieste attive"
+      >
+        <span class="summary-label">Richieste attive</span>
+        <strong>{{ summary.active }}</strong>
+        <small>In gestione dal supporto</small>
+        <span class="summary-filter-action">{% if selected_filter == "active" %}Filtro attivo ✓{% else %}Mostra ticket →{% endif %}</span>
+      </a>
+      <a
+        class="summary-card summary-card-waiting"
+        href="/app?filter=waiting#ticket-list-title"
+        {% if selected_filter == "waiting" %}aria-current="true"{% endif %}
+        aria-label="Filtra e mostra {{ summary.waiting_for_requester }} richieste in attesa di te"
+      >
+        <span class="summary-label">In attesa di te</span>
+        <strong>{{ summary.waiting_for_requester }}</strong>
+        <small>Richiedono informazioni</small>
+        <span class="summary-filter-action">{% if selected_filter == "waiting" %}Filtro attivo ✓{% else %}Mostra ticket →{% endif %}</span>
+      </a>
+      <a
+        class="summary-card summary-card-done"
+        href="/app?filter=completed#ticket-list-title"
+        {% if selected_filter == "completed" %}aria-current="true"{% endif %}
+        aria-label="Filtra e mostra {{ summary.completed }} richieste completate"
+      >
+        <span class="summary-label">Completate</span>
+        <strong>{{ summary.completed }}</strong>
+        <small>Risolte o chiuse</small>
+        <span class="summary-filter-action">{% if selected_filter == "completed" %}Filtro attivo ✓{% else %}Mostra ticket →{% endif %}</span>
+      </a>
+    </div>
+
+    <section class="personal-tickets" aria-labelledby="ticket-list-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Cronologia personale</p>
+          <h2 id="ticket-list-title">I miei ticket</h2>
+        </div>
+        <div class="section-heading-actions">
+          {% if selected_filter != "all" %}
+            <a class="clear-filter" href="/app#ticket-list-title">Mostra tutti</a>
+          {% endif %}
+          <span class="result-count">
+            {{ tickets | length }} {% if tickets | length == 1 %}richiesta{% else %}richieste{% endif %}
+            {% if selected_filter != "all" %}di {{ total_tickets }}{% endif %}
+          </span>
+        </div>
+      </div>
+
+      {% if tickets %}
+        <div class="ticket-list">
+          {% for ticket in tickets %}
+            <article class="ticket-row">
+              <div class="ticket-row-primary">
+                <div class="ticket-row-meta">
+                  <span class="ticket-code">{{ ticket.code }}</span>
+                  <span class="status-badge status-{{ ticket.status_code }}">{{ ticket.status_label }}</span>
+                </div>
+                <h3><a href="/app/tickets/{{ ticket.id }}">{{ ticket.title }}</a></h3>
+                <p>{{ ticket.service }} · {{ ticket.site_name }}</p>
+              </div>
+              <div class="ticket-row-data">
+                <span>Priorità<strong class="priority-{{ ticket.priority_code }}">{{ ticket.priority_label }}</strong></span>
+                <span>Aggiornato<strong>{{ ticket.updated_at }}</strong></span>
+                <a class="detail-link" href="/app/tickets/{{ ticket.id }}" aria-label="Apri il dettaglio di {{ ticket.code }}">
+                  Dettaglio <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <span class="empty-state-mark" aria-hidden="true">✓</span>
+          {% if total_tickets and selected_filter != "all" %}
+            <h3>Nessun ticket in questo stato</h3>
+            <p>Le tue richieste non corrispondono al filtro selezionato.</p>
+            <a class="clear-filter" href="/app#ticket-list-title">Mostra tutti i ticket</a>
+          {% else %}
+            <h3>Nessuna richiesta presente</h3>
+            <p>Quando aprirai un ticket, potrai seguirne qui stato e aggiornamenti.</p>
+            <small>La creazione guidata arriverà con SP-042.</small>
+          {% endif %}
+        </div>
+      {% endif %}
+    </section>
+  </section>
+{% endblock %}
