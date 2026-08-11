@@ -132,6 +132,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Autorizzazione per ruolo](docs/AUTHORIZATION.md)
 - [API essenziali dei ticket](docs/TICKET_API.md)
 - [Adapter del modello AI](docs/AI_MODEL_ADAPTER.md)
+- [Estrazione AI dei dati del ticket](docs/AI_TICKET_EXTRACTION.md)
 
 ### Avvertenza
 

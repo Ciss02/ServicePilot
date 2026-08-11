@@ -14,6 +14,13 @@ from app.ai.contracts import (
     AIUnavailableError,
 )
 from app.ai.factory import build_ai_model
+from app.ai.ticket_extraction import (
+    AIExtractedTicketDetails,
+    AvailableSite,
+    TicketExtractionResult,
+    TicketIntakeField,
+    extract_ticket_details,
+)
 
 __all__ = [
     "AIInvalidResponseError",
@@ -24,6 +31,11 @@ __all__ = [
     "AIProviderError",
     "AISettings",
     "AIUnavailableError",
+    "AIExtractedTicketDetails",
+    "AvailableSite",
+    "TicketExtractionResult",
+    "TicketIntakeField",
     "build_ai_model",
+    "extract_ticket_details",
     "load_ai_settings",
 ]

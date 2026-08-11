@@ -21,6 +21,13 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.ai import (
+    AIModelError,
+    AvailableSite,
+    TicketIntakeField,
+    extract_ticket_details,
+)
+from app.ai.dependencies import AIModelDependency
 from app.api.dependencies import (
     DatabaseSession,
     SessionCookie,
@@ -97,6 +104,13 @@ INTAKE_ERRORS = {
     "service": "Indica il servizio o lo strumento coinvolto.",
     "affected_users": "Inserisci un numero di persone compreso tra 1 e 10.000.",
 }
+ALL_INTAKE_FIELDS = [field.value for field in TicketIntakeField]
+INTAKE_FIELD_LABELS = {
+    TicketIntakeField.TITLE.value: "un titolo breve",
+    TicketIntakeField.SITE_ID.value: "la sede interessata",
+    TicketIntakeField.SERVICE.value: "il servizio o lo strumento coinvolto",
+    TicketIntakeField.AFFECTED_USERS.value: "quante persone sono coinvolte",
+}
 
 
 def get_web_user(
@@ -164,6 +178,8 @@ def _intake_context(
     sites: list[Site] | None = None,
     values: dict[str, object] | None = None,
     errors: dict[str, str] | None = None,
+    requested_fields: list[str] | None = None,
+    ai_assisted: bool = False,
 ) -> dict[str, object]:
     """Prepara uno dei tre passaggi della conversazione guidata."""
 
@@ -174,6 +190,17 @@ def _intake_context(
             "sites": sites or [],
             "values": values or {},
             "errors": errors or {},
+            "requested_fields": (
+                requested_fields
+                if requested_fields is not None
+                else ALL_INTAKE_FIELDS
+            ),
+            "ai_assisted": ai_assisted,
+            "missing_details": [
+                INTAKE_FIELD_LABELS[field]
+                for field in (requested_fields or [])
+                if field in INTAKE_FIELD_LABELS
+            ],
         }
     )
     return context
@@ -533,6 +560,7 @@ def collect_ticket_problem(
     request: Request,
     session: DatabaseSession,
     current_user: WebUser,
+    ai_model: AIModelDependency,
     description: Annotated[str, Form()] = "",
 ) -> Response:
     """Controlla il racconto iniziale e chiede soltanto gli altri dati essenziali."""
@@ -555,13 +583,70 @@ def collect_ticket_problem(
             headers={"Cache-Control": "no-store"},
         )
 
+    active_sites = _active_sites(session)
+    try:
+        extraction = extract_ticket_details(
+            problem.description,
+            available_sites=[
+                AvailableSite(id=site.id, code=site.code, name=site.name)
+                for site in active_sites
+            ],
+            ai_model=ai_model,
+        )
+    except AIModelError:
+        extraction = None
+
+    if extraction is not None:
+        extracted_values = {
+            "description": problem.description,
+            "title": extraction.title or "",
+            "site_id": extraction.site_id or "",
+            "service": extraction.service or "",
+            "affected_users": extraction.affected_users or "",
+        }
+        requested_fields = [field.value for field in extraction.missing_fields]
+        if not requested_fields:
+            selected_site = next(
+                site for site in active_sites if site.id == extraction.site_id
+            )
+            return templates.TemplateResponse(
+                request=request,
+                name="employee_ticket_intake.html",
+                context=_intake_context(
+                    current_user,
+                    step="confirmation",
+                    values={
+                        **extracted_values,
+                        "site_name": selected_site.name,
+                        "creation_key": secrets.token_urlsafe(32),
+                    },
+                    requested_fields=[],
+                    ai_assisted=True,
+                ),
+                headers={"Cache-Control": "no-store"},
+            )
+
+        return templates.TemplateResponse(
+            request=request,
+            name="employee_ticket_intake.html",
+            context=_intake_context(
+                current_user,
+                step="details",
+                sites=active_sites,
+                values=extracted_values,
+                requested_fields=requested_fields,
+                ai_assisted=True,
+            ),
+            headers={"Cache-Control": "no-store"},
+        )
+
     return templates.TemplateResponse(
         request=request,
         name="employee_ticket_intake.html",
         context=_intake_context(
             current_user,
             step="details",
-            sites=_active_sites(session),
+            sites=active_sites,
             values={"description": problem.description},
         ),
         headers={"Cache-Control": "no-store"},
