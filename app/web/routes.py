@@ -443,7 +443,7 @@ def app_home(
     session: DatabaseSession,
     current_user: WebUser,
     selected_filter: EmployeeTicketFilterParameter = "all",
-    technical_status: TechnicianStatusFilterParameter = "all",
+    technical_status: TechnicianStatusFilterParameter = "open",
     assignment: TechnicianAssignmentFilterParameter = "all",
     priority: TechnicianPriorityFilterParameter = "all",
     sort_by: TechnicianSortParameter = "priority",
@@ -478,6 +478,18 @@ def app_home(
         priority_filter=priority,
         sort_by=sort_by,
     )
+    if assignment == "unassigned":
+        active_summary = "unassigned"
+    elif technical_status in {
+        "waiting",
+        "waiting_for_requester",
+        "waiting_for_vendor",
+    }:
+        active_summary = "waiting"
+    elif technical_status in {"completed", "resolved", "closed"}:
+        active_summary = "completed"
+    else:
+        active_summary = "open"
     context = _workspace_context(current_user, "Coda tecnica")
     context.update(
         {
@@ -488,6 +500,7 @@ def app_home(
             "assignment": assignment,
             "priority": priority,
             "sort_by": sort_by,
+            "active_summary": active_summary,
         }
     )
     return templates.TemplateResponse(

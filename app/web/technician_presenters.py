@@ -13,7 +13,7 @@ from app.web.ticket_presenters import CATEGORY_LABELS, PRIORITY_LABELS, STATUS_L
 
 
 TechnicianStatusFilter = Literal[
-    "all", "open", "waiting", "completed", "new", "in_progress",
+    "open", "waiting", "completed", "new", "in_progress",
     "waiting_for_requester", "waiting_for_vendor", "resolved", "closed",
 ]
 TechnicianAssignmentFilter = Literal["all", "mine", "unassigned"]
@@ -188,7 +188,7 @@ def filter_and_sort_technician_tickets(
             for ticket in filtered
             if ticket.status in {TicketStatus.RESOLVED, TicketStatus.CLOSED}
         ]
-    elif status_filter != "all":
+    else:
         filtered = [ticket for ticket in filtered if ticket.status.value == status_filter]
     if assignment_filter == "mine":
         filtered = [

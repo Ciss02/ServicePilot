@@ -449,7 +449,9 @@ def test_employee_without_tickets_sees_an_empty_state(web_client) -> None:
     assert "0 richieste" in response.text
 
 
-def test_technician_queue_lists_all_tickets_and_operational_filters(web_client) -> None:
+def test_technician_queue_defaults_to_open_tickets_and_operational_filters(
+    web_client,
+) -> None:
     client, _, password = web_client
     login_web(client, "tecnico.web@servicepilot.example", password)
 
@@ -459,11 +461,24 @@ def test_technician_queue_lists_all_tickets_and_operational_filters(web_client) 
     assert "Coda tecnica" in response.text
     assert "VPN demo in attesa di informazioni" in response.text
     assert "Ticket riservato a un altro dipendente" in response.text
+    assert "Software demo installato" not in response.text
     assert "Applica filtri" in response.text
     assert "Da assegnare" in response.text
-    assert "4 di 4" in response.text
-    assert 'href="/app?status=open&sort=priority#technical-ticket-list"' in response.text
-    assert 'href="/app?status=completed&sort=updated#technical-ticket-list"' in response.text
+    assert "3 di 4" in response.text
+    assert "Tutti gli stati" not in response.text
+    assert "#technical-ticket-list" not in response.text
+    assert (
+        'href="/app?status=open&assignment=all&priority=all&sort=priority"'
+        in response.text
+    )
+    assert (
+        'href="/app?status=completed&assignment=all&priority=all&sort=priority"'
+        in response.text
+    )
+    summary_markup = response.text.split('<div class="technical-summary"', 1)[1]
+    summary_markup = summary_markup.split("</div>", 1)[0]
+    assert summary_markup.count('aria-current="true"') == 1
+    assert "ticket aperti" in summary_markup
     assert '.technical-summary a[aria-current="true"]' in client.get(
         "/static/styles.css"
     ).text
@@ -479,10 +494,10 @@ def test_technician_queue_lists_all_tickets_and_operational_filters(web_client) 
 @pytest.mark.parametrize(
     ("query", "active_label"),
     [
-        ("status=open&sort=priority", "ticket aperti"),
-        ("assignment=unassigned&sort=priority", "ticket da assegnare"),
+        ("status=new&sort=priority", "ticket aperti"),
+        ("status=open&assignment=unassigned&sort=priority", "ticket da assegnare"),
         ("status=waiting&sort=priority", "ticket in attesa"),
-        ("status=completed&sort=updated", "ticket completati"),
+        ("status=closed&sort=updated", "ticket completati"),
     ],
 )
 def test_technical_summary_highlights_the_selected_filter(
@@ -502,6 +517,25 @@ def test_technical_summary_highlights_the_selected_filter(
 
     assert response.status_code == 200
     assert current_link is not None
+    summary_markup = response.text.split('<div class="technical-summary"', 1)[1]
+    summary_markup = summary_markup.split("</div>", 1)[0]
+    assert summary_markup.count('aria-current="true"') == 1
+
+
+def test_technical_summary_preserves_priority_and_sort_without_page_anchor(
+    web_client,
+) -> None:
+    client, _, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+
+    response = client.get("/app?status=open&priority=p2&sort=oldest")
+
+    assert response.status_code == 200
+    assert (
+        'href="/app?status=waiting&assignment=all&priority=p2&sort=oldest"'
+        in response.text
+    )
+    assert "#technical-ticket-list" not in response.text
 
 
 def test_admin_can_use_the_same_technical_queue(web_client) -> None:

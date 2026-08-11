@@ -19,29 +19,29 @@
 
     <div class="technical-summary" aria-label="Riepilogo della coda">
       <a
-        href="/app?status=open&sort=priority#technical-ticket-list"
-        {% if technical_status == "open" %}aria-current="true"{% endif %}
+        href="/app?status=open&assignment=all&priority={{ priority }}&sort={{ sort_by }}"
+        {% if active_summary == "open" %}aria-current="true"{% endif %}
         aria-label="Filtra e mostra {{ summary.open }} ticket aperti"
       >
         <span>Aperti</span><strong>{{ summary.open }}</strong><small>Richiedono lavoro</small>
       </a>
       <a
-        href="/app?assignment=unassigned&sort=priority#technical-ticket-list"
-        {% if assignment == "unassigned" %}aria-current="true"{% endif %}
+        href="/app?status=open&assignment=unassigned&priority={{ priority }}&sort={{ sort_by }}"
+        {% if active_summary == "unassigned" %}aria-current="true"{% endif %}
         aria-label="Filtra e mostra {{ summary.unassigned }} ticket da assegnare"
       >
         <span>Da assegnare</span><strong>{{ summary.unassigned }}</strong><small>Senza responsabile</small>
       </a>
       <a
-        href="/app?status=waiting&sort=priority#technical-ticket-list"
-        {% if technical_status == "waiting" %}aria-current="true"{% endif %}
+        href="/app?status=waiting&assignment=all&priority={{ priority }}&sort={{ sort_by }}"
+        {% if active_summary == "waiting" %}aria-current="true"{% endif %}
         aria-label="Filtra e mostra {{ summary.waiting }} ticket in attesa"
       >
         <span>In attesa</span><strong>{{ summary.waiting }}</strong><small>Utente o fornitore</small>
       </a>
       <a
-        href="/app?status=completed&sort=updated#technical-ticket-list"
-        {% if technical_status == "completed" %}aria-current="true"{% endif %}
+        href="/app?status=completed&assignment=all&priority={{ priority }}&sort={{ sort_by }}"
+        {% if active_summary == "completed" %}aria-current="true"{% endif %}
         aria-label="Filtra e mostra {{ summary.completed }} ticket completati"
       >
         <span>Completati</span><strong>{{ summary.completed }}</strong><small>Risolti o chiusi</small>
@@ -52,7 +52,6 @@
       <div class="field-group">
         <label for="status">Stato</label>
         <select id="status" name="status">
-          <option value="all" {% if technical_status == "all" %}selected{% endif %}>Tutti gli stati</option>
           <option value="open" {% if technical_status == "open" %}selected{% endif %}>Tutti gli aperti</option>
           <option value="waiting" {% if technical_status == "waiting" %}selected{% endif %}>Tutti quelli in attesa</option>
           <option value="completed" {% if technical_status == "completed" %}selected{% endif %}>Tutti i completati</option>
@@ -93,7 +92,7 @@
         </select>
       </div>
       <button class="primary-button" type="submit">Applica filtri</button>
-      <a class="clear-filter" href="/app#technical-ticket-list">Azzera</a>
+      <a class="clear-filter" href="/app">Azzera</a>
     </form>
 
     <section class="technical-tickets" id="technical-ticket-list" aria-labelledby="technical-list-title">
@@ -135,7 +134,7 @@
           <span class="empty-state-mark" aria-hidden="true">✓</span>
           <h3>Nessun ticket corrisponde ai filtri</h3>
           <p>La coda completa è ancora disponibile: azzera i filtri per rivederla.</p>
-          <a class="clear-filter" href="/app#technical-ticket-list">Mostra tutta la coda</a>
+          <a class="clear-filter" href="/app">Torna ai ticket aperti</a>
         </div>
       {% endif %}
     </section>
