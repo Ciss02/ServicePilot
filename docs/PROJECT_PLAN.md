@@ -97,7 +97,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 **Risultato:** l'AI assiste la raccolta e la classificazione senza decidere la priorità.
 
-- [ ] **SP-050 - Adapter del modello AI**
+- [x] **SP-050 - Adapter del modello AI**
   Isolare Gemini dietro un'interfaccia sostituibile e configurazione sicura.
   Verifica: il progetto funziona nei test senza chiamate AI reali.
 - [ ] **SP-051 - Estrazione strutturata**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-050**. La milestone attiva è **Milestone 5**.
+La prossima attività è **SP-051**. La milestone attiva è **Milestone 5**.

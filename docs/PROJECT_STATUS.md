@@ -51,6 +51,10 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Dettaglio operativo per tecnico e amministratore con assegnazione, classificazione,
   note, soluzione e avanzamento controllato.
 - Aggiornamento condiviso tra pagine web e API con ricalcolo deterministico della priorità.
+- Adapter AI sostituibile con Gemini 3.5 Flash-Lite come modello configurabile.
+- Configurazione AI esterna, disattivata per impostazione predefinita e protetta da
+  timeout, tentativi e limite di output.
+- Risposte strutturate ricontrollate da Pydantic e testabili senza chiamate AI reali.
 
 ## Milestone attiva
 
@@ -58,22 +62,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-044 - Coda del tecnico**
+**SP-050 - Adapter del modello AI**
 
-Tecnico e amministratore vedono l'intera coda, possono filtrarla e ordinarla, aprire il
-dettaglio, assegnare il ticket, correggere categoria, impatto e urgenza, aggiungere note
-e soluzione e avanzare soltanto attraverso gli stati consentiti. La priorità viene
-ricalcolata dal backend e la soluzione è obbligatoria prima di risolvere o chiudere.
+ServicePilot usa un contratto comune per richiedere risposte strutturate senza dipendere
+direttamente da Gemini. Il provider resta disattivato senza configurazione esplicita;
+chiave, modello e limiti provengono dall'ambiente. I test sostituiscono Gemini con client
+controllati e non effettuano chiamate esterne.
 
 ## Prossima attività
 
-**SP-050 - Adapter del modello AI**
+**SP-051 - Estrazione strutturata**
 
 Risultato atteso:
 
-- isolare Gemini dietro un'interfaccia sostituibile;
-- mantenere chiavi e configurazione fuori dal repository;
-- permettere ai test di funzionare senza chiamate AI reali.
+- estrarre dalla descrizione i dati già presenti;
+- individuare con precisione le informazioni mancanti;
+- rifiutare output AI incompleti o non conformi.
 
 ## Blocchi o decisioni aperte
 
@@ -83,11 +87,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-050.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-051.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-043` con il codice dell'attività successiva.
+Sostituire `SP-051` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -247,4 +251,14 @@ Prima di terminare verificare che:
 - Verificata la vista predefinita “Aperti” e la selezione dei riepiloghi senza salti
   nella pagina, conservando priorità e ordinamento scelti.
 - `pytest`: 172 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificata la configurazione AI disattivata senza chiave e l'attivazione esplicita di
+  Gemini soltanto con `GEMINI_API_KEY` presente.
+- Verificato che la chiave non compaia nelle rappresentazioni o nei messaggi di errore.
+- Verificati modello configurabile, timeout di 15 secondi, massimo 2 tentativi e limite
+  di 1024 token di output.
+- Verificato l'uso di uno schema Pydantic e il rifiuto di risposte vuote o non valide.
+- Verificata la sostituzione completa di Gemini con client simulati senza accesso alla rete.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-050.
+- `pytest`: 186 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
