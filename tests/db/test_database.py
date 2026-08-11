@@ -71,6 +71,32 @@ def test_existing_user_table_receives_password_hash_column(database_engine) -> N
     assert password_hash is None
 
 
+def test_existing_ticket_table_receives_unique_creation_key(database_engine) -> None:
+    with database_engine.begin() as connection:
+        connection.execute(
+            text("CREATE TABLE tickets (id INTEGER PRIMARY KEY, title TEXT NOT NULL)")
+        )
+        connection.execute(
+            text("INSERT INTO tickets (title) VALUES ('Ticket locale esistente')")
+        )
+
+    create_database(database_engine)
+    create_database(database_engine)
+
+    columns = {
+        column["name"] for column in inspect(database_engine).get_columns("tickets")
+    }
+    indexes = {
+        index["name"]: index for index in inspect(database_engine).get_indexes("tickets")
+    }
+    with database_engine.connect() as connection:
+        preserved_title = connection.execute(text("SELECT title FROM tickets")).scalar_one()
+
+    assert "creation_key" in columns
+    assert indexes["ux_tickets_creation_key"]["unique"] == 1
+    assert preserved_title == "Ticket locale esistente"
+
+
 def test_initial_records_can_be_saved(database_engine) -> None:
     create_database(database_engine)
 

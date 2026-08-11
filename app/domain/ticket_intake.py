@@ -1,6 +1,8 @@
 """Contratti per la raccolta guidata prima della conferma del ticket."""
 
-from pydantic import BaseModel, ConfigDict
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.domain.ticket_contracts import (
     AffectedUsers,
@@ -30,3 +32,12 @@ class TicketMissingDetailsInput(_IntakeModel):
     site_id: Identifier
     service: ShortText
     affected_users: AffectedUsers
+
+
+class TicketCreationKeyInput(_IntakeModel):
+    """Codice casuale che rende sicuro un eventuale doppio invio."""
+
+    creation_key: Annotated[
+        str,
+        Field(min_length=32, max_length=64, pattern=r"^[A-Za-z0-9_-]+$"),
+    ]

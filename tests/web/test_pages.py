@@ -1,5 +1,6 @@
 """Test HTTP del layout, del login web e dell'area protetta."""
 
+import re
 import secrets
 from collections.abc import Iterator
 
@@ -163,6 +164,21 @@ def login_web(client: TestClient, email: str, password: str) -> None:
         follow_redirects=False,
     )
     assert response.status_code == 303
+
+
+def ticket_confirmation_data(response_text: str, site_id: int) -> dict[str, str]:
+    """Ricostruisce l'invio del riepilogo usando soltanto dati fittizi."""
+
+    match = re.search(r'name="creation_key" value="([A-Za-z0-9_-]+)"', response_text)
+    assert match is not None
+    return {
+        "description": "La connessione VPN demo mostra un errore dopo l'accesso.",
+        "title": "VPN demo non disponibile",
+        "site_id": str(site_id),
+        "service": "Accesso remoto",
+        "affected_users": "2",
+        "creation_key": match.group(1),
+    }
 
 
 def test_login_page_has_accessible_responsive_structure(web_client) -> None:
@@ -533,7 +549,7 @@ def test_guided_intake_rejects_invalid_or_inactive_details(web_client) -> None:
         assert session.scalar(select(func.count()).select_from(Ticket)) == tickets_before
 
 
-def test_guided_intake_collects_data_without_creating_ticket(web_client) -> None:
+def test_guided_intake_shows_summary_without_creating_ticket(web_client) -> None:
     client, database_engine, password = web_client
     login_web(client, "dipendente.web@servicepilot.example", password)
     with Session(database_engine) as session:
@@ -552,10 +568,171 @@ def test_guided_intake_collects_data_without_creating_ticket(web_client) -> None
     )
 
     assert response.status_code == 200
-    assert "Dati essenziali raccolti" in response.text
+    assert "Riepilogo della richiesta" in response.text
     assert "Il ticket non è ancora stato creato" in response.text
-    assert "Controllo e conferma" in response.text
-    assert "Con SP-043" in response.text
+    assert "VPN demo non disponibile" in response.text
+    assert "Sede Web Demo" in response.text
+    assert "Accesso remoto" in response.text
+    assert "Persone coinvolte" in response.text
+    assert 'action="/app/new-ticket/confirm"' in response.text
+    assert 'formaction="/app/new-ticket/edit"' in response.text
+    assert 'href="/app">Annulla' in response.text
+    assert 'name="confirmed" value="true"' in response.text
+    with Session(database_engine) as session:
+        assert session.scalar(select(func.count()).select_from(Ticket)) == tickets_before
+
+
+def test_employee_can_correct_summary_without_creating_ticket(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        site_id = session.scalar(select(Site.id).where(Site.code == "WEB-DEMO"))
+        tickets_before = session.scalar(select(func.count()).select_from(Ticket))
+
+    response = client.post(
+        "/app/new-ticket/edit",
+        data={
+            "description": "La connessione VPN demo mostra un errore dopo l'accesso.",
+            "title": "VPN demo non disponibile",
+            "site_id": str(site_id),
+            "service": "Accesso remoto",
+            "affected_users": "2",
+        },
+    )
+
+    assert response.status_code == 200
+    assert 'value="VPN demo non disponibile"' in response.text
+    assert f'<option value="{site_id}" selected>' in response.text
+    assert 'value="Accesso remoto"' in response.text
+    assert 'value="2"' in response.text
+    with Session(database_engine) as session:
+        assert session.scalar(select(func.count()).select_from(Ticket)) == tickets_before
+
+
+def test_cancelling_summary_creates_nothing(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        tickets_before = session.scalar(select(func.count()).select_from(Ticket))
+
+    response = client.get("/app")
+
+    assert response.status_code == 200
+    with Session(database_engine) as session:
+        assert session.scalar(select(func.count()).select_from(Ticket)) == tickets_before
+
+
+def test_confirmation_creates_exactly_one_ticket(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        site_id = session.scalar(select(Site.id).where(Site.code == "WEB-DEMO"))
+        requester_id = session.scalar(
+            select(User.id).where(
+                User.email == "dipendente.web@servicepilot.example"
+            )
+        )
+        tickets_before = session.scalar(select(func.count()).select_from(Ticket))
+
+    summary = client.post(
+        "/app/new-ticket/details",
+        data={
+            "description": "La connessione VPN demo mostra un errore dopo l'accesso.",
+            "title": "VPN demo non disponibile",
+            "site_id": str(site_id),
+            "service": "Accesso remoto",
+            "affected_users": "2",
+        },
+    )
+    confirmation_data = ticket_confirmation_data(summary.text, site_id)
+    confirmation_data["confirmed"] = "true"
+
+    first_response = client.post(
+        "/app/new-ticket/confirm",
+        data=confirmation_data,
+        follow_redirects=False,
+    )
+    second_response = client.post(
+        "/app/new-ticket/confirm",
+        data=confirmation_data,
+        follow_redirects=False,
+    )
+
+    assert first_response.status_code == 303
+    assert second_response.status_code == 303
+    assert first_response.headers["location"] == second_response.headers["location"]
+    assert first_response.headers["location"].endswith("?created=true")
+    with Session(database_engine) as session:
+        assert session.scalar(select(func.count()).select_from(Ticket)) == tickets_before + 1
+        created_ticket = session.scalar(
+            select(Ticket).where(Ticket.creation_key == confirmation_data["creation_key"])
+        )
+        assert created_ticket is not None
+        assert created_ticket.requester_id == requester_id
+        assert created_ticket.title == "VPN demo non disponibile"
+        assert created_ticket.status is TicketStatus.NEW
+
+    detail = client.get(first_response.headers["location"])
+    assert detail.status_code == 200
+    assert "Ticket creato correttamente" in detail.text
+
+
+def test_missing_explicit_confirmation_creates_nothing(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        site_id = session.scalar(select(Site.id).where(Site.code == "WEB-DEMO"))
+        tickets_before = session.scalar(select(func.count()).select_from(Ticket))
+
+    summary = client.post(
+        "/app/new-ticket/details",
+        data={
+            "description": "La connessione VPN demo mostra un errore dopo l'accesso.",
+            "title": "VPN demo non disponibile",
+            "site_id": str(site_id),
+            "service": "Accesso remoto",
+            "affected_users": "2",
+        },
+    )
+    confirmation_data = ticket_confirmation_data(summary.text, site_id)
+
+    response = client.post("/app/new-ticket/confirm", data=confirmation_data)
+
+    assert response.status_code == 422
+    assert "deve essere confermata esplicitamente" in response.text
+    with Session(database_engine) as session:
+        assert session.scalar(select(func.count()).select_from(Ticket)) == tickets_before
+
+
+def test_confirmation_rechecks_that_site_is_still_active(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        site_id = session.scalar(select(Site.id).where(Site.code == "WEB-DEMO"))
+        tickets_before = session.scalar(select(func.count()).select_from(Ticket))
+
+    summary = client.post(
+        "/app/new-ticket/details",
+        data={
+            "description": "La connessione VPN demo mostra un errore dopo l'accesso.",
+            "title": "VPN demo non disponibile",
+            "site_id": str(site_id),
+            "service": "Accesso remoto",
+            "affected_users": "2",
+        },
+    )
+    confirmation_data = ticket_confirmation_data(summary.text, site_id)
+    confirmation_data["confirmed"] = "true"
+    with Session(database_engine) as session:
+        site = session.get(Site, site_id)
+        assert site is not None
+        site.is_active = False
+        session.commit()
+
+    response = client.post("/app/new-ticket/confirm", data=confirmation_data)
+
+    assert response.status_code == 422
+    assert "Seleziona una sede disponibile" in response.text
     with Session(database_engine) as session:
         assert session.scalar(select(func.count()).select_from(Ticket)) == tickets_before
 
@@ -566,6 +743,8 @@ def test_guided_intake_collects_data_without_creating_ticket(web_client) -> None
         "/app/new-ticket",
         "/app/new-ticket/problem",
         "/app/new-ticket/details",
+        "/app/new-ticket/edit",
+        "/app/new-ticket/confirm",
     ],
 )
 def test_guided_intake_redirects_anonymous_visitor_to_login(
@@ -581,11 +760,25 @@ def test_guided_intake_redirects_anonymous_visitor_to_login(
     assert response.headers["location"] == "/login"
 
 
-def test_guided_intake_is_not_available_to_technician(web_client) -> None:
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/app/new-ticket",
+        "/app/new-ticket/problem",
+        "/app/new-ticket/details",
+        "/app/new-ticket/edit",
+        "/app/new-ticket/confirm",
+    ],
+)
+def test_guided_intake_is_not_available_to_technician(
+    web_client,
+    path: str,
+) -> None:
     client, _, password = web_client
     login_web(client, "tecnico.web@servicepilot.example", password)
+    method = client.get if path == "/app/new-ticket" else client.post
 
-    response = client.get("/app/new-ticket", follow_redirects=False)
+    response = method(path, follow_redirects=False)
 
     assert response.status_code == 303
     assert response.headers["location"] == "/app"

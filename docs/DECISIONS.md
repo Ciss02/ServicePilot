@@ -449,3 +449,27 @@ sufficiente per due richieste consecutive e impedisce di confonderla con un tick
 ufficiale. La validazione ripetuta evita di fidarsi dei dati modificabili nel browser;
 la persistenza verrà introdotta soltanto insieme alla conferma esplicita prevista dalla
 specifica.
+
+## D-020 - Conferma esplicita e creazione ripetibile
+
+**Data:** 11 agosto 2026
+**Stato:** confermata durante SP-043
+
+**Decisione:**
+
+- mostrare tutti i dati raccolti prima della creazione;
+- permettere correzione e annullamento senza conservare una bozza nel database;
+- creare il ticket soltanto con una conferma positiva inviata dal pulsante dedicato;
+- ricontrollare dati, sede attiva e conferma nel backend;
+- usare la stessa funzione di creazione per API e interfaccia web;
+- associare al riepilogo un codice casuale univoco, conservato nel ticket;
+- in caso di doppio invio, restituire il ticket già collegato a quel codice;
+- aggiornare in modo ripetibile anche i database SQLite creati prima di SP-043;
+- non aggiungere dipendenze o JavaScript.
+
+**Motivazione:**
+
+Il riepilogo rende consapevole la decisione del dipendente e rispetta il vincolo che
+impedisce al sistema di creare richieste autonomamente. La funzione condivisa evita
+regole diverse tra pagina e API. Il codice univoco protegge dai duplicati causati da un
+doppio clic o dal reinvio del modulo, senza salvare bozze non confermate.

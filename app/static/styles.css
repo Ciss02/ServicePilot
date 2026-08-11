@@ -1417,7 +1417,7 @@ main {
 }
 
 .intake-form,
-.intake-complete-card {
+.intake-confirmation-form {
   display: grid;
   gap: 21px;
   margin-left: 50px;
@@ -1488,20 +1488,114 @@ main {
   min-width: 250px;
 }
 
-.intake-complete-card h2 {
+.intake-confirmation-form h2 {
   margin: 0;
   font-size: 1.8rem;
 }
 
-.intake-complete-card > p:not(.eyebrow) {
-  max-width: 610px;
-  margin: -10px 0 0;
+.intake-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.intake-summary div {
+  padding: 18px;
+  border-left: 1px solid var(--line);
+}
+
+.intake-summary div:first-child,
+.intake-summary-description {
+  border-left: 0;
+}
+
+.intake-summary-description {
+  grid-column: 1 / -1;
+  border-bottom: 1px solid var(--line);
+}
+
+.intake-summary dt {
+  margin-bottom: 7px;
+  color: var(--ink-soft);
+  font-size: 0.71rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.intake-summary dd {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.confirmation-note {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+
+.confirmation-note strong {
+  color: var(--ink);
+}
+
+.intake-confirmation-actions {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 18px;
+}
+
+.intake-confirmation-actions .primary-button {
+  justify-self: end;
+}
+
+.secondary-button {
+  padding: 11px 15px;
+  border: 1px solid var(--navy);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--navy);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.ticket-created-alert {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+  padding: 16px 18px;
+  border: 1px solid #9bc2ae;
+  border-radius: 14px;
+  background: #edf7f0;
+}
+
+.ticket-created-alert span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.ticket-created-alert p {
+  margin: 0;
   color: var(--ink-soft);
 }
 
-.intake-complete-card .primary-link-button {
-  justify-self: start;
-  margin-top: 0;
+.ticket-created-alert strong {
+  display: block;
+  color: var(--ink);
 }
 
 .ticket-intake > .privacy-note {
@@ -1723,13 +1817,32 @@ main {
   }
 
   .intake-form,
-  .intake-complete-card {
+  .intake-confirmation-form {
     margin-left: 0;
     padding: 22px;
   }
 
   .intake-field-grid {
     grid-template-columns: 1fr;
+  }
+
+  .intake-summary,
+  .intake-confirmation-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .intake-summary div {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .intake-summary div:first-child {
+    border-top: 0;
+  }
+
+  .intake-confirmation-actions .primary-button {
+    width: 100%;
+    justify-self: stretch;
   }
 
   .intake-actions {

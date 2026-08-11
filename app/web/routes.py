@@ -1,5 +1,6 @@
 """Pagine web per login, layout protetto e logout."""
 
+import secrets
 from pathlib import Path
 from typing import Annotated
 
@@ -27,7 +28,12 @@ from app.api.dependencies import (
 )
 from app.db.models import Site, Ticket, User
 from app.domain.auth_contracts import LoginRequest
-from app.domain.ticket_intake import TicketMissingDetailsInput, TicketProblemInput
+from app.domain.ticket_contracts import TicketCreate
+from app.domain.ticket_intake import (
+    TicketCreationKeyInput,
+    TicketMissingDetailsInput,
+    TicketProblemInput,
+)
 from app.domain.vocabulary import Role
 from app.security.authentication import (
     authenticate_user,
@@ -35,6 +41,11 @@ from app.security.authentication import (
     start_user_session,
 )
 from app.security.session_cookie import delete_session_cookie, set_session_cookie
+from app.tickets.creation import (
+    TicketPersistenceError,
+    TicketSiteNotFoundError,
+    create_confirmed_ticket,
+)
 from app.tickets.queries import get_visible_ticket, list_visible_tickets
 from app.web.ticket_presenters import (
     EmployeeTicketFilter,
@@ -368,7 +379,7 @@ def collect_ticket_details(
     service: Annotated[str, Form()] = "",
     affected_users: Annotated[str, Form()] = "",
 ) -> Response:
-    """Completa la raccolta ma non crea ancora alcun ticket."""
+    """Controlla i dettagli e mostra il riepilogo senza creare il ticket."""
 
     if redirect := _employee_only(current_user):
         return redirect
@@ -438,7 +449,7 @@ def collect_ticket_details(
         name="employee_ticket_intake.html",
         context=_intake_context(
             current_user,
-            step="complete",
+            step="confirmation",
             values={
                 "description": problem.description,
                 "title": details.title,
@@ -446,9 +457,159 @@ def collect_ticket_details(
                 "site_name": selected_site.name,
                 "service": details.service,
                 "affected_users": details.affected_users,
+                "creation_key": secrets.token_urlsafe(32),
             },
         ),
         headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/app/new-ticket/edit", response_class=HTMLResponse)
+def edit_ticket_draft(
+    request: Request,
+    session: DatabaseSession,
+    current_user: WebUser,
+    description: Annotated[str, Form()] = "",
+    title: Annotated[str, Form()] = "",
+    site_id: Annotated[str, Form()] = "",
+    service: Annotated[str, Form()] = "",
+    affected_users: Annotated[str, Form()] = "",
+) -> Response:
+    """Riapre i campi raccolti per permettere una correzione."""
+
+    if redirect := _employee_only(current_user):
+        return redirect
+    return templates.TemplateResponse(
+        request=request,
+        name="employee_ticket_intake.html",
+        context=_intake_context(
+            current_user,
+            step="details",
+            sites=_active_sites(session),
+            values={
+                "description": description[:4_000],
+                "title": title[:120],
+                "site_id": site_id,
+                "service": service[:100],
+                "affected_users": affected_users,
+            },
+        ),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/app/new-ticket/confirm")
+def confirm_ticket_draft(
+    request: Request,
+    session: DatabaseSession,
+    current_user: WebUser,
+    description: Annotated[str, Form()] = "",
+    title: Annotated[str, Form()] = "",
+    site_id: Annotated[str, Form()] = "",
+    service: Annotated[str, Form()] = "",
+    affected_users: Annotated[str, Form()] = "",
+    creation_key: Annotated[str, Form()] = "",
+    confirmed: Annotated[str, Form()] = "",
+) -> Response:
+    """Crea il ticket soltanto dopo una conferma positiva e validata."""
+
+    if redirect := _employee_only(current_user):
+        return redirect
+
+    clean_site_id = site_id.strip()
+    clean_affected_users = affected_users.strip()
+    raw_values = {
+        "description": description,
+        "title": title,
+        "site_id": int(clean_site_id) if clean_site_id.isdecimal() else clean_site_id,
+        "service": service,
+        "affected_users": (
+            int(clean_affected_users)
+            if clean_affected_users.isdecimal()
+            else clean_affected_users
+        ),
+        "confirmed": confirmed == "true",
+    }
+    errors: dict[str, str] = {}
+    try:
+        payload = TicketCreate.model_validate(raw_values)
+    except ValidationError as error:
+        errors.update(_validation_errors(error))
+        if any(item["loc"] and item["loc"][0] == "confirmed" for item in error.errors()):
+            errors["confirmation"] = "La richiesta deve essere confermata esplicitamente."
+        payload = None
+    try:
+        validated_key = TicketCreationKeyInput.model_validate(
+            {"creation_key": creation_key}
+        ).creation_key
+    except ValidationError:
+        errors["confirmation"] = "Il riepilogo non è più valido. Rivedi i dati e riprova."
+        validated_key = None
+
+    selected_site = None
+    if clean_site_id.isdecimal() and int(clean_site_id) > 0:
+        selected_site = session.scalar(
+            select(Site).where(
+                Site.id == int(clean_site_id),
+                Site.is_active.is_(True),
+            )
+        )
+        if selected_site is None:
+            errors["site_id"] = INTAKE_ERRORS["site_id"]
+
+    if errors or payload is None or validated_key is None or selected_site is None:
+        return templates.TemplateResponse(
+            request=request,
+            name="employee_ticket_intake.html",
+            context=_intake_context(
+                current_user,
+                step="details",
+                sites=_active_sites(session),
+                values={
+                    "description": description[:4_000],
+                    "title": title[:120],
+                    "site_id": site_id,
+                    "service": service[:100],
+                    "affected_users": affected_users,
+                },
+                errors=errors,
+            ),
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    try:
+        ticket = create_confirmed_ticket(
+            session,
+            payload,
+            current_user,
+            creation_key=validated_key,
+        )
+    except (TicketSiteNotFoundError, TicketPersistenceError):
+        return templates.TemplateResponse(
+            request=request,
+            name="employee_ticket_intake.html",
+            context=_intake_context(
+                current_user,
+                step="confirmation",
+                values={
+                    **payload.model_dump(exclude={"confirmed"}),
+                    "site_name": selected_site.name,
+                    "creation_key": validated_key,
+                },
+                errors={
+                    "confirmation": (
+                        "Non siamo riusciti a creare il ticket. Riprova tra poco."
+                    )
+                },
+            ),
+            status_code=status.HTTP_409_CONFLICT,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    return RedirectResponse(
+        url=f"/app/tickets/{ticket.id}?created=true",
+        status_code=status.HTTP_303_SEE_OTHER,
     )
 
 
@@ -458,6 +619,7 @@ def employee_ticket_detail(
     ticket_id: WebTicketId,
     session: DatabaseSession,
     current_user: WebUser,
+    created: Annotated[bool, Query()] = False,
 ) -> Response:
     """Mostra al dipendente soltanto il dettaglio di una propria richiesta."""
 
@@ -476,6 +638,7 @@ def employee_ticket_detail(
 
     context = _workspace_context(current_user, f"Ticket SP-{ticket.id:04d}")
     context["ticket"] = _present_tickets(session, [ticket])[0]
+    context["created"] = created
     return templates.TemplateResponse(
         request=request,
         name="employee_ticket_detail.html",

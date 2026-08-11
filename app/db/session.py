@@ -59,6 +59,22 @@ def create_database(target_engine: Engine = engine) -> None:
                 text("ALTER TABLE users ADD COLUMN password_hash VARCHAR(255)")
             )
 
+    ticket_columns = {
+        column["name"] for column in inspect(target_engine).get_columns("tickets")
+    }
+    if "creation_key" not in ticket_columns:
+        with target_engine.begin() as connection:
+            connection.execute(
+                text("ALTER TABLE tickets ADD COLUMN creation_key VARCHAR(64)")
+            )
+            connection.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS ux_tickets_creation_key "
+                    "ON tickets (creation_key)"
+                )
+            )
+            connection.execute(text("PRAGMA optimize"))
+
 
 def get_session() -> Iterator[Session]:
     """Fornisce una sessione isolata e la chiude dopo ogni richiesta."""

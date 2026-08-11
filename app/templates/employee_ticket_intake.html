@@ -13,8 +13,8 @@
       </div>
       <ol class="intake-progress" aria-label="Avanzamento della richiesta">
         <li class="is-complete"><span>1</span>Problema</li>
-        <li {% if step in ["details", "complete"] %}class="is-complete"{% endif %}><span>2</span>Dettagli</li>
-        <li><span>3</span>Conferma</li>
+        <li {% if step in ["details", "confirmation"] %}class="is-complete"{% endif %}><span>2</span>Dettagli</li>
+        <li {% if step == "confirmation" %}class="is-complete"{% endif %}><span>3</span>Conferma</li>
       </ol>
     </header>
 
@@ -27,7 +27,7 @@
         </div>
       </div>
 
-      {% if step in ["details", "complete"] %}
+      {% if step in ["details", "confirmation"] %}
         <div class="message message-user">
           <div>
             <strong>Tu</strong>
@@ -69,7 +69,7 @@
           {% if errors %}
             <div class="form-alert" role="alert">
               <strong>Controlla i campi indicati</strong>
-              <span>La richiesta non è stata salvata. Correggi i dati e riprova.</span>
+              <span>{% if errors.confirmation %}{{ errors.confirmation }}{% else %}La richiesta non è stata salvata. Correggi i dati e riprova.{% endif %}</span>
             </div>
           {% endif %}
           <div class="field-group">
@@ -109,24 +109,51 @@
         </form>
       {% else %}
         <div class="message message-assistant message-success" role="status">
-          <span class="message-avatar" aria-hidden="true">✓</span>
+          <span class="message-avatar" aria-hidden="true">SP</span>
           <div>
-            <strong>Dati essenziali raccolti</strong>
-            <p>Abbiamo descrizione, titolo, sede, servizio e numero di persone coinvolte. Il ticket non è ancora stato creato.</p>
+            <strong>Controlla prima di inviare</strong>
+            <p>Questa è la richiesta che riceverà il supporto. Il ticket non è ancora stato creato.</p>
           </div>
         </div>
-        <div class="intake-complete-card">
-          <p class="eyebrow">Prossimo passaggio</p>
-          <h2>Controllo e conferma</h2>
-          <p>Con SP-043 potrai rivedere questi dati, correggerli e decidere se creare davvero la richiesta.</p>
-          <a class="primary-link-button" href="/app/new-ticket">Apri un'altra raccolta <span aria-hidden="true">→</span></a>
-        </div>
+        <form class="intake-form intake-confirmation-form" method="post" action="/app/new-ticket/confirm">
+          <input type="hidden" name="description" value="{{ values.description }}">
+          <input type="hidden" name="title" value="{{ values.title }}">
+          <input type="hidden" name="site_id" value="{{ values.site_id }}">
+          <input type="hidden" name="service" value="{{ values.service }}">
+          <input type="hidden" name="affected_users" value="{{ values.affected_users }}">
+          <input type="hidden" name="creation_key" value="{{ values.creation_key }}">
+          {% if errors.confirmation %}
+            <div class="form-alert" role="alert">
+              <strong>Il ticket non è stato creato</strong>
+              <span>{{ errors.confirmation }}</span>
+            </div>
+          {% endif %}
+          <div>
+            <p class="eyebrow">Riepilogo della richiesta</p>
+            <h2>{{ values.title }}</h2>
+          </div>
+          <dl class="intake-summary">
+            <div class="intake-summary-description">
+              <dt>Problema descritto</dt>
+              <dd>{{ values.description }}</dd>
+            </div>
+            <div><dt>Sede</dt><dd>{{ values.site_name }}</dd></div>
+            <div><dt>Servizio</dt><dd>{{ values.service }}</dd></div>
+            <div><dt>Persone coinvolte</dt><dd>{{ values.affected_users }}</dd></div>
+          </dl>
+          <p class="confirmation-note"><strong>Conferma esplicita richiesta.</strong> Solo il pulsante “Conferma e crea ticket” salverà questa richiesta.</p>
+          <div class="intake-confirmation-actions">
+            <button class="secondary-button" type="submit" formaction="/app/new-ticket/edit">Correggi i dati</button>
+            <a class="back-link" href="/app">Annulla</a>
+            <button class="primary-button" type="submit" name="confirmed" value="true">Conferma e crea ticket <span aria-hidden="true">→</span></button>
+          </div>
+        </form>
       {% endif %}
     </div>
 
     <aside class="privacy-note" role="note">
       <span aria-hidden="true">i</span>
-      <p><strong>Nessun ticket creato</strong>I dati raccolti non vengono salvati nel database finché non saranno mostrati e confermati nel passaggio successivo.</p>
+      <p><strong>{% if step == "confirmation" %}In attesa della tua conferma{% else %}Nessun ticket creato{% endif %}</strong>I dati raccolti non vengono salvati nel database finché non selezioni “Conferma e crea ticket”.</p>
     </aside>
   </section>
 {% endblock %}
