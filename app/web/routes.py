@@ -9,6 +9,7 @@ from fastapi import (
     Form,
     HTTPException,
     Path as PathParameter,
+    Query,
     Request,
     Response,
     status,
@@ -35,7 +36,9 @@ from app.security.authentication import (
 from app.security.session_cookie import delete_session_cookie, set_session_cookie
 from app.tickets.queries import get_visible_ticket, list_visible_tickets
 from app.web.ticket_presenters import (
+    EmployeeTicketFilter,
     EmployeeTicketView,
+    filter_employee_tickets,
     present_employee_ticket,
     summarize_employee_tickets,
 )
@@ -72,6 +75,10 @@ def get_web_user(
 
 WebUser = Annotated[User, Depends(get_web_user)]
 WebTicketId = Annotated[int, PathParameter(gt=0)]
+EmployeeTicketFilterParameter = Annotated[
+    EmployeeTicketFilter,
+    Query(alias="filter"),
+]
 
 
 def _login_context(email: str = "", error: str | None = None) -> dict[str, object]:
@@ -204,16 +211,20 @@ def app_home(
     request: Request,
     session: DatabaseSession,
     current_user: WebUser,
+    selected_filter: EmployeeTicketFilterParameter = "all",
 ) -> HTMLResponse:
     """Mostra l'area personale del dipendente o la base degli altri ruoli."""
 
     if current_user.role is Role.EMPLOYEE:
         tickets = list_visible_tickets(session, current_user)
+        filtered_tickets = filter_employee_tickets(tickets, selected_filter)
         context = _workspace_context(current_user, "I miei ticket")
         context.update(
             {
-                "tickets": _present_tickets(session, tickets),
+                "tickets": _present_tickets(session, filtered_tickets),
                 "summary": summarize_employee_tickets(tickets),
+                "selected_filter": selected_filter,
+                "total_tickets": len(tickets),
             }
         )
         return templates.TemplateResponse(

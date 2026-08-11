@@ -111,6 +111,24 @@ def web_client(tmp_path) -> Iterator[tuple[TestClient, Engine, str]]:
                             resolution="Applicazione demo installata e avvio verificato.",
                         ),
                         Ticket(
+                            title="Postazione demo in lavorazione",
+                            description=(
+                                "La postazione dimostrativa richiede una verifica hardware."
+                            ),
+                            requester_id=employee.id,
+                            site_id=site.id,
+                            service="Supporto postazione",
+                            affected_users=1,
+                            category=TicketCategory.DEVICES_AND_HARDWARE,
+                            subcategory="Postazione di lavoro",
+                            impact=Impact.MEDIUM,
+                            urgency=Urgency.HIGH,
+                            priority=Priority.P2,
+                            assigned_group="Supporto workplace",
+                            assigned_technician_id=technician.id,
+                            status=TicketStatus.IN_PROGRESS,
+                        ),
+                        Ticket(
                             title="Ticket riservato a un altro dipendente",
                             description=(
                                 "Questa descrizione fittizia non deve apparire altrove."
@@ -278,10 +296,68 @@ def test_employee_dashboard_lists_only_personal_tickets(web_client) -> None:
     assert response.status_code == 200
     assert "VPN demo in attesa di informazioni" in response.text
     assert "Software demo installato" in response.text
+    assert "Postazione demo in lavorazione" in response.text
     assert "Ticket riservato a un altro dipendente" not in response.text
     assert "In attesa di te" in response.text
     assert "Risolto" in response.text
-    assert "2 richieste" in response.text
+    assert "3 richieste" in response.text
+    assert 'href="/app?filter=active#ticket-list-title"' in response.text
+    assert 'href="/app?filter=waiting#ticket-list-title"' in response.text
+    assert 'href="/app?filter=completed#ticket-list-title"' in response.text
+
+
+@pytest.mark.parametrize(
+    ("selected_filter", "visible_titles", "hidden_titles", "expected_count"),
+    [
+        (
+            "active",
+            [
+                "VPN demo in attesa di informazioni",
+                "Postazione demo in lavorazione",
+            ],
+            ["Software demo installato"],
+            "2 richieste di 3",
+        ),
+        (
+            "waiting",
+            ["VPN demo in attesa di informazioni"],
+            ["Postazione demo in lavorazione", "Software demo installato"],
+            "1 richiesta di 3",
+        ),
+        (
+            "completed",
+            ["Software demo installato"],
+            [
+                "VPN demo in attesa di informazioni",
+                "Postazione demo in lavorazione",
+            ],
+            "1 richiesta di 3",
+        ),
+    ],
+    ids=["active", "waiting", "completed"],
+)
+def test_summary_cards_filter_personal_ticket_list(
+    web_client,
+    selected_filter: str,
+    visible_titles: list[str],
+    hidden_titles: list[str],
+    expected_count: str,
+) -> None:
+    client, _, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+
+    response = client.get(f"/app?filter={selected_filter}")
+    normalized_text = " ".join(response.text.split())
+
+    assert response.status_code == 200
+    assert expected_count in normalized_text
+    assert "Filtro attivo" in response.text
+    assert "Mostra tutti" in response.text
+    for title in visible_titles:
+        assert title in response.text
+    for title in hidden_titles:
+        assert title not in response.text
+    assert "Ticket riservato a un altro dipendente" not in response.text
 
 
 def test_employee_can_open_own_ticket_detail(web_client) -> None:

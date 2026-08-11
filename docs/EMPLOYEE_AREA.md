@@ -12,6 +12,8 @@ aggiornamenti del supporto e soluzione finale in una vista leggibile e responsiv
 ## Pagine disponibili
 
 - `GET /app` mostra riepilogo ed elenco personale quando il ruolo è `employee`;
+- `GET /app?filter=active`, `waiting` o `completed` filtra l'elenco tramite i tre
+  riepiloghi cliccabili;
 - `GET /app/tickets/{ticket_id}` mostra il dettaglio di una richiesta personale;
 - tecnico e amministratore conservano la pagina provvisoria fino alla coda di SP-044.
 
@@ -31,6 +33,11 @@ titolo, descrizione o altri dati riservati.
 
 Le stesse query di visibilità sono condivise dalle API e dalle pagine HTML, così i due
 ingressi non possono applicare regole differenti.
+
+I filtri lavorano soltanto sull'insieme personale già autorizzato: `active` include gli
+stati non conclusi, `waiting` le richieste in attesa del dipendente e `completed` gli
+stati risolto o chiuso. I conteggi nei tre box restano complessivi e “Mostra tutti”
+rimuove il filtro.
 
 ## Dove vengono salvati i dati
 
@@ -62,5 +69,7 @@ I test HTTP creano dati fittizi per due dipendenti differenti e verificano che:
 - il collegamento diretto a un ticket altrui restituisca `404` senza mostrare dati;
 - un ID inesistente usi la stessa risposta privata;
 - un dipendente senza ticket veda lo stato vuoto;
+- i tre riepiloghi mostrino soltanto ticket attivi, in attesa o completati e permettano
+  di tornare all'elenco completo;
 - una persona anonima venga rimandata al login;
 - il tecnico non riceva in anticipo la schermata della futura coda.

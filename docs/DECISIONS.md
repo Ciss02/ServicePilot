@@ -406,6 +406,8 @@ mentre l'assenza di JavaScript evita complessità che il modulo di accesso non r
   dipendente;
 - mostrare in `/app` conteggi ed elenco personale ordinato dal più recente;
 - esporre `/app/tickets/{ticket_id}` come dettaglio di sola lettura;
+- rendere i tre conteggi filtri server-side tramite il parametro `filter`, mantenendo
+  invariati i conteggi complessivi e senza aggiungere stato nel browser;
 - caricare in gruppo i nomi di sedi e tecnici necessari alla presentazione;
 - convertire codici di stato, categoria e priorità in etichette italiane fuori dai
   modelli persistenti;

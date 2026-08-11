@@ -41,7 +41,7 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Controlli riutilizzabili per funzioni tecniche e amministrative.
 - Interfaccia web responsive con layout condiviso e pagina di accesso accessibile.
 - Area di base protetta e uscita dal browser collegate alle sessioni esistenti.
-- Area dipendente con riepilogo, elenco e dettaglio dei ticket personali.
+- Area dipendente con riepilogo filtrabile, elenco e dettaglio dei ticket personali.
 - Query di visibilità condivise tra API e pagine web, con proprietà filtrata nel backend.
 
 ## Milestone attiva
@@ -56,7 +56,8 @@ Il dipendente vede in `/app` conteggi ed elenco delle sole richieste associate a
 propria sessione e può aprirne il dettaglio. Il filtro di proprietà avviene nella query
 del backend ed è condiviso con le API. Ticket inesistenti e ticket altrui restituiscono
 la stessa pagina `404` senza rivelare dati. Tecnico e amministratore restano sulla base
-protetta in attesa della coda prevista da SP-044.
+protetta in attesa della coda prevista da SP-044. I tre conteggi permettono di filtrare
+l'elenco per richieste attive, in attesa del dipendente o completate.
 
 ## Prossima attività
 
@@ -195,8 +196,11 @@ Prima di terminare verificare che:
 - Verificato che ticket altrui e ticket inesistenti restituiscano la stessa pagina `404`
   senza titolo o descrizione riservati.
 - Verificati stato vuoto, rinvio anonimo al login e separazione dalla futura coda tecnica.
+- Verificati i filtri `active`, `waiting` e `completed`, il conteggio rispetto al totale
+  e il ripristino dell'elenco completo.
+- Provati nel browser i tre box cliccabili e “Mostra tutti”, senza errori nella pagina.
 - Verificato che le API conservino lettura e gestione completa per tecnico e admin dopo
   l'estrazione delle query condivise.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-041.
-- `pytest`: 137 test superati senza avvisi.
+- `pytest`: 140 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

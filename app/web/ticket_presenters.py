@@ -2,9 +2,13 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Literal
 
 from app.db.models import Ticket
 from app.domain.vocabulary import Priority, TicketCategory, TicketStatus
+
+
+EmployeeTicketFilter = Literal["all", "active", "waiting", "completed"]
 
 
 STATUS_LABELS = {
@@ -128,3 +132,23 @@ def summarize_employee_tickets(tickets: list[Ticket]) -> EmployeeTicketSummary:
         ),
         completed=sum(ticket.status in completed_statuses for ticket in tickets),
     )
+
+
+def filter_employee_tickets(
+    tickets: list[Ticket],
+    selected_filter: EmployeeTicketFilter,
+) -> list[Ticket]:
+    """Filtra la vista senza modificare i ticket o i conteggi complessivi."""
+
+    completed_statuses = {TicketStatus.RESOLVED, TicketStatus.CLOSED}
+    if selected_filter == "active":
+        return [ticket for ticket in tickets if ticket.status not in completed_statuses]
+    if selected_filter == "waiting":
+        return [
+            ticket
+            for ticket in tickets
+            if ticket.status is TicketStatus.WAITING_FOR_REQUESTER
+        ]
+    if selected_filter == "completed":
+        return [ticket for ticket in tickets if ticket.status in completed_statuses]
+    return tickets
