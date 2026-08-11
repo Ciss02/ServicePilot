@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% set active_section = "queue" %}
+{% block app_navigation %}{% include "_technical_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <article class="technical-detail shell" aria-labelledby="ticket-title">
+    <a class="back-link" href="/app"><span aria-hidden="true">←</span> Torna alla coda</a>
+
+    {% if updated %}
+      <div class="ticket-created-alert" role="status">
+        <span aria-hidden="true">✓</span>
+        <p><strong>Aggiornamento salvato</strong>Il ticket e la coda tecnica mostrano ora i nuovi dati.</p>
+      </div>
+    {% endif %}
+
+    <header class="ticket-detail-heading technical-detail-heading">
+      <div>
+        <div class="ticket-row-meta">
+          <span class="ticket-code">{{ ticket.code }}</span>
+          <span class="status-badge status-{{ ticket.status_code }}">{{ ticket.status_label }}</span>
+        </div>
+        <h1 id="ticket-title">{{ ticket.title }}</h1>
+        <p>Aperto da {{ ticket.requester_name }} il {{ ticket.created_at }} · Aggiornato {{ ticket.updated_at }}</p>
+      </div>
+      <div class="detail-priority priority-panel-{{ ticket.priority_code }}">
+        <span>Priorità calcolata</span>
+        <strong>{{ ticket.priority_label }}</strong>
+      </div>
+    </header>
+
+    <div class="technical-detail-grid">
+      <div class="technical-detail-content">
+        <section class="detail-card" aria-labelledby="description-title">
+          <p class="card-label">Segnalazione originale</p>
+          <h2 id="description-title">Descrizione del problema</h2>
+          <p class="ticket-description">{{ ticket.description }}</p>
+        </section>
+
+        <section class="detail-card technical-facts" aria-labelledby="facts-title">
+          <p class="card-label">Contesto</p>
+          <h2 id="facts-title">Dati della richiesta</h2>
+          <dl>
+            <div><dt>Richiedente</dt><dd>{{ ticket.requester_name }}<small>{{ ticket.requester_email }}</small></dd></div>
+            <div><dt>Sede</dt><dd>{{ ticket.site_name }}</dd></div>
+            <div><dt>Servizio</dt><dd>{{ ticket.service }}</dd></div>
+            <div><dt>Persone coinvolte</dt><dd>{{ ticket.affected_users_label }}</dd></div>
+            <div><dt>Categoria</dt><dd>{{ ticket.category_label }}</dd></div>
+            <div><dt>Impatto / urgenza</dt><dd>{{ ticket.impact_label }} / {{ ticket.urgency_label }}</dd></div>
+          </dl>
+        </section>
+      </div>
+
+      <aside class="management-panel" aria-labelledby="management-title">
+        <div class="management-heading">
+          <p class="eyebrow">Pannello operativo</p>
+          <h2 id="management-title">Gestisci il ticket</h2>
+          <p>Assegna, correggi la classificazione e registra il prossimo passo.</p>
+        </div>
+
+        {% if errors.get("update") %}<div class="form-alert" role="alert">{{ errors.get("update") }}</div>{% endif %}
+        <form class="management-form" method="post" action="/app/tickets/{{ ticket.id }}/update">
+          <fieldset>
+            <legend>Responsabilità</legend>
+            <div class="field-group">
+              <label for="assigned_technician_id">Tecnico assegnato</label>
+              <select id="assigned_technician_id" name="assigned_technician_id" {% if errors.assigned_technician_id %}aria-invalid="true"{% endif %}>
+                <option value="">Non cambiare assegnazione</option>
+                {% for technician in technicians %}
+                  <option value="{{ technician.id }}" {% if values.assigned_technician_id == technician.id | string %}selected{% endif %}>{{ technician.display_name }}{% if technician.id == current_user.id %} · Tu{% endif %}</option>
+                {% endfor %}
+              </select>
+              {% if errors.assigned_technician_id %}<small class="field-error">{{ errors.assigned_technician_id }}</small>{% endif %}
+            </div>
+            <div class="field-group">
+              <label for="assigned_group">Gruppo</label>
+              <input id="assigned_group" name="assigned_group" value="{{ values.assigned_group }}" maxlength="100" {% if errors.assigned_group %}aria-invalid="true"{% endif %}>
+              {% if errors.assigned_group %}<small class="field-error">{{ errors.assigned_group }}</small>{% endif %}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Classificazione</legend>
+            {% if errors.classification %}<div class="form-alert" role="alert">{{ errors.classification }}</div>{% endif %}
+            <div class="field-group">
+              <label for="category">Categoria</label>
+              <select id="category" name="category">
+                <option value="">Da classificare</option>
+                {% for code, label in category_options %}<option value="{{ code }}" {% if values.category == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="subcategory">Sottocategoria</label>
+              <input id="subcategory" name="subcategory" value="{{ values.subcategory }}" maxlength="100">
+            </div>
+            <div class="management-split">
+              <div class="field-group">
+                <label for="impact">Impatto</label>
+                <select id="impact" name="impact">
+                  <option value="">Da definire</option>
+                  {% for code, label in impact_options %}<option value="{{ code }}" {% if values.impact == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="urgency">Urgenza</label>
+                <select id="urgency" name="urgency">
+                  <option value="">Da definire</option>
+                  {% for code, label in urgency_options %}<option value="{{ code }}" {% if values.urgency == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <small class="calculation-note">La priorità verrà ricalcolata automaticamente.</small>
+          </fieldset>
+
+          <fieldset>
+            <legend>Avanzamento</legend>
+            <div class="field-group">
+              <label for="status">Nuovo stato</label>
+              <select id="status" name="status" {% if errors.status %}aria-invalid="true"{% endif %}>
+                {% for code, label in status_options %}<option value="{{ code }}" {% if values.status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+              </select>
+              {% if errors.status %}<small class="field-error">{{ errors.status }}</small>{% endif %}
+            </div>
+            <div class="field-group">
+              <label for="technician_note">Nota per il richiedente</label>
+              <textarea id="technician_note" name="technician_note" maxlength="2000" {% if errors.technician_note %}aria-invalid="true"{% endif %}>{{ values.technician_note }}</textarea>
+              {% if errors.technician_note %}<small class="field-error">{{ errors.technician_note }}</small>{% endif %}
+            </div>
+            <div class="field-group">
+              <label for="resolution">Soluzione</label>
+              <textarea id="resolution" name="resolution" maxlength="4000" {% if errors.resolution %}aria-invalid="true"{% endif %}>{{ values.resolution }}</textarea>
+              <small>Obbligatoria per passare a “Risolto” o “Chiuso”.</small>
+              {% if errors.resolution %}<small class="field-error">{{ errors.resolution }}</small>{% endif %}
+            </div>
+          </fieldset>
+
+          <button class="primary-button management-submit" type="submit">Salva aggiornamento <span aria-hidden="true">→</span></button>
+        </form>
+      </aside>
+    </div>
+  </article>
+{% endblock %}

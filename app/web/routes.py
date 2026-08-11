@@ -28,12 +28,13 @@ from app.api.dependencies import (
 )
 from app.db.models import Site, Ticket, User
 from app.domain.auth_contracts import LoginRequest
-from app.domain.ticket_contracts import TicketCreate
+from app.domain.ticket_contracts import TicketClassification, TicketCreate, TicketUpdate
 from app.domain.ticket_intake import (
     TicketCreationKeyInput,
     TicketMissingDetailsInput,
     TicketProblemInput,
 )
+from app.domain.ticket_workflow import ALLOWED_STATUS_TRANSITIONS
 from app.domain.vocabulary import Role
 from app.security.authentication import (
     authenticate_user,
@@ -46,7 +47,30 @@ from app.tickets.creation import (
     TicketSiteNotFoundError,
     create_confirmed_ticket,
 )
+from app.tickets.management import (
+    InvalidStatusTransitionError,
+    ManagedTechnicianNotFoundError,
+    ManagedTechnicianUnavailableError,
+    ManagedTicketNotFoundError,
+    ResolutionRequiredError,
+    TicketUpdatePersistenceError,
+    update_managed_ticket,
+)
 from app.tickets.queries import get_visible_ticket, list_visible_tickets
+from app.web.technician_presenters import (
+    CATEGORY_OPTIONS,
+    IMPACT_OPTIONS,
+    STATUS_OPTIONS,
+    URGENCY_OPTIONS,
+    TechnicianAssignmentFilter,
+    TechnicianPriorityFilter,
+    TechnicianSort,
+    TechnicianStatusFilter,
+    filter_and_sort_technician_tickets,
+    list_active_technical_users,
+    present_technician_tickets,
+    summarize_technician_queue,
+)
 from app.web.ticket_presenters import (
     EmployeeTicketFilter,
     EmployeeTicketView,
@@ -98,6 +122,19 @@ EmployeeTicketFilterParameter = Annotated[
     EmployeeTicketFilter,
     Query(alias="filter"),
 ]
+TechnicianStatusFilterParameter = Annotated[
+    TechnicianStatusFilter,
+    Query(alias="status"),
+]
+TechnicianAssignmentFilterParameter = Annotated[
+    TechnicianAssignmentFilter,
+    Query(alias="assignment"),
+]
+TechnicianPriorityFilterParameter = Annotated[
+    TechnicianPriorityFilter,
+    Query(alias="priority"),
+]
+TechnicianSortParameter = Annotated[TechnicianSort, Query(alias="sort")]
 
 
 def _login_context(email: str = "", error: str | None = None) -> dict[str, object]:
@@ -212,6 +249,131 @@ def _present_tickets(
     ]
 
 
+def _technical_ticket_context(
+    session: Session,
+    current_user: User,
+    ticket: Ticket,
+    *,
+    values: dict[str, str] | None = None,
+    errors: dict[str, str] | None = None,
+    updated: bool = False,
+) -> dict[str, object]:
+    """Prepara dettaglio, scelte consentite e valori del modulo tecnico."""
+
+    ticket_view = present_technician_tickets(session, [ticket])[0]
+    allowed_statuses = {ticket.status, *ALLOWED_STATUS_TRANSITIONS[ticket.status]}
+    default_values = {
+        "status": ticket_view.status_code,
+        "assigned_technician_id": str(ticket_view.assigned_technician_id or ""),
+        "assigned_group": ticket_view.assigned_group,
+        "category": ticket_view.category_code,
+        "subcategory": ticket_view.subcategory,
+        "impact": ticket_view.impact_code,
+        "urgency": ticket_view.urgency_code,
+        "technician_note": ticket_view.technician_note,
+        "resolution": ticket_view.resolution,
+    }
+    context = _workspace_context(current_user, f"Gestisci {ticket_view.code}")
+    context.update(
+        {
+            "ticket": ticket_view,
+            "technicians": list_active_technical_users(session),
+            "status_options": [
+                option
+                for option in STATUS_OPTIONS
+                if option[0] in {item.value for item in allowed_statuses}
+            ],
+            "category_options": CATEGORY_OPTIONS,
+            "impact_options": IMPACT_OPTIONS,
+            "urgency_options": URGENCY_OPTIONS,
+            "values": values or default_values,
+            "errors": errors or {},
+            "updated": updated,
+        }
+    )
+    return context
+
+
+def _technical_update_payload(
+    *,
+    status_value: str,
+    assigned_technician_id: str,
+    assigned_group: str,
+    category: str,
+    subcategory: str,
+    impact: str,
+    urgency: str,
+    technician_note: str,
+    resolution: str,
+) -> tuple[TicketUpdate | None, dict[str, str], dict[str, str]]:
+    """Converte il modulo in un contratto sicuro e messaggi comprensibili."""
+
+    values = {
+        "status": status_value,
+        "assigned_technician_id": assigned_technician_id,
+        "assigned_group": assigned_group[:100],
+        "category": category,
+        "subcategory": subcategory[:100],
+        "impact": impact,
+        "urgency": urgency,
+        "technician_note": technician_note[:2_000],
+        "resolution": resolution[:4_000],
+    }
+    errors: dict[str, str] = {}
+    raw_payload: dict[str, object] = {"status": status_value}
+
+    clean_technician_id = assigned_technician_id.strip()
+    if clean_technician_id:
+        if clean_technician_id.isdecimal() and int(clean_technician_id) > 0:
+            raw_payload["assigned_technician_id"] = int(clean_technician_id)
+        else:
+            errors["assigned_technician_id"] = "Seleziona un tecnico disponibile."
+
+    for field_name, value in {
+        "assigned_group": assigned_group,
+        "technician_note": technician_note,
+        "resolution": resolution,
+    }.items():
+        if value.strip():
+            raw_payload[field_name] = value
+
+    classification_values = {
+        "category": category,
+        "subcategory": subcategory or None,
+        "impact": impact,
+        "urgency": urgency,
+    }
+    required_classification = (category, impact, urgency)
+    if any(required_classification) and not all(required_classification):
+        errors["classification"] = "Completa categoria, impatto e urgenza insieme."
+    elif all(required_classification):
+        try:
+            raw_payload["classification"] = TicketClassification.model_validate(
+                classification_values
+            )
+        except ValidationError:
+            errors["classification"] = "Controlla i dati della classificazione."
+
+    if errors:
+        return None, values, errors
+    try:
+        return TicketUpdate.model_validate(raw_payload), values, {}
+    except ValidationError as error:
+        for item in error.errors():
+            field = str(item["loc"][0]) if item["loc"] else "update"
+            if field == "status":
+                errors[field] = "Seleziona uno stato consentito."
+            elif field == "technician_note":
+                errors[field] = "La nota deve contenere almeno 2 caratteri."
+            elif field == "resolution":
+                errors[field] = "La soluzione deve contenere almeno 10 caratteri."
+            elif field == "assigned_group":
+                errors[field] = "Il gruppo deve contenere almeno 2 caratteri."
+            else:
+                errors["update"] = "Controlla i dati inseriti e riprova."
+        return None, values, errors
+
+
 @router.get("/", response_class=HTMLResponse)
 def index() -> RedirectResponse:
     """Porta il visitatore al punto di ingresso dell'applicazione."""
@@ -281,8 +443,12 @@ def app_home(
     session: DatabaseSession,
     current_user: WebUser,
     selected_filter: EmployeeTicketFilterParameter = "all",
+    technical_status: TechnicianStatusFilterParameter = "open",
+    assignment: TechnicianAssignmentFilterParameter = "all",
+    priority: TechnicianPriorityFilterParameter = "all",
+    sort_by: TechnicianSortParameter = "priority",
 ) -> HTMLResponse:
-    """Mostra l'area personale del dipendente o la base degli altri ruoli."""
+    """Mostra l'area personale oppure la coda completa dei ruoli tecnici."""
 
     if current_user.role is Role.EMPLOYEE:
         tickets = list_visible_tickets(session, current_user)
@@ -303,10 +469,44 @@ def app_home(
             headers={"Cache-Control": "no-store"},
         )
 
+    tickets = list_visible_tickets(session, current_user)
+    filtered_tickets = filter_and_sort_technician_tickets(
+        tickets,
+        current_user_id=current_user.id,
+        status_filter=technical_status,
+        assignment_filter=assignment,
+        priority_filter=priority,
+        sort_by=sort_by,
+    )
+    if assignment == "unassigned":
+        active_summary = "unassigned"
+    elif technical_status in {
+        "waiting",
+        "waiting_for_requester",
+        "waiting_for_vendor",
+    }:
+        active_summary = "waiting"
+    elif technical_status in {"completed", "resolved", "closed"}:
+        active_summary = "completed"
+    else:
+        active_summary = "open"
+    context = _workspace_context(current_user, "Coda tecnica")
+    context.update(
+        {
+            "tickets": present_technician_tickets(session, filtered_tickets),
+            "summary": summarize_technician_queue(tickets),
+            "total_tickets": len(tickets),
+            "technical_status": technical_status,
+            "assignment": assignment,
+            "priority": priority,
+            "sort_by": sort_by,
+            "active_summary": active_summary,
+        }
+    )
     return templates.TemplateResponse(
         request=request,
-        name="app_home.html",
-        context=_workspace_context(current_user, "Area di lavoro"),
+        name="technician_dashboard.html",
+        context=context,
         headers={"Cache-Control": "no-store"},
     )
 
@@ -620,11 +820,31 @@ def employee_ticket_detail(
     session: DatabaseSession,
     current_user: WebUser,
     created: Annotated[bool, Query()] = False,
+    updated: Annotated[bool, Query()] = False,
 ) -> Response:
-    """Mostra al dipendente soltanto il dettaglio di una propria richiesta."""
+    """Mostra il dettaglio personale o gli strumenti riservati al tecnico."""
 
     if current_user.role is not Role.EMPLOYEE:
-        return RedirectResponse(url="/app", status_code=status.HTTP_303_SEE_OTHER)
+        ticket = get_visible_ticket(session, current_user, ticket_id)
+        if ticket is None:
+            return templates.TemplateResponse(
+                request=request,
+                name="technician_ticket_not_found.html",
+                context=_workspace_context(current_user, "Ticket non trovato"),
+                status_code=status.HTTP_404_NOT_FOUND,
+                headers={"Cache-Control": "no-store"},
+            )
+        return templates.TemplateResponse(
+            request=request,
+            name="technician_ticket_detail.html",
+            context=_technical_ticket_context(
+                session,
+                current_user,
+                ticket,
+                updated=updated,
+            ),
+            headers={"Cache-Control": "no-store"},
+        )
 
     ticket = get_visible_ticket(session, current_user, ticket_id)
     if ticket is None:
@@ -643,6 +863,104 @@ def employee_ticket_detail(
         request=request,
         name="employee_ticket_detail.html",
         context=context,
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/app/tickets/{ticket_id}/update", response_class=HTMLResponse)
+def update_technical_ticket(
+    request: Request,
+    ticket_id: WebTicketId,
+    session: DatabaseSession,
+    current_user: WebUser,
+    status_value: Annotated[str, Form(alias="status")] = "",
+    assigned_technician_id: Annotated[str, Form()] = "",
+    assigned_group: Annotated[str, Form()] = "",
+    category: Annotated[str, Form()] = "",
+    subcategory: Annotated[str, Form()] = "",
+    impact: Annotated[str, Form()] = "",
+    urgency: Annotated[str, Form()] = "",
+    technician_note: Annotated[str, Form()] = "",
+    resolution: Annotated[str, Form()] = "",
+) -> Response:
+    """Controlla e salva assegnazione, classificazione e avanzamento manuali."""
+
+    if current_user.role not in {Role.TECHNICIAN, Role.ADMIN}:
+        return RedirectResponse(url="/app", status_code=status.HTTP_303_SEE_OTHER)
+
+    ticket = session.get(Ticket, ticket_id)
+    if ticket is None:
+        return templates.TemplateResponse(
+            request=request,
+            name="technician_ticket_not_found.html",
+            context=_workspace_context(current_user, "Ticket non trovato"),
+            status_code=status.HTTP_404_NOT_FOUND,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    payload, values, errors = _technical_update_payload(
+        status_value=status_value,
+        assigned_technician_id=assigned_technician_id,
+        assigned_group=assigned_group,
+        category=category,
+        subcategory=subcategory,
+        impact=impact,
+        urgency=urgency,
+        technician_note=technician_note,
+        resolution=resolution,
+    )
+    if payload is None:
+        return templates.TemplateResponse(
+            request=request,
+            name="technician_ticket_detail.html",
+            context=_technical_ticket_context(
+                session,
+                current_user,
+                ticket,
+                values=values,
+                errors=errors,
+            ),
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    try:
+        update_managed_ticket(session, ticket_id, payload)
+    except ManagedTicketNotFoundError:
+        return templates.TemplateResponse(
+            request=request,
+            name="technician_ticket_not_found.html",
+            context=_workspace_context(current_user, "Ticket non trovato"),
+            status_code=status.HTTP_404_NOT_FOUND,
+            headers={"Cache-Control": "no-store"},
+        )
+    except (ManagedTechnicianNotFoundError, ManagedTechnicianUnavailableError):
+        errors["assigned_technician_id"] = "Seleziona un tecnico attivo."
+    except InvalidStatusTransitionError:
+        errors["status"] = "Questo passaggio di stato non è consentito."
+    except ResolutionRequiredError:
+        errors["resolution"] = "Scrivi la soluzione prima di risolvere o chiudere."
+    except TicketUpdatePersistenceError:
+        errors["update"] = "Non siamo riusciti a salvare. Riprova tra poco."
+    else:
+        return RedirectResponse(
+            url=f"/app/tickets/{ticket_id}?updated=true",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    session.rollback()
+    ticket = session.get(Ticket, ticket_id)
+    return templates.TemplateResponse(
+        request=request,
+        name="technician_ticket_detail.html",
+        context=_technical_ticket_context(
+            session,
+            current_user,
+            ticket,
+            values=values,
+            errors=errors,
+        ),
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         headers={"Cache-Control": "no-store"},
     )
 

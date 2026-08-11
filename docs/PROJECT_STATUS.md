@@ -47,29 +47,33 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Bozza temporanea validata senza creazione del ticket prima della conferma.
 - Riepilogo completo con correzione, annullamento e conferma esplicita.
 - Creazione web condivisa con l'API e protetta dai doppi invii accidentali.
+- Coda tecnica completa con filtri per stato, assegnazione e priorità.
+- Dettaglio operativo per tecnico e amministratore con assegnazione, classificazione,
+  note, soluzione e avanzamento controllato.
+- Aggiornamento condiviso tra pagine web e API con ricalcolo deterministico della priorità.
 
 ## Milestone attiva
 
-**Milestone 4 - Interfaccia completa senza AI**
+**Milestone 5 - Classificazione AI**
 
 ## Ultima attività completata
 
-**SP-043 - Riepilogo e conferma**
+**SP-044 - Coda del tecnico**
 
-Il dipendente rivede descrizione, titolo, sede, servizio e persone coinvolte prima
-dell'invio. Può tornare ai campi già compilati oppure annullare senza salvare. Soltanto
-il pulsante di conferma crea il ticket e apre il relativo dettaglio. Un codice casuale
-associato alla creazione impedisce che un doppio invio produca due ticket.
+Tecnico e amministratore vedono l'intera coda, possono filtrarla e ordinarla, aprire il
+dettaglio, assegnare il ticket, correggere categoria, impatto e urgenza, aggiungere note
+e soluzione e avanzare soltanto attraverso gli stati consentiti. La priorità viene
+ricalcolata dal backend e la soluzione è obbligatoria prima di risolvere o chiudere.
 
 ## Prossima attività
 
-**SP-044 - Coda del tecnico**
+**SP-050 - Adapter del modello AI**
 
 Risultato atteso:
 
-- mostrare al tecnico la coda completa con filtri e dettaglio;
-- permettere assegnazione e aggiornamento manuali;
-- completare dal browser il ciclo di vita di un ticket demo.
+- isolare Gemini dietro un'interfaccia sostituibile;
+- mantenere chiavi e configurazione fuori dal repository;
+- permettere ai test di funzionare senza chiamate AI reali.
 
 ## Blocchi o decisioni aperte
 
@@ -79,7 +83,7 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-044.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-050.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
@@ -231,4 +235,16 @@ Prima di terminare verificare che:
   creazione univoco, senza perdere ticket locali.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-043.
 - `pytest`: 161 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificato che tecnico e amministratore vedano l'intera coda e il dettaglio completo.
+- Verificati filtri per stato, assegnazione e priorità, insieme ai quattro ordinamenti.
+- Verificati assegnazione a un account tecnico attivo e rifiuto del ruolo dipendente.
+- Verificata la correzione manuale di categoria, impatto e urgenza con priorità ricalcolata.
+- Verificato dal browser il percorso `new → in_progress → resolved → closed` con
+  soluzione obbligatoria e senza aggiornamenti parziali in caso di errore.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-044.
+- Verificata l'evidenziazione visiva del riepilogo tecnico realmente selezionato.
+- Verificata la vista predefinita “Aperti” e la selezione dei riepiloghi senza salti
+  nella pagina, conservando priorità e ordinamento scelti.
+- `pytest`: 172 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

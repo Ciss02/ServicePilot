@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% set active_section = "queue" %}
+{% block app_navigation %}{% include "_technical_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <section class="not-found-state shell" aria-labelledby="not-found-title">
+    <span class="not-found-code">404</span>
+    <p class="eyebrow">Coda tecnica</p>
+    <h1 id="not-found-title">Ticket non trovato.</h1>
+    <p>Il ticket richiesto non esiste oppure è stato rimosso dalla demo.</p>
+    <a class="primary-link-button" href="/app">Torna alla coda <span aria-hidden="true">→</span></a>
+  </section>
+{% endblock %}
