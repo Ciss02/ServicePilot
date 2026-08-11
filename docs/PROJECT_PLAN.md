@@ -77,7 +77,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 **Risultato:** dipendente e tecnico completano il flusso principale dal browser.
 
-- [ ] **SP-040 - Layout e pagina di accesso**
+- [x] **SP-040 - Layout e pagina di accesso**
   Creare la base grafica responsive e la pagina login.
   Verifica: pagine utilizzabili da computer e schermo piccolo.
 - [ ] **SP-041 - Area del dipendente**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-040**. La milestone attiva è **Milestone 4**.
+La prossima attività è **SP-041**. La milestone attiva è **Milestone 4**.

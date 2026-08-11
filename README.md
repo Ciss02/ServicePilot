@@ -24,7 +24,9 @@ contratti dati validati, il database iniziale, un dataset completamente sintetic
 API per creare, leggere e gestire tecnicamente i ticket, oltre agli account demo con
 password protette tramite Argon2. Gli account possono effettuare login, mantenere una
 sessione autenticata e fare logout. Le API applicano inoltre i permessi dei ruoli:
-ticket personali per i dipendenti e gestione completa per tecnico e amministratore.
+ticket personali per i dipendenti e gestione completa per tecnico e amministratore. È
+ora disponibile anche una pagina di accesso responsive collegata alla sessione e una
+base protetta per le prossime schermate dell'applicazione.
 
 La prossima attività è indicata in
 [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
@@ -66,6 +68,7 @@ Da PowerShell, nella cartella del progetto:
 Il server sarà disponibile all'indirizzo `http://127.0.0.1:8000`. L'endpoint
 `http://127.0.0.1:8000/health` verifica che il servizio risponda, mentre la
 documentazione interattiva delle API è disponibile su `http://127.0.0.1:8000/docs`.
+La pagina di accesso è disponibile su `http://127.0.0.1:8000/login`.
 
 Le operazioni di accesso sono `POST /auth/login`, `GET /auth/session` e
 `POST /auth/logout`. Sono inoltre disponibili `POST /tickets`, `GET /tickets`,
@@ -121,6 +124,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Dataset dimostrativo](docs/DEMO_DATA.md)
 - [Account demo e password sicure](docs/DEMO_ACCOUNTS.md)
 - [Login, sessione e logout](docs/AUTHENTICATION.md)
+- [Interfaccia web iniziale](docs/WEB_INTERFACE.md)
 - [Autorizzazione per ruolo](docs/AUTHORIZATION.md)
 - [API essenziali dei ticket](docs/TICKET_API.md)
 
@@ -147,6 +151,8 @@ and update tickets are available. Demo accounts store Argon2 password hashes who
 plain-text values come only from environment variables, and can now log in, keep an
 authenticated session, and log out. Ticket APIs enforce role permissions: employees
 see only their own requests, while technicians and administrators manage the full queue.
+A responsive sign-in page now connects the browser to the same session mechanism and
+provides the protected foundation for the next application screens.
 
 See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
 
@@ -168,6 +174,7 @@ python -m pip install -r requirements-dev.txt
 
 Open `http://127.0.0.1:8000/health` to check the service or
 `http://127.0.0.1:8000/docs` to view the interactive API documentation.
+Open `http://127.0.0.1:8000/login` to use the browser sign-in page.
 
 Authentication operations are `POST /auth/login`, `GET /auth/session`, and
 `POST /auth/logout`. Ticket operations are `POST /tickets`, `GET /tickets`,

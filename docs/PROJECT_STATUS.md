@@ -1,6 +1,6 @@
 # ServicePilot AI - Stato del progetto
 
-Aggiornato: 10 agosto 2026
+Aggiornato: 11 agosto 2026
 
 Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
@@ -39,6 +39,8 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - API ticket protette da sessione autenticata e permessi applicati nel backend.
 - Dipendenti limitati ai propri ticket; tecnico e admin abilitati alla gestione completa.
 - Controlli riutilizzabili per funzioni tecniche e amministrative.
+- Interfaccia web responsive con layout condiviso e pagina di accesso accessibile.
+- Area di base protetta e uscita dal browser collegate alle sessioni esistenti.
 
 ## Milestone attiva
 
@@ -46,22 +48,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-032 - Autorizzazione per ruolo**
+**SP-040 - Layout e pagina di accesso**
 
-Le API ticket richiedono una sessione valida. Il richiedente viene ricavato dalla
-sessione, i dipendenti vedono soltanto i propri ticket e non possono usare la gestione
-tecnica; tecnico e amministratore consultano e modificano l'intera coda. È disponibile
-anche il controllo riutilizzabile riservato alle future funzioni amministrative.
+Il browser offre una pagina di accesso responsive collegata all'autenticazione già
+presente. Il layout comune supporta tastiera e schermi piccoli; accesso errato, accesso
+valido, protezione di `/app` e logout sono stati verificati. `/app` resta volutamente
+una base vuota per non anticipare l'area dipendente.
 
 ## Prossima attività
 
-**SP-040 - Layout e pagina di accesso**
+**SP-041 - Area del dipendente**
 
 Risultato atteso:
 
-- creare la base grafica responsive dell'applicazione;
-- aggiungere una pagina di accesso collegata alle API esistenti;
-- rendere le pagine utilizzabili da computer e schermo piccolo.
+- mostrare al dipendente soltanto i propri ticket;
+- aggiungere il dettaglio di un ticket personale;
+- riutilizzare il layout e i permessi già verificati.
 
 ## Blocchi o decisioni aperte
 
@@ -71,11 +73,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-040.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-041.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-040` con il codice dell'attività successiva.
+Sostituire `SP-041` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -173,4 +175,13 @@ Prima di terminare verificare che:
 - Verificato il controllo amministrativo: `admin` accettato e `technician` rifiutato.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-032.
 - `pytest`: 123 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificate Jinja2 3.1.6 e python-multipart 0.0.32 nell'ambiente Python 3.13.
+- Verificati modulo di accesso, errore uniforme, cookie di sessione, pagina protetta e
+  logout tramite test HTTP automatici.
+- Verificato che la password errata non venga ripresentata nel documento HTML.
+- Verificati layout e interazioni reali nel browser a 1440 × 900 e 390 × 844 pixel,
+  senza scorrimento orizzontale o errori nella console.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-040.
+- `pytest`: 130 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

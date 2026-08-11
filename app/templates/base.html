@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="ServicePilot AI, portale demo per la gestione delle richieste IT.">
+    <title>{{ page_title }} · ServicePilot AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+  </head>
+  <body class="{{ body_class | default('') }}">
+    <a class="skip-link" href="#contenuto">Vai al contenuto</a>
+
+    <div class="demo-banner" role="note">
+      <span class="demo-dot" aria-hidden="true"></span>
+      Ambiente dimostrativo · Tutti i dati sono fittizi
+    </div>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="/" aria-label="ServicePilot AI, pagina iniziale">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </span>
+          <span class="brand-copy">
+            <strong>ServicePilot</strong>
+            <small>AI service desk</small>
+          </span>
+        </a>
+        {% block header_actions %}
+          <span class="environment-chip">Portfolio MVP</span>
+        {% endblock %}
+      </div>
+    </header>
+
+    <main id="contenuto">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span>ServicePilot AI</span>
+        <span>Portale dimostrativo · Nessun dato reale</span>
+      </div>
+    </footer>
+  </body>
+</html>

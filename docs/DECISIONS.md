@@ -364,3 +364,31 @@ identità nel corpo della richiesta. Il `404` sui ticket altrui non rivela infor
 sulla loro esistenza. Controlli condivisi evitano di riscrivere regole diverse in ogni
 endpoint e preparano le future funzioni amministrative mantenendo SP-032 nel suo
 perimetro.
+
+## D-017 - Interfaccia server-rendered e accesso web
+
+**Data:** 11 agosto 2026
+**Stato:** confermata durante SP-040
+
+**Decisione:**
+
+- usare `Jinja2 3.1.6` per produrre HTML dal backend e `python-multipart 0.0.32` per
+  leggere i moduli;
+- creare un layout comune con HTML semantico e un foglio di stile locale responsive;
+- esporre `/login`, `/app` e `/logout`, mantenendo separate e disponibili le API JSON;
+- riutilizzare lo stesso servizio per verifica delle credenziali, creazione della
+  sessione e gestione del cookie nei flussi API e web;
+- mostrare un errore generico per qualsiasi accesso non valido e non ripresentare la
+  password nel documento HTML;
+- non aggiungere JavaScript o HTMX finché una funzionalità interattiva non lo richiede;
+- mantenere `/app` come sola base protetta e rinviare elenco e dettaglio ticket a
+  SP-041;
+- rinviare pubblicazione e configurazione dell'ambiente ospitato a SP-082.
+
+**Motivazione:**
+
+Il rendering sul server produce una prima interfaccia semplice da capire e verificare,
+senza duplicare nel browser le regole di autenticazione. I servizi condivisi impediscono
+che API e pagine applichino controlli differenti. HTML semantico, uso da tastiera e
+adattamento allo schermo piccolo rendono la base riutilizzabile per le prossime pagine,
+mentre l'assenza di JavaScript evita complessità che il modulo di accesso non richiede.
