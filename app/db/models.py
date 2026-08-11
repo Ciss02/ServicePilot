@@ -9,6 +9,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -105,6 +106,7 @@ class Ticket(Base):
             "affected_users BETWEEN 1 AND 10000",
             name="ck_tickets_affected_users",
         ),
+        Index("ux_tickets_creation_key", "creation_key", unique=True),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -118,6 +120,7 @@ class Ticket(Base):
     )
     service: Mapped[str] = mapped_column(String(100), nullable=False)
     affected_users: Mapped[int] = mapped_column(Integer, nullable=False)
+    creation_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
     category: Mapped[TicketCategory | None] = mapped_column(
         _enum_column(TicketCategory, "ticket_category"), nullable=True
     )

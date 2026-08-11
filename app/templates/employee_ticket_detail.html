@@ -7,6 +7,13 @@
   <article class="ticket-detail shell" aria-labelledby="ticket-title">
     <a class="back-link" href="/app"><span aria-hidden="true">←</span> Torna ai miei ticket</a>
 
+    {% if created %}
+      <div class="ticket-created-alert" role="status">
+        <span aria-hidden="true">✓</span>
+        <p><strong>Ticket creato correttamente</strong>La richiesta è stata inviata al supporto e ora compare tra i tuoi ticket.</p>
+      </div>
+    {% endif %}
+
     <header class="ticket-detail-heading">
       <div>
         <div class="ticket-row-meta">

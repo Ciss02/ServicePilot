@@ -12,6 +12,11 @@ from app.db.session import get_session
 from app.domain.ticket_contracts import TicketCreate, TicketRead, TicketUpdate
 from app.domain.ticket_workflow import can_transition_status
 from app.domain.vocabulary import Role, TicketStatus
+from app.tickets.creation import (
+    TicketPersistenceError,
+    TicketSiteNotFoundError,
+    create_confirmed_ticket,
+)
 from app.tickets.queries import get_visible_ticket, list_visible_tickets
 
 
@@ -33,31 +38,18 @@ def create_ticket(
 ) -> Ticket:
     """Salva una richiesta confermata per l'utente autenticato."""
 
-    if session.get(Site, payload.site_id) is None:
+    try:
+        return create_confirmed_ticket(session, payload, current_user)
+    except TicketSiteNotFoundError as error:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Sede {payload.site_id} non trovata",
-        )
-
-    ticket = Ticket(
-        title=payload.title,
-        description=payload.description,
-        requester_id=current_user.id,
-        site_id=payload.site_id,
-        service=payload.service,
-        affected_users=payload.affected_users,
-    )
-    session.add(ticket)
-    try:
-        session.commit()
-        session.refresh(ticket)
-    except IntegrityError as error:
-        session.rollback()
+        ) from error
+    except TicketPersistenceError as error:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Il ticket non può essere salvato con i riferimenti forniti",
         ) from error
-    return ticket
 
 
 @router.get(

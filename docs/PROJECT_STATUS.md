@@ -45,6 +45,8 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Query di visibilità condivise tra API e pagine web, con proprietà filtrata nel backend.
 - Raccolta guidata deterministica con descrizione libera e richiesta dei dati mancanti.
 - Bozza temporanea validata senza creazione del ticket prima della conferma.
+- Riepilogo completo con correzione, annullamento e conferma esplicita.
+- Creazione web condivisa con l'API e protetta dai doppi invii accidentali.
 
 ## Milestone attiva
 
@@ -52,23 +54,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-042 - Raccolta guidata dei dati**
+**SP-043 - Riepilogo e conferma**
 
-Il dipendente apre `/app/new-ticket`, descrive liberamente il problema e riceve una
-seconda domanda per titolo, sede, servizio e numero di persone coinvolte. Tutti i dati
-vengono controllati nel backend e la sede deve essere attiva. La bozza resta temporanea
-nei moduli e nessun ticket viene ancora salvato. Tecnico e amministratore non possono
-usare il percorso.
+Il dipendente rivede descrizione, titolo, sede, servizio e persone coinvolte prima
+dell'invio. Può tornare ai campi già compilati oppure annullare senza salvare. Soltanto
+il pulsante di conferma crea il ticket e apre il relativo dettaglio. Un codice casuale
+associato alla creazione impedisce che un doppio invio produca due ticket.
 
 ## Prossima attività
 
-**SP-043 - Riepilogo e conferma**
+**SP-044 - Coda del tecnico**
 
 Risultato atteso:
 
-- mostrare in modo chiaro tutti i dati raccolti;
-- permettere al dipendente di correggere o annullare;
-- creare un solo ticket soltanto dopo una conferma esplicita.
+- mostrare al tecnico la coda completa con filtri e dettaglio;
+- permettere assegnazione e aggiornamento manuali;
+- completare dal browser il ciclo di vita di un ticket demo.
 
 ## Blocchi o decisioni aperte
 
@@ -78,7 +79,7 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-043.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-044.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
@@ -215,4 +216,19 @@ Prima di terminare verificare che:
 - Verificato che una raccolta valida non crei alcun ticket prima di SP-043.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-042.
 - `pytest`: 149 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificato che il riepilogo mostri tutti i dati raccolti senza creare ticket.
+- Verificato che correzione e annullamento non modifichino il database.
+- Verificata la creazione di un ticket soltanto con conferma esplicita positiva.
+- Verificato che due invii con lo stesso codice riportino allo stesso ticket senza
+  duplicarlo.
+- Verificato che una sede disattivata dopo il riepilogo venga rifiutata alla conferma.
+- Verificato che tutti i passaggi di raccolta, correzione e conferma restino riservati
+  al dipendente.
+- Verificati il messaggio di successo, il collegamento al dipendente e lo stato iniziale
+  `new`.
+- Verificato l'aggiornamento ripetibile dei database SQLite esistenti con il codice di
+  creazione univoco, senza perdere ticket locali.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-043.
+- `pytest`: 161 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

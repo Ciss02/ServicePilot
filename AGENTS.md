@@ -31,6 +31,10 @@ Prima di modificare il progetto:
 - Non dichiarare completata un'attività solo perché il codice è stato scritto.
 - Eseguire i controlli e i test pertinenti.
 - Spiegare cosa è stato verificato e segnalare ciò che non è stato possibile verificare.
+- Quando un'attività modifica pagine web, aggiornare o riavviare il server locale e
+  aprire nel browser integrato la pagina interessata, senza attendere una richiesta
+  separata dell'utente.
+- Mostrare il risultato visivo prima del merge e indicare in modo semplice cosa provare.
 - Aggiornare `docs/PROJECT_STATUS.md` al termine di ogni attività completata.
 - Aggiornare la casella corrispondente in `docs/PROJECT_PLAN.md` solo dopo la verifica.
 - Prima di un commit, riepilogare modifiche e controlli eseguiti.
