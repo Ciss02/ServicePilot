@@ -60,7 +60,11 @@
           <span class="message-avatar" aria-hidden="true">SP</span>
           <div>
             <strong>ServicePilot</strong>
-            <p>Grazie. Per indirizzare bene la richiesta mi mancano quattro informazioni essenziali.</p>
+            {% if ai_assisted %}
+              <p>Ho già preparato le informazioni che ho riconosciuto. Mi serve ancora {{ missing_details | join(", ") }}.</p>
+            {% else %}
+              <p>Grazie. Per indirizzare bene la richiesta mi mancano quattro informazioni essenziali.</p>
+            {% endif %}
           </div>
         </div>
 
@@ -72,36 +76,57 @@
               <span>{% if errors.confirmation %}{{ errors.confirmation }}{% else %}La richiesta non è stata salvata. Correggi i dati e riprova.{% endif %}</span>
             </div>
           {% endif %}
-          <div class="field-group">
-            <div class="label-row">
-              <label for="title">Titolo breve</label>
-              <span>Da 5 a 120 caratteri</span>
-            </div>
-            <input id="title" name="title" value="{{ values.title | default("") }}" minlength="5" maxlength="120" required {% if errors.title %}aria-invalid="true" aria-describedby="title-error"{% endif %} placeholder="Esempio: Accesso VPN non disponibile">
-            {% if errors.title %}<small class="field-error" id="title-error">{{ errors.title }}</small>{% endif %}
-          </div>
-          <div class="intake-field-grid">
+          {% if "title" in requested_fields %}
             <div class="field-group">
-              <label for="site_id">Sede interessata</label>
-              <select id="site_id" name="site_id" required {% if errors.site_id %}aria-invalid="true" aria-describedby="site-error"{% endif %}>
-                <option value="">Seleziona una sede</option>
-                {% for site in sites %}
-                  <option value="{{ site.id }}" {% if values.site_id | string == site.id | string %}selected{% endif %}>{{ site.name }}</option>
-                {% endfor %}
-              </select>
-              {% if errors.site_id %}<small class="field-error" id="site-error">{{ errors.site_id }}</small>{% endif %}
+              <div class="label-row">
+                <label for="title">Titolo breve</label>
+                <span>Da 5 a 120 caratteri</span>
+              </div>
+              <input id="title" name="title" value="{{ values.title | default("") }}" minlength="5" maxlength="120" required {% if errors.title %}aria-invalid="true" aria-describedby="title-error"{% endif %} placeholder="Esempio: Accesso VPN non disponibile">
+              {% if errors.title %}<small class="field-error" id="title-error">{{ errors.title }}</small>{% endif %}
             </div>
+          {% else %}
+            <input type="hidden" name="title" value="{{ values.title }}">
+          {% endif %}
+          {% if "site_id" in requested_fields or "affected_users" in requested_fields %}
+            <div class="intake-field-grid">
+              {% if "site_id" in requested_fields %}
+                <div class="field-group">
+                  <label for="site_id">Sede interessata</label>
+                  <select id="site_id" name="site_id" required {% if errors.site_id %}aria-invalid="true" aria-describedby="site-error"{% endif %}>
+                    <option value="">Seleziona una sede</option>
+                    {% for site in sites %}
+                      <option value="{{ site.id }}" {% if values.site_id | string == site.id | string %}selected{% endif %}>{{ site.name }}</option>
+                    {% endfor %}
+                  </select>
+                  {% if errors.site_id %}<small class="field-error" id="site-error">{{ errors.site_id }}</small>{% endif %}
+                </div>
+              {% else %}
+                <input type="hidden" name="site_id" value="{{ values.site_id }}">
+              {% endif %}
+              {% if "affected_users" in requested_fields %}
+                <div class="field-group">
+                  <label for="affected_users">Persone coinvolte</label>
+                  <input id="affected_users" name="affected_users" type="number" min="1" max="10000" value="{{ values.affected_users | default("") }}" required {% if errors.affected_users %}aria-invalid="true" aria-describedby="users-error"{% endif %} placeholder="1">
+                  {% if errors.affected_users %}<small class="field-error" id="users-error">{{ errors.affected_users }}</small>{% endif %}
+                </div>
+              {% else %}
+                <input type="hidden" name="affected_users" value="{{ values.affected_users }}">
+              {% endif %}
+            </div>
+          {% else %}
+            <input type="hidden" name="site_id" value="{{ values.site_id }}">
+            <input type="hidden" name="affected_users" value="{{ values.affected_users }}">
+          {% endif %}
+          {% if "service" in requested_fields %}
             <div class="field-group">
-              <label for="affected_users">Persone coinvolte</label>
-              <input id="affected_users" name="affected_users" type="number" min="1" max="10000" value="{{ values.affected_users | default("") }}" required {% if errors.affected_users %}aria-invalid="true" aria-describedby="users-error"{% endif %} placeholder="1">
-              {% if errors.affected_users %}<small class="field-error" id="users-error">{{ errors.affected_users }}</small>{% endif %}
+              <label for="service">Servizio o strumento coinvolto</label>
+              <input id="service" name="service" value="{{ values.service | default("") }}" minlength="2" maxlength="100" required {% if errors.service %}aria-invalid="true" aria-describedby="service-error"{% endif %} placeholder="Esempio: VPN, posta elettronica, stampante etichette">
+              {% if errors.service %}<small class="field-error" id="service-error">{{ errors.service }}</small>{% endif %}
             </div>
-          </div>
-          <div class="field-group">
-            <label for="service">Servizio o strumento coinvolto</label>
-            <input id="service" name="service" value="{{ values.service | default("") }}" minlength="2" maxlength="100" required {% if errors.service %}aria-invalid="true" aria-describedby="service-error"{% endif %} placeholder="Esempio: VPN, posta elettronica, stampante etichette">
-            {% if errors.service %}<small class="field-error" id="service-error">{{ errors.service }}</small>{% endif %}
-          </div>
+          {% else %}
+            <input type="hidden" name="service" value="{{ values.service }}">
+          {% endif %}
           <div class="intake-actions">
             <a class="back-link" href="/app/new-ticket">Ricomincia</a>
             <button class="primary-button" type="submit">Completa la raccolta <span aria-hidden="true">→</span></button>

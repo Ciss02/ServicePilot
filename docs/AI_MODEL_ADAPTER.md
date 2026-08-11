@@ -1,7 +1,8 @@
 # Adapter del modello AI
 
-Questo documento descrive la base introdotta con SP-050. L'adapter non modifica ancora
-la raccolta guidata: prepara un collegamento sicuro che verrà usato da SP-051 e SP-052.
+Questo documento descrive la base introdotta con SP-050. Da SP-051 l'adapter è usato
+dalla raccolta guidata per estrarre i dati presenti nella descrizione; SP-052 userà lo
+stesso contratto per la classificazione suggerita.
 
 ## Quale problema risolve
 
@@ -23,8 +24,8 @@ L'operazione `generate_structured` riceve:
 - eventuali istruzioni di sistema;
 - lo schema esatto che la risposta deve rispettare.
 
-SP-050 non definisce ancora i dati estratti dal ticket. Gli schemi specifici verranno
-aggiunti nelle attività dedicate all'estrazione e alla classificazione.
+Lo schema dell'estrazione ticket è definito in `app/ai/ticket_extraction.py` e spiegato
+in `docs/AI_TICKET_EXTRACTION.md`. La classificazione verrà aggiunta in SP-052.
 
 ## Dove vengono controllati
 

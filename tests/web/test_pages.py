@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import Engine, func, select
 from sqlalchemy.orm import Session
 
+from app.ai.dependencies import get_ai_model
 from app.db import (
     AuthSession,
     Site,
@@ -192,6 +193,23 @@ def ticket_confirmation_data(response_text: str, site_id: int) -> dict[str, str]
         "affected_users": "2",
         "creation_key": match.group(1),
     }
+
+
+class WebExtractionModelStub:
+    """Modello locale per provare il percorso web senza usare Gemini."""
+
+    def __init__(self, response: dict[str, object]) -> None:
+        self.response = response
+
+    def generate_structured(
+        self,
+        *,
+        prompt: str,
+        response_schema,
+        system_instruction: str | None = None,
+    ):
+        del prompt, system_instruction
+        return response_schema.model_validate(self.response)
 
 
 def test_login_page_has_accessible_responsive_structure(web_client) -> None:
@@ -773,6 +791,72 @@ def test_guided_intake_asks_only_for_missing_essential_details(web_client) -> No
     assert 'name="affected_users"' in response.text
     assert "Sede Web Demo" in response.text
     assert "Sede disattivata" not in response.text
+
+
+def test_ai_extraction_goes_directly_to_confirmation_when_data_is_complete(
+    web_client,
+) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        tickets_before = session.scalar(select(func.count()).select_from(Ticket))
+
+    client.app.dependency_overrides[get_ai_model] = lambda: WebExtractionModelStub(
+        {
+            "title": "VPN demo non disponibile",
+            "site_code": "WEB-DEMO",
+            "service": "Accesso remoto",
+            "affected_users": 2,
+        }
+    )
+    response = client.post(
+        "/app/new-ticket/problem",
+        data={
+            "description": (
+                "Nella Sede Web Demo la VPN non funziona per due persone."
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert "Riepilogo della richiesta" in response.text
+    assert "VPN demo non disponibile" in response.text
+    assert "Sede Web Demo" in response.text
+    assert "Accesso remoto" in response.text
+    assert "ticket non" in response.text
+    assert "ancora stato creato" in response.text
+    with Session(database_engine) as session:
+        assert session.scalar(select(func.count()).select_from(Ticket)) == tickets_before
+
+
+def test_ai_extraction_asks_only_for_information_that_is_still_missing(
+    web_client,
+) -> None:
+    client, _, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    client.app.dependency_overrides[get_ai_model] = lambda: WebExtractionModelStub(
+        {
+            "title": "Errore durante l'accesso VPN",
+            "site_code": None,
+            "service": "VPN",
+            "affected_users": 1,
+        }
+    )
+
+    response = client.post(
+        "/app/new-ticket/problem",
+        data={"description": "Quando accedo alla VPN compare un errore."},
+    )
+
+    assert response.status_code == 200
+    assert "Mi serve ancora la sede interessata" in response.text
+    assert '<select id="site_id" name="site_id"' in response.text
+    assert '<input type="hidden" name="title"' in response.text
+    assert '<input type="hidden" name="service" value="VPN">' in response.text
+    assert '<input type="hidden" name="affected_users" value="1">' in response.text
+    assert '<input id="title"' not in response.text
+    assert '<input id="service"' not in response.text
+    assert '<input id="affected_users"' not in response.text
 
 
 def test_guided_intake_rejects_invalid_or_inactive_details(web_client) -> None:

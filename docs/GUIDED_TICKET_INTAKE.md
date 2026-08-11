@@ -1,9 +1,9 @@
 # Raccolta guidata dei dati
 
 SP-042 e SP-043 permettono a un dipendente autenticato di descrivere un problema,
-completare i dati essenziali e controllare tutto prima dell'invio. Il flusso non usa
-ancora l'AI: la raccolta manuale è la base temporanea che verrà sostituita dalla
-conversazione intelligente nelle attività SP-050 e SP-051.
+completare i dati essenziali e controllare tutto prima dell'invio. Da SP-051 l'AI prova
+a ricavare titolo, sede, servizio e persone coinvolte: il modulo mostra soltanto i campi
+ancora mancanti. Se l'AI è disattivata, resta disponibile la raccolta manuale completa.
 
 ## Quale problema risolve
 
@@ -19,6 +19,10 @@ Il primo passaggio riceve una descrizione da 10 a 4.000 caratteri. Il secondo ri
 - sede attiva scelta dall'elenco del database;
 - servizio o strumento coinvolto, da 2 a 100 caratteri;
 - numero di persone coinvolte, da 1 a 10.000.
+
+Quando l'estrazione trova tutti e quattro i dati, il secondo passaggio viene saltato e
+si arriva direttamente al riepilogo. I dettagli sono descritti in
+`docs/AI_TICKET_EXTRACTION.md`.
 
 Le pagine sono disponibili in `GET /app/new-ticket`,
 `POST /app/new-ticket/problem`, `POST /app/new-ticket/details`,

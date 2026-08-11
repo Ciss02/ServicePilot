@@ -525,3 +525,30 @@ La configurazione disattivata mantiene il portale avviabile senza segreti o rete
 i limiti impediscono attese e tentativi eccessivi. Il collegamento al flusso utente viene
 rinviato alle issue che definiscono dati estratti, classificazione e gestione visibile
 degli errori.
+
+## D-023 - Estrazione prudente e campi mancanti calcolati dal backend
+
+**Data:** 11 agosto 2026
+**Stato:** confermata durante SP-051
+
+**Decisione:**
+
+- inviare al modello la descrizione e soltanto codice e nome delle sedi attive;
+- richiedere titolo, codice sede, servizio e persone coinvolte in uno schema rigido;
+- usare `null` quando un dato non è ricavabile senza supposizioni;
+- generare un titolo breve fedele alla descrizione, senza classificare il ticket;
+- accettare una sede soltanto se corrisponde a una delle opzioni fornite dal backend;
+- calcolare nel backend, e non nel modello, l'elenco esatto dei campi mancanti;
+- mostrare soltanto i campi mancanti e passare direttamente al riepilogo se il risultato
+  è completo;
+- conservare il percorso manuale quando l'AI è disattivata o produce un errore controllato;
+- non salvare descrizione, prompt o bozza prima della conferma esplicita;
+- usare modelli simulati nei test senza chiamate esterne.
+
+**Motivazione:**
+
+Il modello riduce il lavoro del dipendente, ma ogni dato continua a passare attraverso
+regole deterministiche del backend. Limitare la scelta delle sedi evita che una risposta
+plausibile ma inventata diventi un identificativo valido. Calcolare localmente i campi
+mancanti impedisce contraddizioni tra dati e domande successive. Il percorso manuale
+mantiene l'applicazione utilizzabile anche senza configurare Gemini.

@@ -55,6 +55,10 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Configurazione AI esterna, disattivata per impostazione predefinita e protetta da
   timeout, tentativi e limite di output.
 - Risposte strutturate ricontrollate da Pydantic e testabili senza chiamate AI reali.
+- Estrazione AI di titolo, sede, servizio e persone coinvolte dalla descrizione libera.
+- Campi mancanti calcolati dal backend e richiesti singolarmente nel percorso web.
+- Passaggio diretto al riepilogo quando l'estrazione è completa, senza creare il ticket.
+- Raccolta manuale ancora disponibile quando il provider AI è disattivato.
 
 ## Milestone attiva
 
@@ -62,22 +66,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-050 - Adapter del modello AI**
+**SP-051 - Estrazione strutturata**
 
-ServicePilot usa un contratto comune per richiedere risposte strutturate senza dipendere
-direttamente da Gemini. Il provider resta disattivato senza configurazione esplicita;
-chiave, modello e limiti provengono dall'ambiente. I test sostituiscono Gemini con client
-controllati e non effettuano chiamate esterne.
+ServicePilot analizza la descrizione libera tramite l'adapter AI e accetta soltanto un
+risultato conforme allo schema previsto. Il backend riconosce esclusivamente sedi attive,
+calcola i campi mancanti e presenta all'utente solo le domande ancora necessarie. Nessun
+ticket viene creato prima del riepilogo e della conferma esplicita.
 
 ## Prossima attività
 
-**SP-051 - Estrazione strutturata**
+**SP-052 - Classificazione suggerita**
 
 Risultato atteso:
 
-- estrarre dalla descrizione i dati già presenti;
-- individuare con precisione le informazioni mancanti;
-- rifiutare output AI incompleti o non conformi.
+- proporre categoria, sottocategoria, impatto, urgenza e gruppo di assegnazione;
+- controllare l'output AI con il vocabolario del dominio;
+- continuare a calcolare la priorità soltanto nel backend.
 
 ## Blocchi o decisioni aperte
 
@@ -87,7 +91,7 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-051.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-052.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
@@ -261,4 +265,14 @@ Prima di terminare verificare che:
 - Verificata la sostituzione completa di Gemini con client simulati senza accesso alla rete.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-050.
 - `pytest`: 186 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificata l'estrazione strutturata di titolo, sede, servizio e persone coinvolte.
+- Verificato che il backend calcoli esattamente i campi ancora mancanti.
+- Verificato il passaggio diretto al riepilogo con un risultato completo.
+- Verificata la richiesta dei soli dati mancanti con un risultato incompleto.
+- Verificati il rifiuto di sedi non disponibili e di risposte fuori contratto.
+- Verificato che il percorso manuale resti disponibile con provider disattivato.
+- Verificata l'assenza di creazioni ticket prima della conferma esplicita.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-051.
+- `pytest`: 192 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
