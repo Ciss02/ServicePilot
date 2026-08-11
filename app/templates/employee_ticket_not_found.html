@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% set active_section = "tickets" %}
+{% block app_navigation %}{% include "_employee_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <section class="not-found-state shell" aria-labelledby="not-found-title">
+    <span class="not-found-code">404</span>
+    <p class="eyebrow">Richiesta non disponibile</p>
+    <h1 id="not-found-title">Questo ticket non è tra le tue richieste.</h1>
+    <p>Potrebbe non esistere oppure appartenere a un altro account.</p>
+    <a class="primary-link-button" href="/app">Torna ai miei ticket <span aria-hidden="true">→</span></a>
+  </section>
+{% endblock %}

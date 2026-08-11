@@ -41,6 +41,8 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Controlli riutilizzabili per funzioni tecniche e amministrative.
 - Interfaccia web responsive con layout condiviso e pagina di accesso accessibile.
 - Area di base protetta e uscita dal browser collegate alle sessioni esistenti.
+- Area dipendente con riepilogo, elenco e dettaglio dei ticket personali.
+- Query di visibilità condivise tra API e pagine web, con proprietà filtrata nel backend.
 
 ## Milestone attiva
 
@@ -48,22 +50,23 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-040 - Layout e pagina di accesso**
+**SP-041 - Area del dipendente**
 
-Il browser offre una pagina di accesso responsive collegata all'autenticazione già
-presente. Il layout comune supporta tastiera e schermi piccoli; accesso errato, accesso
-valido, protezione di `/app` e logout sono stati verificati. `/app` resta volutamente
-una base vuota per non anticipare l'area dipendente.
+Il dipendente vede in `/app` conteggi ed elenco delle sole richieste associate alla
+propria sessione e può aprirne il dettaglio. Il filtro di proprietà avviene nella query
+del backend ed è condiviso con le API. Ticket inesistenti e ticket altrui restituiscono
+la stessa pagina `404` senza rivelare dati. Tecnico e amministratore restano sulla base
+protetta in attesa della coda prevista da SP-044.
 
 ## Prossima attività
 
-**SP-041 - Area del dipendente**
+**SP-042 - Raccolta guidata dei dati**
 
 Risultato atteso:
 
-- mostrare al dipendente soltanto i propri ticket;
-- aggiungere il dettaglio di un ticket personale;
-- riutilizzare il layout e i permessi già verificati.
+- creare una conversazione inizialmente deterministica per descrivere il problema;
+- chiedere in modo sintetico i dati essenziali ancora mancanti;
+- non creare ancora il ticket prima del riepilogo e della conferma di SP-043.
 
 ## Blocchi o decisioni aperte
 
@@ -73,11 +76,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-041.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-042.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-041` con il codice dell'attività successiva.
+Sostituire `SP-042` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -184,4 +187,16 @@ Prima di terminare verificare che:
   senza scorrimento orizzontale o errori nella console.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-040.
 - `pytest`: 130 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificato che l'elenco web del dipendente mostri soltanto i propri ticket, ordinati
+  dal più recente.
+- Verificati dettaglio personale, sede, categoria, priorità, tecnico, aggiornamento e
+  soluzione quando disponibili.
+- Verificato che ticket altrui e ticket inesistenti restituiscano la stessa pagina `404`
+  senza titolo o descrizione riservati.
+- Verificati stato vuoto, rinvio anonimo al login e separazione dalla futura coda tecnica.
+- Verificato che le API conservino lettura e gestione completa per tecnico e admin dopo
+  l'estrazione delle query condivise.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-041.
+- `pytest`: 137 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

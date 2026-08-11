@@ -80,7 +80,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-040 - Layout e pagina di accesso**
   Creare la base grafica responsive e la pagina login.
   Verifica: pagine utilizzabili da computer e schermo piccolo.
-- [ ] **SP-041 - Area del dipendente**
+- [x] **SP-041 - Area del dipendente**
   Mostrare i ticket personali e il relativo dettaglio.
   Verifica: un dipendente non vede ticket di altri utenti.
 - [ ] **SP-042 - Raccolta guidata dei dati**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-041**. La milestone attiva è **Milestone 4**.
+La prossima attività è **SP-042**. La milestone attiva è **Milestone 4**.

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% set active_section = "tickets" %}
+{% block app_navigation %}{% include "_employee_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <article class="ticket-detail shell" aria-labelledby="ticket-title">
+    <a class="back-link" href="/app"><span aria-hidden="true">←</span> Torna ai miei ticket</a>
+
+    <header class="ticket-detail-heading">
+      <div>
+        <div class="ticket-row-meta">
+          <span class="ticket-code">{{ ticket.code }}</span>
+          <span class="status-badge status-{{ ticket.status_code }}">{{ ticket.status_label }}</span>
+        </div>
+        <h1 id="ticket-title">{{ ticket.title }}</h1>
+        <p>Aperto il {{ ticket.created_at }} · Ultimo aggiornamento {{ ticket.updated_at }}</p>
+      </div>
+      <div class="detail-priority priority-panel-{{ ticket.priority_code }}">
+        <span>Priorità</span>
+        <strong>{{ ticket.priority_label }}</strong>
+      </div>
+    </header>
+
+    <div class="ticket-detail-grid">
+      <div class="ticket-detail-main">
+        <section class="detail-card" aria-labelledby="description-title">
+          <p class="card-label">La tua segnalazione</p>
+          <h2 id="description-title">Descrizione del problema</h2>
+          <p class="ticket-description">{{ ticket.description }}</p>
+        </section>
+
+        {% if ticket.technician_note %}
+          <section class="detail-card support-update" aria-labelledby="update-title">
+            <span class="support-update-mark" aria-hidden="true">IT</span>
+            <div>
+              <p class="card-label">Aggiornamento dal supporto</p>
+              <h2 id="update-title">Il team sta lavorando alla richiesta</h2>
+              <p>{{ ticket.technician_note }}</p>
+            </div>
+          </section>
+        {% endif %}
+
+        {% if ticket.resolution %}
+          <section class="detail-card resolution-card" aria-labelledby="resolution-title">
+            <span class="resolution-mark" aria-hidden="true">✓</span>
+            <div>
+              <p class="card-label">Soluzione registrata</p>
+              <h2 id="resolution-title">Intervento completato</h2>
+              <p>{{ ticket.resolution }}</p>
+            </div>
+          </section>
+        {% endif %}
+      </div>
+
+      <aside class="ticket-facts" aria-label="Dati della richiesta">
+        <div class="detail-card">
+          <p class="card-label">Dati del ticket</p>
+          <dl>
+            <div><dt>Servizio</dt><dd>{{ ticket.service }}</dd></div>
+            <div><dt>Sede</dt><dd>{{ ticket.site_name }}</dd></div>
+            <div><dt>Categoria</dt><dd>{{ ticket.category_label }}</dd></div>
+            <div><dt>Persone coinvolte</dt><dd>{{ ticket.affected_users_label }}</dd></div>
+            <div><dt>Gruppo assegnato</dt><dd>{{ ticket.assigned_group }}</dd></div>
+            <div><dt>Tecnico</dt><dd>{{ ticket.technician_name }}</dd></div>
+          </dl>
+        </div>
+        <div class="privacy-note">
+          <span aria-hidden="true">◎</span>
+          <p><strong>Richiesta personale</strong>Questo dettaglio è visibile soltanto al tuo account.</p>
+        </div>
+      </aside>
+    </div>
+  </article>
+{% endblock %}

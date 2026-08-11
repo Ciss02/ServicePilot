@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% set active_section = "tickets" %}
+{% block app_navigation %}{% include "_employee_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <section class="employee-dashboard shell" aria-labelledby="dashboard-title">
+    <header class="dashboard-heading">
+      <div>
+        <p class="eyebrow">Area dipendente</p>
+        <h1 id="dashboard-title">Le tue richieste,<br>sotto controllo.</h1>
+        <p>Consulta stato, aggiornamenti e soluzione dei ticket aperti con il supporto IT.</p>
+      </div>
+      <div class="dashboard-guide" role="note">
+        <span aria-hidden="true">i</span>
+        <p><strong>Vista personale</strong>Qui compaiono soltanto le richieste associate al tuo account.</p>
+      </div>
+    </header>
+
+    <div class="summary-grid" aria-label="Riepilogo dei ticket">
+      <article class="summary-card summary-card-active">
+        <span class="summary-label">Richieste attive</span>
+        <strong>{{ summary.active }}</strong>
+        <small>In gestione dal supporto</small>
+      </article>
+      <article class="summary-card summary-card-waiting">
+        <span class="summary-label">In attesa di te</span>
+        <strong>{{ summary.waiting_for_requester }}</strong>
+        <small>Richiedono informazioni</small>
+      </article>
+      <article class="summary-card summary-card-done">
+        <span class="summary-label">Completate</span>
+        <strong>{{ summary.completed }}</strong>
+        <small>Risolte o chiuse</small>
+      </article>
+    </div>
+
+    <section class="personal-tickets" aria-labelledby="ticket-list-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Cronologia personale</p>
+          <h2 id="ticket-list-title">I miei ticket</h2>
+        </div>
+        <span class="result-count">{{ tickets | length }} {% if tickets | length == 1 %}richiesta{% else %}richieste{% endif %}</span>
+      </div>
+
+      {% if tickets %}
+        <div class="ticket-list">
+          {% for ticket in tickets %}
+            <article class="ticket-row">
+              <div class="ticket-row-primary">
+                <div class="ticket-row-meta">
+                  <span class="ticket-code">{{ ticket.code }}</span>
+                  <span class="status-badge status-{{ ticket.status_code }}">{{ ticket.status_label }}</span>
+                </div>
+                <h3><a href="/app/tickets/{{ ticket.id }}">{{ ticket.title }}</a></h3>
+                <p>{{ ticket.service }} · {{ ticket.site_name }}</p>
+              </div>
+              <div class="ticket-row-data">
+                <span>Priorità<strong class="priority-{{ ticket.priority_code }}">{{ ticket.priority_label }}</strong></span>
+                <span>Aggiornato<strong>{{ ticket.updated_at }}</strong></span>
+                <a class="detail-link" href="/app/tickets/{{ ticket.id }}" aria-label="Apri il dettaglio di {{ ticket.code }}">
+                  Dettaglio <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <span class="empty-state-mark" aria-hidden="true">✓</span>
+          <h3>Nessuna richiesta presente</h3>
+          <p>Quando aprirai un ticket, potrai seguirne qui stato e aggiornamenti.</p>
+          <small>La creazione guidata arriverà con SP-042.</small>
+        </div>
+      {% endif %}
+    </section>
+  </section>
+{% endblock %}
