@@ -19,9 +19,12 @@ from app.db import (
 )
 from app.domain.vocabulary import Role
 from app.knowledge import (
+    MIN_SOLUTION_SOURCE_SCORE,
+    NO_SOLUTION_SOURCES_MESSAGE,
     SOLUTION_GENERATED,
     SOLUTION_INVALID_RESPONSE,
     SOLUTION_UNAVAILABLE,
+    WEAK_SOLUTION_SOURCES_MESSAGE,
     generate_ticket_solution,
     list_ticket_solution_sources,
     suggest_sourced_solution,
@@ -52,6 +55,7 @@ class FirstSourceSolutionModel:
     ):
         assert "esclusivamente" in (system_instruction or "")
         payload = json.loads(prompt)
+        assert len(payload["retrieved_sources"]) == 1
         first_source = payload["retrieved_sources"][0]
         return response_schema.model_validate(
             {
@@ -77,6 +81,11 @@ class InventedSourceSolutionModel:
 class UnavailableSolutionModel:
     def generate_structured(self, **_kwargs):
         raise AIUnavailableError("timeout fittizio")
+
+
+class SolutionModelThatMustNotRun:
+    def generate_structured(self, **_kwargs):
+        raise AssertionError("Il modello non deve essere chiamato senza fonti affidabili")
 
 
 @pytest.fixture
@@ -224,6 +233,51 @@ def test_unavailable_ai_keeps_ticket_usable_without_sources(solution_context) ->
         )
 
         assert ticket.ai_solution_status == SOLUTION_UNAVAILABLE
+        assert ticket.ai_suggested_solution is None
+        assert ticket.resolution is None
+        assert session.scalar(select(TicketSolutionSource)) is None
+
+
+def test_generation_stops_before_ai_when_search_has_no_results(solution_context) -> None:
+    engine, context = solution_context
+    with Session(engine) as session:
+        ticket = session.get(Ticket, context["ticket_id"])
+        session.query(KnowledgeSegment).delete()
+        session.commit()
+
+        generate_ticket_solution(
+            session,
+            ticket,
+            ai_model=SolutionModelThatMustNotRun(),
+            embedding_model=KeywordEmbeddingModel(),
+        )
+
+        assert ticket.ai_solution_status == SOLUTION_UNAVAILABLE
+        assert ticket.ai_solution_error == NO_SOLUTION_SOURCES_MESSAGE
+        assert ticket.ai_suggested_solution is None
+        assert session.scalar(select(TicketSolutionSource)) is None
+
+
+def test_generation_stops_before_ai_when_all_sources_are_too_weak(
+    solution_context,
+) -> None:
+    engine, context = solution_context
+    with Session(engine) as session:
+        ticket = session.get(Ticket, context["ticket_id"])
+        vpn_segment = session.get(KnowledgeSegment, context["vpn_segment_id"])
+        session.delete(vpn_segment)
+        session.commit()
+
+        generate_ticket_solution(
+            session,
+            ticket,
+            ai_model=SolutionModelThatMustNotRun(),
+            embedding_model=KeywordEmbeddingModel(),
+        )
+
+        assert MIN_SOLUTION_SOURCE_SCORE == 0.55
+        assert ticket.ai_solution_status == SOLUTION_UNAVAILABLE
+        assert ticket.ai_solution_error == WEAK_SOLUTION_SOURCES_MESSAGE
         assert ticket.ai_suggested_solution is None
         assert ticket.resolution is None
         assert session.scalar(select(TicketSolutionSource)) is None

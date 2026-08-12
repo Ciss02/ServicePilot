@@ -2,7 +2,8 @@
 
 SP-063 completa il primo percorso RAG di ServicePilot: il sistema recupera passaggi
 pertinenti, chiede a Gemini un suggerimento tecnico e conserva le fonti realmente
-citate. Il risultato assiste il tecnico ma non modifica automaticamente il ticket.
+citate. SP-064 aggiunge uno stop prudenziale quando quelle fonti non sono abbastanza
+solide. Il risultato assiste il tecnico ma non modifica automaticamente il ticket.
 
 ## Quale problema risolve
 
@@ -30,9 +31,13 @@ caratteri e da uno a tre identificativi di fonte, positivi e non duplicati. Il b
 rifiuta l'intero risultato se Gemini cita un identificativo che non appartiene ai
 passaggi recuperati.
 
-SP-064 aggiungerà la soglia che impedisce di generare quando i risultati sono assenti o
-troppo deboli. In SP-063 il punteggio resta visibile al tecnico ma non è ancora usato
-come soglia decisionale.
+Prima di chiamare Gemini, il backend conserva soltanto i passaggi con similarità del
+coseno pari o superiore a `0,55`. Se non rimane alcun passaggio, la generazione si ferma.
+La soglia è un limite prudenziale iniziale, non una percentuale di certezza: dovrà essere
+ricalibrata in futuro con un insieme più ampio di domande e procedure dimostrative.
+
+Le fonti sotto soglia non vengono inviate al modello. Questo riduce sia il rischio di una
+risposta basata su contenuti vaghi sia il consumo inutile di una chiamata Gemini.
 
 ## Dove vengono salvati
 
@@ -44,10 +49,16 @@ rimanere una soluzione parziale senza le proprie fonti.
 Se un documento viene rielaborato e i suoi segmenti cambiano, i suggerimenti che li
 citavano tornano automaticamente allo stato `pending` per evitare riferimenti obsoleti.
 
+Quando le fonti mancano o sono tutte sotto soglia, il ticket conserva lo stato
+controllato `unavailable` e un messaggio che spiega al tecnico se deve indicizzare una
+procedura, verificare i dettagli della richiesta o aggiungere documentazione più
+specifica. Un eventuale vecchio suggerimento e le sue citazioni vengono rimossi.
+
 ## Cosa può andare storto
 
 - ricerca o embedding non disponibili: il ticket resta utilizzabile e mostra un errore;
 - nessun documento indicizzato: non viene salvato alcun suggerimento;
+- risultati tutti sotto `0,55`: Gemini non viene chiamato e il tecnico riceve indicazioni;
 - risposta AI non valida o fonte inventata: l'intero risultato viene rifiutato;
 - errore del database: suggerimento e fonti non vengono salvati parzialmente;
 - procedura rielaborata: il suggerimento collegato viene invalidato.
@@ -61,6 +72,9 @@ soluzione finale e non cambia stato, assegnazione o classificazione.
 ## Quale test dimostra che funziona
 
 - una domanda VPN recupera il passaggio previsto e salva soltanto la fonte citata;
+- una ricerca senza risultati si ferma prima di chiamare il modello;
+- una ricerca con sole fonti sotto soglia si ferma e mostra il motivo al tecnico;
+- una fonte forte viene inviata al modello senza includere i risultati deboli;
 - un identificativo di fonte inventato viene rifiutato;
 - timeout e risposte non valide lasciano il ticket utilizzabile;
 - la rielaborazione di un documento invalida i suggerimenti collegati;

@@ -96,7 +96,7 @@
             <p class="ai-solution-meta">Generato il {{ ticket.ai_solution_generated_at }}. Verifica sempre i passaggi prima di applicare la proposta.</p>
           {% elif ticket.ai_solution_status in ["unavailable", "invalid_response"] %}
             <div class="ai-solution-warning" role="status">
-              <strong>Suggerimento non disponibile</strong>
+              <strong>Nessuna soluzione generata</strong>
               <p>{{ ticket.ai_solution_error }}</p>
             </div>
           {% else %}
