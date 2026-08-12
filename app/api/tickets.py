@@ -5,6 +5,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
 
+from app.ai import (
+    AIModelError,
+    TicketClassificationPersistenceError,
+    classify_confirmed_ticket,
+)
+from app.ai.dependencies import AIModelDependency
 from app.api.dependencies import CurrentUser, TechnicalUser
 from app.db.models import Ticket
 from app.db.session import get_session
@@ -42,11 +48,12 @@ def create_ticket(
     payload: TicketCreate,
     session: DatabaseSession,
     current_user: CurrentUser,
+    ai_model: AIModelDependency,
 ) -> Ticket:
     """Salva una richiesta confermata per l'utente autenticato."""
 
     try:
-        return create_confirmed_ticket(session, payload, current_user)
+        ticket = create_confirmed_ticket(session, payload, current_user)
     except TicketSiteNotFoundError as error:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -57,6 +64,11 @@ def create_ticket(
             status_code=status.HTTP_409_CONFLICT,
             detail="Il ticket non può essere salvato con i riferimenti forniti",
         ) from error
+
+    try:
+        return classify_confirmed_ticket(session, ticket, ai_model=ai_model)
+    except (AIModelError, TicketClassificationPersistenceError):
+        return ticket
 
 
 @router.get(

@@ -9,9 +9,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy import Engine, func, select
 from sqlalchemy.orm import Session
 
+from app.ai.dependencies import get_ai_model
 from app.db import Site, Ticket, User, build_engine, create_database, get_session
 from app.api.dependencies import require_roles
-from app.domain.vocabulary import Role
+from app.domain.vocabulary import Priority, Role
 from app.main import create_app
 from app.security.passwords import hash_password
 
@@ -97,6 +98,26 @@ def valid_ticket_payload() -> dict[str, object]:
     }
 
 
+class APIClassificationModelStub:
+    def generate_structured(
+        self,
+        *,
+        prompt: str,
+        response_schema,
+        system_instruction: str | None = None,
+    ):
+        del prompt, system_instruction
+        return response_schema.model_validate(
+            {
+                "category": "network_and_connectivity",
+                "subcategory": "VPN",
+                "impact": "medium",
+                "urgency": "high",
+                "assigned_group": "Supporto rete",
+            }
+        )
+
+
 def login_as(client: TestClient, email: str, password: str) -> None:
     response = client.post(
         "/auth/login",
@@ -137,6 +158,27 @@ def test_create_ticket_requires_confirmation(api_client) -> None:
     assert response.status_code == 422
     with Session(database_engine) as session:
         assert session.scalar(select(func.count()).select_from(Ticket)) == 0
+
+
+def test_create_ticket_saves_ai_suggestion_but_calculates_priority_in_backend(
+    api_client,
+) -> None:
+    client, database_engine, _ = api_client
+    client.app.dependency_overrides[get_ai_model] = APIClassificationModelStub
+
+    response = client.post("/tickets", json=valid_ticket_payload())
+
+    assert response.status_code == 201
+    assert response.json()["category"] == "network_and_connectivity"
+    assert response.json()["subcategory"] == "VPN"
+    assert response.json()["impact"] == "medium"
+    assert response.json()["urgency"] == "high"
+    assert response.json()["priority"] == "p2"
+    assert response.json()["assigned_group"] == "Supporto rete"
+    with Session(database_engine) as session:
+        saved = session.get(Ticket, response.json()["id"])
+        assert saved is not None
+        assert saved.priority is Priority.P2
 
 
 @pytest.mark.parametrize(

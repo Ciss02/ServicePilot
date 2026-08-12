@@ -103,7 +103,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-051 - Estrazione strutturata**
   Estrarre i dati presenti nella descrizione e individuare quelli mancanti.
   Verifica: output controllato e casi incompleti gestiti.
-- [ ] **SP-052 - Classificazione suggerita**
+- [x] **SP-052 - Classificazione suggerita**
   Proporre categoria, sottocategoria, impatto, urgenza e gruppo.
   Verifica: la priorità continua a essere calcolata dal backend.
 - [ ] **SP-053 - Revisione umana e gestione errori**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-052**. La milestone attiva è **Milestone 5**.
+La prossima attività è **SP-053**. La milestone attiva è **Milestone 5**.
