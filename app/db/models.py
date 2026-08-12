@@ -22,6 +22,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
 from app.domain.vocabulary import (
+    ActionStatus,
+    ActionType,
     ClassificationReviewStatus,
     Impact,
     Priority,
@@ -291,5 +293,52 @@ class TicketSolutionSource(Base):
     similarity_score: Mapped[float] = mapped_column(Float, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
+    )
+
+
+class ProposedAction(Base):
+    """Azione suggerita e salvata senza produrre alcun effetto operativo."""
+
+    __tablename__ = "proposed_actions"
+    __table_args__ = (
+        CheckConstraint(
+            "length(trim(rationale)) BETWEEN 20 AND 1000",
+            name="ck_proposed_actions_rationale_length",
+        ),
+        CheckConstraint(
+            "length(trim(expected_effect)) BETWEEN 10 AND 1000",
+            name="ck_proposed_actions_expected_effect_length",
+        ),
+        CheckConstraint(
+            "length(trim(payload_json)) >= 2",
+            name="ck_proposed_actions_payload_present",
+        ),
+        Index("ix_proposed_actions_ticket_status", "ticket_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ticket_id: Mapped[int] = mapped_column(
+        ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    action_type: Mapped[ActionType] = mapped_column(
+        _enum_column(ActionType, "action_type"), nullable=False
+    )
+    rationale: Mapped[str] = mapped_column(Text, nullable=False)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False)
+    expected_effect: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[ActionStatus] = mapped_column(
+        _enum_column(ActionStatus, "action_status"),
+        nullable=False,
+        default=ActionStatus.PENDING_APPROVAL,
+        server_default=ActionStatus.PENDING_APPROVAL.value,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
     )
 

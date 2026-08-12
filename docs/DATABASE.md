@@ -21,6 +21,8 @@ tra ticket, utenti e sedi.
   assegnazione, stato, soluzione finale e suggerimento AI separato;
 - `ticket_solution_sources`: passaggi realmente citati da un suggerimento AI, con
   ordine e punteggio della ricerca.
+- `proposed_actions`: intenzioni dell'agente collegate al ticket, con tipo, motivazione,
+  payload JSON, effetto previsto e stato iniziale di approvazione.
 
 La classificazione può essere vuota quando il ticket nasce perché, nel flusso MVP,
 viene proposta dopo la conferma. La priorità sarà sempre calcolata dal backend prima
@@ -61,6 +63,8 @@ modifiche strutturali future.
 - fonti dei suggerimenti collegate a ticket e segmenti esistenti, senza duplicare rango
   o passaggio nello stesso risultato;
 - suggerimenti invalidati quando una procedura citata viene rielaborata.
+- azioni proposte collegate a ticket esistenti e limitate a tipi e stati controllati;
+- creazione della proposta separata da assegnazione, comunicazione ed escalation reali.
 
 I test usano file SQLite temporanei e non modificano `servicepilot.db`.
 

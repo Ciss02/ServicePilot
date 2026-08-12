@@ -48,6 +48,25 @@ class ClassificationReviewStatus(StrEnum):
     AI_INVALID_RESPONSE = "ai_invalid_response"
 
 
+class ActionType(StrEnum):
+    """Azioni che l'agente può proporre senza eseguirle."""
+
+    ASSIGN_TICKET = "assign_ticket"
+    NOTIFY_REQUESTER = "notify_requester"
+    ESCALATE_VENDOR = "escalate_vendor"
+
+
+class ActionStatus(StrEnum):
+    """Stato controllato della proposta e della futura esecuzione."""
+
+    PENDING_APPROVAL = "pending_approval"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    EXECUTING = "executing"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
 class TicketStatus(StrEnum):
     """Stati possibili di un ticket già creato."""
 

@@ -26,6 +26,7 @@ def test_database_creation_is_repeatable(database_engine) -> None:
         "auth_sessions",
         "knowledge_documents",
         "knowledge_segments",
+        "proposed_actions",
         "sites",
         "ticket_solution_sources",
         "tickets",
@@ -275,6 +276,46 @@ def test_initial_records_can_be_saved(database_engine) -> None:
         ).one()
 
     assert stored_codes == ("employee", "new")
+
+
+def test_proposed_action_table_keeps_proposal_separate_from_ticket(
+    database_engine,
+) -> None:
+    create_database(database_engine)
+
+    columns = {
+        column["name"]
+        for column in inspect(database_engine).get_columns("proposed_actions")
+    }
+    assert columns == {
+        "id",
+        "ticket_id",
+        "action_type",
+        "rationale",
+        "payload_json",
+        "expected_effect",
+        "status",
+        "created_at",
+        "updated_at",
+    }
+
+
+def test_existing_database_receives_proposed_action_table(database_engine) -> None:
+    with database_engine.begin() as connection:
+        connection.execute(
+            text("CREATE TABLE tickets (id INTEGER PRIMARY KEY, title TEXT NOT NULL)")
+        )
+        connection.execute(
+            text("INSERT INTO tickets (title) VALUES ('Ticket locale da conservare')")
+        )
+
+    create_database(database_engine)
+    create_database(database_engine)
+
+    assert "proposed_actions" in inspect(database_engine).get_table_names()
+    with database_engine.connect() as connection:
+        title = connection.execute(text("SELECT title FROM tickets")).scalar_one()
+    assert title == "Ticket locale da conservare"
 
 
 def test_ticket_rejects_unknown_requester(database_engine) -> None:

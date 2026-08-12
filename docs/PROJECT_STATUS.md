@@ -91,6 +91,10 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
   soglia iniziale di similarità `0,55`.
 - Risultati deboli esclusi dal contesto del modello e messaggio operativo mostrato al
   tecnico senza modificare la soluzione finale.
+- Tre tipi controllati di azione proposta: assegnazione, comunicazione al richiedente ed
+  escalation verso un fornitore fittizio.
+- Motivazione, payload specifico, effetto previsto e stato `pending_approval` salvati in
+  una tabella separata senza applicare modifiche al ticket.
 
 ## Milestone attiva
 
@@ -98,22 +102,21 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-064 - Risposta prudente**
+**SP-070 - Modello delle azioni proposte**
 
-Il backend filtra i passaggi recuperati prima di chiamare Gemini e genera soltanto se
-almeno una fonte raggiunge la soglia `0,55`. Senza fonti sufficienti rimuove eventuali
-suggerimenti precedenti, non consuma una chiamata al modello e spiega al tecnico se
-verificare il ticket o aggiungere documentazione più specifica.
+Il backend valida e salva le intenzioni dell'agente in `proposed_actions`. Ogni tipo ha
+dati specifici controllati e nasce in attesa di approvazione. Il semplice salvataggio
+non cambia assegnazione, note, stato o soluzione del ticket e non chiama alcun servizio.
 
 ## Prossima attività
 
-**SP-070 - Modello delle azioni proposte**
+**SP-071 - Servizi REST simulati**
 
 Risultato atteso:
 
-- salvare tipo, motivazione, dati, stato ed effetto previsto di un'azione;
-- mantenere la proposta separata dalla sua esecuzione;
-- preparare la base per l'approvazione esplicita del tecnico.
+- simulare assegnazione, comunicazione ed escalation tramite servizi REST locali;
+- produrre successi e fallimenti ripetibili;
+- mantenere i servizi simulati separati dalla futura approvazione del tecnico.
 
 ## Blocchi o decisioni aperte
 
@@ -123,11 +126,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-070.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-071.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-070` con il codice dell'attività successiva.
+Sostituire `SP-071` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -390,4 +393,17 @@ Prima di terminare verificare che:
   una procedura più specifica.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-064.
 - `pytest`: 270 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificati i tre tipi controllati di azione e i relativi payload specifici.
+- Verificato il rifiuto di motivazioni, effetti, destinazioni e tipi non validi.
+- Verificato che ogni nuova proposta nasca in stato `pending_approval`.
+- Verificato che lo stato iniziale non possa essere fornito o alterato dall'esterno.
+- Verificato che salvare assegnazione, comunicazione o escalation non modifichi alcun
+  campo operativo del ticket e non esegua servizi esterni.
+- Verificati collegamento obbligatorio a un ticket, rollback e lettura controllata del
+  payload JSON, inclusa la gestione di dati corrotti.
+- Verificata la creazione ripetibile di `proposed_actions` anche su un database locale
+  precedente senza perdita dei ticket esistenti.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-070.
+- `pytest`: 291 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

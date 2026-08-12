@@ -134,7 +134,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 **Risultato:** le azioni dell'agente richiedono approvazione e sono tracciate.
 
-- [ ] **SP-070 - Modello delle azioni proposte**
+- [x] **SP-070 - Modello delle azioni proposte**
   Salvare tipo, motivazione, dati, stato ed effetto previsto.
   Verifica: proposta separata dall'esecuzione.
 - [ ] **SP-071 - Servizi REST simulati**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-070**. La milestone attiva è **Milestone 7**.
+La prossima attività è **SP-071**. La milestone attiva è **Milestone 7**.
