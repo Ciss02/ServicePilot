@@ -1,6 +1,9 @@
 <nav class="app-navigation" aria-label="Navigazione area tecnica">
   <div class="shell app-navigation-inner">
     <a class="app-nav-link" href="/app" {% if active_section == "queue" %}aria-current="page"{% endif %}>Coda ticket</a>
+    {% if current_user.role.value == "admin" %}
+      <a class="app-nav-link" href="/app/knowledge" {% if active_section == "knowledge" %}aria-current="page"{% endif %}>Knowledge base</a>
+    {% endif %}
     <span class="app-nav-future" aria-disabled="true">Assistente AI <small>prossimamente</small></span>
   </div>
 </nav>

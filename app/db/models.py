@@ -98,6 +98,30 @@ class Site(Base):
     )
 
 
+class KnowledgeDocument(Base):
+    """Documento amministrativo conservato prima della futura indicizzazione."""
+
+    __tablename__ = "knowledge_documents"
+    __table_args__ = (
+        CheckConstraint("size_bytes > 0", name="ck_knowledge_documents_size"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    storage_filename: Mapped[str] = mapped_column(
+        String(80), nullable=False, unique=True
+    )
+    content_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    checksum_sha256: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    uploaded_by_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
+    )
+
+
 class Ticket(Base):
     """Richiesta IT confermata e salvata dall'applicazione."""
 

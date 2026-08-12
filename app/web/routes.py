@@ -7,12 +7,14 @@ from typing import Annotated
 from fastapi import (
     APIRouter,
     Depends,
+    File,
     Form,
     HTTPException,
     Path as PathParameter,
     Query,
     Request,
     Response,
+    UploadFile,
     status,
 )
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -35,7 +37,7 @@ from app.api.dependencies import (
     SessionCookie,
     get_current_user,
 )
-from app.db.models import Site, Ticket, User
+from app.db.models import KnowledgeDocument, Site, Ticket, User
 from app.domain.auth_contracts import LoginRequest
 from app.domain.ticket_contracts import TicketClassification, TicketCreate, TicketUpdate
 from app.domain.ticket_intake import (
@@ -45,6 +47,12 @@ from app.domain.ticket_intake import (
 )
 from app.domain.ticket_workflow import ALLOWED_STATUS_TRANSITIONS
 from app.domain.vocabulary import Role
+from app.knowledge import (
+    KnowledgeDocumentPersistenceError,
+    KnowledgeDocumentValidationError,
+    get_knowledge_storage_directory,
+    store_knowledge_document,
+)
 from app.security.authentication import (
     authenticate_user,
     revoke_user_session,
@@ -235,6 +243,62 @@ def _employee_only(current_user: User) -> RedirectResponse | None:
     if current_user.role is not Role.EMPLOYEE:
         return RedirectResponse(url="/app", status_code=status.HTTP_303_SEE_OTHER)
     return None
+
+
+def _admin_only(current_user: User) -> RedirectResponse | None:
+    """Nasconde gli strumenti della knowledge base a chi non è amministratore."""
+
+    if current_user.role is not Role.ADMIN:
+        return RedirectResponse(url="/app", status_code=status.HTTP_303_SEE_OTHER)
+    return None
+
+
+def _knowledge_context(
+    session: Session,
+    current_user: User,
+    *,
+    uploaded: bool = False,
+    error: str | None = None,
+) -> dict[str, object]:
+    """Prepara l'elenco dei documenti senza rivelarne il percorso interno."""
+
+    documents = list(
+        session.scalars(
+            select(KnowledgeDocument).order_by(
+                KnowledgeDocument.created_at.desc(),
+                KnowledgeDocument.id.desc(),
+            )
+        ).all()
+    )
+    uploader_ids = {document.uploaded_by_user_id for document in documents}
+    uploaders = (
+        list(session.scalars(select(User).where(User.id.in_(uploader_ids))).all())
+        if uploader_ids
+        else []
+    )
+    uploader_names = {uploader.id: uploader.display_name for uploader in uploaders}
+    presented_documents = [
+        {
+            "id": document.id,
+            "filename": document.original_filename,
+            "format": "PDF" if document.content_type == "application/pdf" else "Markdown",
+            "size": f"{document.size_bytes / 1024:.1f} KB",
+            "uploaded_by": uploader_names.get(
+                document.uploaded_by_user_id, "Amministratore demo"
+            ),
+            "created_at": document.created_at.strftime("%d/%m/%Y · %H:%M"),
+        }
+        for document in documents
+    ]
+    context = _workspace_context(current_user, "Knowledge base")
+    context.update(
+        {
+            "documents": presented_documents,
+            "uploaded": uploaded,
+            "upload_error": error,
+        }
+    )
+    return context
 
 
 def _present_tickets(
@@ -569,6 +633,82 @@ def new_ticket_start(
         request=request,
         name="employee_ticket_intake.html",
         context=_intake_context(current_user, step="problem"),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.get("/app/knowledge", response_class=HTMLResponse)
+def knowledge_documents(
+    request: Request,
+    session: DatabaseSession,
+    current_user: WebUser,
+    uploaded: Annotated[bool, Query()] = False,
+) -> Response:
+    """Mostra all'amministratore l'upload e i documenti già conservati."""
+
+    if redirect := _admin_only(current_user):
+        return redirect
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_knowledge.html",
+        context=_knowledge_context(
+            session,
+            current_user,
+            uploaded=uploaded,
+        ),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/app/knowledge", response_class=HTMLResponse)
+def upload_knowledge_document(
+    request: Request,
+    session: DatabaseSession,
+    current_user: WebUser,
+    document: Annotated[UploadFile | None, File()] = None,
+) -> Response:
+    """Controlla e conserva un PDF o Markdown soltanto per l'amministratore."""
+
+    if redirect := _admin_only(current_user):
+        if document is not None:
+            document.file.close()
+        return redirect
+
+    if document is None:
+        error = "Seleziona un documento da caricare."
+    else:
+        try:
+            store_knowledge_document(
+                session,
+                document,
+                uploaded_by=current_user,
+                storage_directory=get_knowledge_storage_directory(),
+            )
+        except KnowledgeDocumentValidationError as validation_error:
+            error = str(validation_error)
+        except KnowledgeDocumentPersistenceError as persistence_error:
+            return templates.TemplateResponse(
+                request=request,
+                name="admin_knowledge.html",
+                context=_knowledge_context(
+                    session,
+                    current_user,
+                    error=str(persistence_error),
+                ),
+                status_code=status.HTTP_409_CONFLICT,
+                headers={"Cache-Control": "no-store"},
+            )
+        else:
+            return RedirectResponse(
+                url="/app/knowledge?uploaded=true",
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_knowledge.html",
+        context=_knowledge_context(session, current_user, error=error),
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         headers={"Cache-Control": "no-store"},
     )
 

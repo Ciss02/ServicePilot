@@ -13,6 +13,7 @@ from app.ai import AIUnavailableError
 from app.ai.dependencies import get_ai_model
 from app.db import (
     AuthSession,
+    KnowledgeDocument,
     Site,
     Ticket,
     User,
@@ -20,6 +21,7 @@ from app.db import (
     create_database,
     get_session,
 )
+from app.knowledge import KNOWLEDGE_STORAGE_DIRECTORY_ENV
 from app.domain.vocabulary import (
     ClassificationReviewStatus,
     Impact,
@@ -35,10 +37,14 @@ from app.security.sessions import SESSION_COOKIE_NAME
 
 
 @pytest.fixture
-def web_client(tmp_path) -> Iterator[tuple[TestClient, Engine, str]]:
+def web_client(tmp_path, monkeypatch) -> Iterator[tuple[TestClient, Engine, str]]:
     """Avvia le pagine con un account fittizio e un database temporaneo."""
 
     password = secrets.token_urlsafe(18)
+    monkeypatch.setenv(
+        KNOWLEDGE_STORAGE_DIRECTORY_ENV,
+        str(tmp_path / "knowledge-storage"),
+    )
     database_engine = build_engine(f"sqlite:///{tmp_path / 'web-pages-test.db'}")
 
     def initialize_test_database() -> None:
@@ -327,6 +333,116 @@ def test_valid_web_login_opens_protected_area(web_client) -> None:
     assert "VPN demo in attesa di informazioni" in protected_page.text
     with Session(database_engine) as session:
         assert session.scalar(select(func.count()).select_from(AuthSession)) == 1
+
+
+def test_admin_can_open_knowledge_upload_page(web_client) -> None:
+    client, _, password = web_client
+    login_web(client, "admin.web@servicepilot.example", password)
+
+    response = client.get("/app/knowledge")
+
+    assert response.status_code == 200
+    assert "Carica un documento" in response.text
+    assert "PDF e Markdown" in response.text
+    assert "Dimensione massima: 5 MB" in response.text
+    assert 'enctype="multipart/form-data"' in response.text
+    assert 'aria-current="page"' in response.text
+
+
+@pytest.mark.parametrize(
+    "email",
+    [
+        "dipendente.web@servicepilot.example",
+        "tecnico.web@servicepilot.example",
+    ],
+)
+def test_non_admin_cannot_open_or_upload_knowledge_documents(
+    web_client,
+    email: str,
+) -> None:
+    client, database_engine, password = web_client
+    login_web(client, email, password)
+
+    page = client.get("/app/knowledge", follow_redirects=False)
+    upload = client.post(
+        "/app/knowledge",
+        files={"document": ("procedura.md", b"# Demo\n", "text/markdown")},
+        follow_redirects=False,
+    )
+
+    assert page.status_code == 303
+    assert page.headers["location"] == "/app"
+    assert upload.status_code == 303
+    assert upload.headers["location"] == "/app"
+    with Session(database_engine) as session:
+        assert session.scalar(
+            select(func.count()).select_from(KnowledgeDocument)
+        ) == 0
+
+
+def test_admin_uploads_markdown_and_sees_it_in_the_library(
+    web_client,
+    tmp_path,
+) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "admin.web@servicepilot.example", password)
+
+    response = client.post(
+        "/app/knowledge",
+        files={
+            "document": (
+                "procedura-wifi-demo.md",
+                b"# Wi-Fi demo\n\nProcedura completamente fittizia.\n",
+                "text/markdown",
+            )
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/app/knowledge?uploaded=true"
+    with Session(database_engine) as session:
+        document = session.scalar(select(KnowledgeDocument))
+        assert document is not None
+        assert document.original_filename == "procedura-wifi-demo.md"
+        assert document.content_type == "text/markdown"
+        stored_path = tmp_path / "knowledge-storage" / document.storage_filename
+        assert stored_path.read_bytes().startswith(b"# Wi-Fi demo")
+
+    page = client.get(response.headers["location"])
+    assert page.status_code == 200
+    assert "Documento conservato correttamente" in page.text
+    assert "procedura-wifi-demo.md" in page.text
+    assert "Markdown" in page.text
+
+
+def test_invalid_admin_upload_shows_error_and_changes_nothing(
+    web_client,
+    tmp_path,
+) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "admin.web@servicepilot.example", password)
+
+    response = client.post(
+        "/app/knowledge",
+        files={
+            "document": (
+                "procedura-finta.pdf",
+                b"questo non e un documento PDF",
+                "application/pdf",
+            )
+        },
+    )
+
+    assert response.status_code == 422
+    assert "Caricamento non eseguito" in response.text
+    assert "non contiene un documento PDF" in response.text
+    with Session(database_engine) as session:
+        assert session.scalar(
+            select(func.count()).select_from(KnowledgeDocument)
+        ) == 0
+    storage_directory = tmp_path / "knowledge-storage"
+    assert not storage_directory.exists() or not list(storage_directory.iterdir())
 
 
 def test_authenticated_visitor_is_redirected_away_from_login(web_client) -> None:

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% set active_section = "knowledge" %}
+{% block app_navigation %}{% include "_technical_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <section class="knowledge-page shell" aria-labelledby="knowledge-title">
+    <header class="knowledge-heading">
+      <div>
+        <p class="eyebrow">Area amministrativa</p>
+        <h1 id="knowledge-title">Procedure affidabili,<br>pronte per l’AI.</h1>
+        <p>Carica le procedure fittizie che useremo come fonti. In questo passaggio le conserviamo in sicurezza; testo e ricerca arriveranno nelle prossime attività.</p>
+      </div>
+      <aside class="knowledge-safety-note" aria-label="Controlli applicati">
+        <span aria-hidden="true">✓</span>
+        <div>
+          <strong>Controlli prima del salvataggio</strong>
+          <p>Formato, contenuto reale e limite di 5 MB vengono verificati dal server.</p>
+        </div>
+      </aside>
+    </header>
+
+    <div class="knowledge-grid">
+      <section class="knowledge-upload-card" aria-labelledby="upload-title">
+        <p class="card-label">Nuova fonte</p>
+        <h2 id="upload-title">Carica un documento</h2>
+        <p class="knowledge-card-intro">Sono ammessi PDF e Markdown con contenuti esclusivamente dimostrativi.</p>
+
+        {% if uploaded %}
+          <div class="upload-success" role="status">
+            <strong>Documento conservato correttamente.</strong>
+            <span>È pronto per la futura estrazione del testo.</span>
+          </div>
+        {% endif %}
+        {% if upload_error %}
+          <div class="form-alert" role="alert">
+            <strong>Caricamento non eseguito</strong>
+            <span>{{ upload_error }}</span>
+          </div>
+        {% endif %}
+
+        <form class="knowledge-upload-form" method="post" action="/app/knowledge" enctype="multipart/form-data">
+          <div class="knowledge-file-field">
+            <label for="document">Documento PDF o Markdown</label>
+            <input id="document" name="document" type="file" accept=".pdf,.md,.markdown,application/pdf,text/markdown" required>
+            <small>Dimensione massima: 5 MB. Il nome originale sarà mostrato, ma non verrà usato come percorso di salvataggio.</small>
+          </div>
+          <button class="primary-button" type="submit">Controlla e carica <span aria-hidden="true">↑</span></button>
+        </form>
+      </section>
+
+      <section class="knowledge-rules" aria-labelledby="rules-title">
+        <p class="card-label">Come funziona</p>
+        <h2 id="rules-title">Tre barriere semplici</h2>
+        <ol>
+          <li><span>01</span><div><strong>Tipo consentito</strong><p>L’estensione e il tipo dichiarato devono essere coerenti.</p></div></li>
+          <li><span>02</span><div><strong>Contenuto riconoscibile</strong><p>Un PDF deve essere davvero un PDF; Markdown deve essere testo leggibile.</p></div></li>
+          <li><span>03</span><div><strong>Salvataggio completo</strong><p>Se qualcosa fallisce, non resta alcun documento parziale.</p></div></li>
+        </ol>
+      </section>
+    </div>
+
+    <section class="knowledge-library" aria-labelledby="library-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Archivio locale</p>
+          <h2 id="library-title">Documenti conservati</h2>
+        </div>
+        <span class="result-count">{{ documents | length }} documenti</span>
+      </div>
+
+      {% if documents %}
+        <div class="knowledge-document-list">
+          {% for document in documents %}
+            <article class="knowledge-document-row">
+              <span class="document-format document-format-{{ document.format | lower }}">{{ document.format }}</span>
+              <div>
+                <h3>{{ document.filename }}</h3>
+                <p>Caricato da {{ document.uploaded_by }} · {{ document.created_at }}</p>
+              </div>
+              <strong>{{ document.size }}</strong>
+              <span class="document-state">Conservato</span>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state knowledge-empty-state">
+          <span class="empty-state-mark" aria-hidden="true">0</span>
+          <div><h3>Nessuna procedura caricata</h3><p>Il primo documento valido comparirà qui.</p></div>
+        </div>
+      {% endif %}
+    </section>
+  </section>
+{% endblock %}
