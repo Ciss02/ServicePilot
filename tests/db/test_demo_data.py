@@ -44,9 +44,7 @@ def database_engine(tmp_path):
 def demo_passwords(monkeypatch) -> dict[Role, str]:
     """Configura credenziali casuali che non vengono salvate nel repository."""
 
-    passwords = {
-        role: secrets.token_urlsafe(24) for role in DEMO_PASSWORD_ENV_BY_ROLE
-    }
+    passwords = {role: secrets.token_urlsafe(24) for role in DEMO_PASSWORD_ENV_BY_ROLE}
     for role, variable_name in DEMO_PASSWORD_ENV_BY_ROLE.items():
         monkeypatch.setenv(variable_name, passwords[role])
     return passwords
@@ -102,10 +100,7 @@ def test_demo_users_store_only_verifiable_hashes(
 
     assert len(users) == 5
     assert all(encoded_hash is not None for encoded_hash in hashes)
-    assert all(
-        verify_password(demo_passwords[user.role], user.password_hash)
-        for user in users
-    )
+    assert all(verify_password(demo_passwords[user.role], user.password_hash) for user in users)
     assert all(
         password not in encoded_hash
         for password in demo_passwords.values()
@@ -117,15 +112,11 @@ def test_demo_users_store_only_verifiable_hashes(
 def test_reload_keeps_valid_password_hashes(database_engine) -> None:
     load_demo_data(database_engine)
     with Session(database_engine) as session:
-        first_hashes = {
-            user.email: user.password_hash for user in session.scalars(select(User))
-        }
+        first_hashes = {user.email: user.password_hash for user in session.scalars(select(User))}
 
     load_demo_data(database_engine)
     with Session(database_engine) as session:
-        second_hashes = {
-            user.email: user.password_hash for user in session.scalars(select(User))
-        }
+        second_hashes = {user.email: user.password_hash for user in session.scalars(select(User))}
 
     assert second_hashes == first_hashes
 
@@ -136,9 +127,7 @@ def test_reload_restores_expected_demo_values(database_engine) -> None:
     with Session(database_engine) as session:
         site = session.scalar(select(Site).where(Site.code == "HQ-DEMO"))
         ticket = session.scalar(
-            select(Ticket).where(
-                Ticket.title == "[DEMO] Linea produttiva non raggiungibile"
-            )
+            select(Ticket).where(Ticket.title == "[DEMO] Linea produttiva non raggiungibile")
         )
         assert site is not None
         assert ticket is not None
@@ -153,9 +142,7 @@ def test_reload_restores_expected_demo_values(database_engine) -> None:
     with Session(database_engine) as session:
         site = session.scalar(select(Site).where(Site.code == "HQ-DEMO"))
         ticket = session.scalar(
-            select(Ticket).where(
-                Ticket.title == "[DEMO] Linea produttiva non raggiungibile"
-            )
+            select(Ticket).where(Ticket.title == "[DEMO] Linea produttiva non raggiungibile")
         )
         assert site is not None
         assert ticket is not None
@@ -190,9 +177,7 @@ def test_demo_records_are_synthetic_and_coherent(database_engine) -> None:
         users = session.scalars(
             select(User).where(User.email.endswith("@servicepilot.example"))
         ).all()
-        tickets = session.scalars(
-            select(Ticket).where(Ticket.title.startswith("[DEMO]"))
-        ).all()
+        tickets = session.scalars(select(Ticket).where(Ticket.title.startswith("[DEMO]"))).all()
 
         assert len(sites) == 6
         assert all(site.name.endswith("Demo") for site in sites)
@@ -210,13 +195,10 @@ def test_demo_records_are_synthetic_and_coherent(database_engine) -> None:
             for ticket in tickets
         )
         assert all(
-            ticket.classification_review_status
-            is ClassificationReviewStatus.HUMAN_REVIEWED
+            ticket.classification_review_status is ClassificationReviewStatus.HUMAN_REVIEWED
             for ticket in tickets
         )
         actions = session.scalars(select(ProposedAction)).all()
         assert len(actions) == 3
         assert {action.action_type for action in actions} == set(ActionType)
-        assert all(
-            action.status is ActionStatus.PENDING_APPROVAL for action in actions
-        )
+        assert all(action.status is ActionStatus.PENDING_APPROVAL for action in actions)

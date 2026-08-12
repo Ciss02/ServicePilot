@@ -12,7 +12,6 @@ from app.api.tickets import router as tickets_router
 from app.db.session import create_database
 from app.web.routes import router as web_router
 
-
 STATIC_DIRECTORY = Path(__file__).resolve().parent / "static"
 
 

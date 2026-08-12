@@ -4,7 +4,6 @@ import hashlib
 import secrets
 import time
 
-
 SESSION_COOKIE_NAME = "servicepilot_session"
 SESSION_DURATION_SECONDS = 8 * 60 * 60
 

@@ -1,22 +1,22 @@
 """Decisione umana ed esecuzione controllata delle azioni proposte."""
 
-from datetime import UTC, datetime
 from collections.abc import Callable
+from datetime import UTC, datetime
 
 from sqlalchemy import update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.audit import (
-    record_action_decision,
-    record_action_execution_result,
-    record_action_execution_started,
-)
 from app.actions.proposals import read_action_proposal
 from app.actions.service_client import (
     ActionExecutionResult,
     ActionServiceClient,
     ActionServiceError,
+)
+from app.audit import (
+    record_action_decision,
+    record_action_execution_result,
+    record_action_execution_started,
 )
 from app.db.models import ProposedAction, User
 from app.domain.vocabulary import ActionDecision, ActionStatus, Role
@@ -94,9 +94,7 @@ def decide_action_proposal(
     proposal = read_action_proposal(action)
     decided_at = datetime.now(UTC)
     target_status = (
-        ActionStatus.APPROVED
-        if decision is ActionDecision.APPROVE
-        else ActionStatus.REJECTED
+        ActionStatus.APPROVED if decision is ActionDecision.APPROVE else ActionStatus.REJECTED
     )
     claimed = _commit_update(
         session,
@@ -146,9 +144,7 @@ def decide_action_proposal(
     except ActionServiceError as error:
         execution = _service_failure(error)
 
-    final_status = (
-        ActionStatus.SUCCEEDED if execution.succeeded else ActionStatus.FAILED
-    )
+    final_status = ActionStatus.SUCCEEDED if execution.succeeded else ActionStatus.FAILED
     saved = _commit_update(
         session,
         update(ProposedAction)

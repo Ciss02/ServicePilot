@@ -72,20 +72,14 @@ def update_managed_ticket(
         technician = session.get(User, payload.assigned_technician_id)
         if technician is None:
             raise ManagedTechnicianNotFoundError
-        if (
-            technician.role not in {Role.TECHNICIAN, Role.ADMIN}
-            or not technician.is_active
-        ):
+        if technician.role not in {Role.TECHNICIAN, Role.ADMIN} or not technician.is_active:
             raise ManagedTechnicianUnavailableError
 
     if payload.status is not None:
         if not can_transition_status(ticket.status, payload.status):
             raise InvalidStatusTransitionError(ticket.status, payload.status)
         future_resolution = payload.resolution or ticket.resolution
-        if (
-            payload.status in {TicketStatus.RESOLVED, TicketStatus.CLOSED}
-            and not future_resolution
-        ):
+        if payload.status in {TicketStatus.RESOLVED, TicketStatus.CLOSED} and not future_resolution:
             raise ResolutionRequiredError
 
     update_values = payload.model_dump(
@@ -108,9 +102,7 @@ def update_managed_ticket(
             for value in (ticket.category, ticket.impact, ticket.urgency, ticket.priority)
         ):
             raise ClassificationReviewRequiredError
-        ticket.classification_review_status = (
-            ClassificationReviewStatus.HUMAN_REVIEWED
-        )
+        ticket.classification_review_status = ClassificationReviewStatus.HUMAN_REVIEWED
 
     try:
         session.flush()

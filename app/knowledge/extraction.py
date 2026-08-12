@@ -18,7 +18,6 @@ from app.db.models import (
     TicketSolutionSource,
 )
 
-
 MAX_SEGMENT_CHARACTERS = 1200
 SEGMENT_OVERLAP_CHARACTERS = 150
 EXTRACTION_PENDING = "pending"
@@ -193,9 +192,7 @@ def invalidate_solutions_for_document(
     if not ticket_ids:
         return
     session.execute(
-        delete(TicketSolutionSource).where(
-            TicketSolutionSource.ticket_id.in_(ticket_ids)
-        )
+        delete(TicketSolutionSource).where(TicketSolutionSource.ticket_id.in_(ticket_ids))
     )
     tickets = session.scalars(select(Ticket).where(Ticket.id.in_(ticket_ids))).all()
     for ticket in tickets:
@@ -213,9 +210,7 @@ def _save_failed_result(
     try:
         invalidate_solutions_for_document(session, document.id)
         session.execute(
-            delete(KnowledgeSegment).where(
-                KnowledgeSegment.document_id == document.id
-            ),
+            delete(KnowledgeSegment).where(KnowledgeSegment.document_id == document.id),
             execution_options={"synchronize_session": "fetch"},
         )
         session.flush()
@@ -264,9 +259,7 @@ def process_knowledge_document(
     try:
         invalidate_solutions_for_document(session, document.id)
         session.execute(
-            delete(KnowledgeSegment).where(
-                KnowledgeSegment.document_id == document.id
-            ),
+            delete(KnowledgeSegment).where(KnowledgeSegment.document_id == document.id),
             execution_options={"synchronize_session": "fetch"},
         )
         session.flush()

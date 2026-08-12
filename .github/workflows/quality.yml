@@ -1,0 +1,49 @@
+name: Controlli automatici
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Qualita e test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Scarica il repository
+        uses: actions/checkout@v6
+
+      - name: Prepara Python 3.13
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Installa le dipendenze
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Controlla le dipendenze
+        run: python -m pip check
+
+      - name: Controlla il codice Python
+        run: python -m ruff check --output-format=github .
+
+      - name: Controlla la formattazione
+        run: python -m ruff format --check .
+
+      - name: Esegui tutti i test
+        run: python -m pytest -W error

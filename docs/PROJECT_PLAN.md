@@ -154,7 +154,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 **Risultato:** demo stabile, documentata e presentabile.
 
-- [ ] **SP-080 - Controlli automatici**
+- [x] **SP-080 - Controlli automatici**
   Completare test, formattazione e controllo automatico su GitHub.
   Verifica: tutti i controlli passano da un ambiente pulito.
 - [ ] **SP-081 - Sicurezza e limiti della demo**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-080**. La milestone attiva è **Milestone 8**.
+La prossima attività è **SP-081**. La milestone attiva è **Milestone 8**.

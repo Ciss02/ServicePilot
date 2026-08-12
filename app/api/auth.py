@@ -12,7 +12,6 @@ from app.security.authentication import (
 )
 from app.security.session_cookie import delete_session_cookie, set_session_cookie
 
-
 router = APIRouter(prefix="/auth", tags=["accesso"])
 INVALID_CREDENTIALS = "Email o password non validi"
 

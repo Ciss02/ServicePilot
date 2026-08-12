@@ -29,7 +29,6 @@ from app.tickets.management import (
 )
 from app.tickets.queries import get_visible_ticket, list_visible_tickets
 
-
 router = APIRouter(prefix="/tickets", tags=["ticket"])
 DatabaseSession = Annotated[Session, Depends(get_session)]
 TicketId = Annotated[int, Path(gt=0, description="Identificativo positivo del ticket")]
@@ -146,10 +145,7 @@ def update_ticket(
     except InvalidStatusTransitionError as error:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                f"Transizione da {error.current.value} a "
-                f"{error.target.value} non consentita"
-            ),
+            detail=(f"Transizione da {error.current.value} a {error.target.value} non consentita"),
         )
     except ResolutionRequiredError:
         raise HTTPException(

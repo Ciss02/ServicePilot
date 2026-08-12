@@ -117,6 +117,9 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Ripristino completo dei dati operativi tramite la frase `RIPRISTINA DEMO`.
 - Reset atomico di ticket, azioni, audit e knowledge base con account e sessione
   amministrativa conservati.
+- Formattazione Python uniforme e controllo degli import tramite Ruff 0.16.2.
+- Workflow GitHub Actions su pull request e ramo `main` con installazione pulita,
+  controllo delle dipendenze, lint, formattazione e test senza chiamate AI reali.
 
 ## Milestone attiva
 
@@ -124,22 +127,21 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-074 - Strumenti amministrativi**
+**SP-080 - Controlli automatici**
 
-L'amministratore può rielaborare o eliminare i documenti della knowledge base e
-ripristinare i dati operativi della demo con una conferma esplicita. Rielaborazione e
-eliminazione invalidano le fonti AI non più affidabili; il reset ricrea ticket, azioni e
-audit iniziali senza interrompere la sessione amministrativa.
+Il progetto usa un unico formato Python e una sequenza ufficiale di controlli locali.
+GitHub Actions ricrea l'ambiente con Python 3.13 per ogni pull request verso `main`,
+controlla le dipendenze, analizza codice e formattazione ed esegue l'intera suite di test.
 
 ## Prossima attività
 
-**SP-080 - Controlli automatici**
+**SP-081 - Sicurezza e limiti della demo**
 
 Risultato atteso:
 
-- completare test, formattazione e controlli automatici su GitHub;
-- verificare l'esecuzione da un ambiente pulito;
-- rendere immediatamente visibili eventuali regressioni nelle pull request.
+- controllare segreti, upload, sessioni e limiti delle chiamate AI;
+- documentare i rischi e le protezioni della demo pubblica;
+- risolvere eventuali problemi critici prima del deploy.
 
 ## Blocchi o decisioni aperte
 
@@ -149,11 +151,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-080.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-081.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-080` con il codice dell'attività successiva.
+Sostituire `SP-081` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -475,3 +477,12 @@ Prima di terminare verificare che:
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-074.
 - `pytest`: 335 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificata la configurazione Ruff su 139 file Python con controllo degli errori e
+  ordinamento degli import.
+- Verificata la formattazione uniforme di tutti i file Python del repository.
+- Verificato il workflow GitHub Actions con Python 3.13, permessi di sola lettura,
+  limite di tempo e annullamento delle esecuzioni superate sullo stesso ramo.
+- Ricreato un secondo ambiente virtuale vuoto e installato soltanto
+  `requirements-dev.txt`.
+- Nell'ambiente pulito, `pip check`, Ruff e formattazione sono passati.
+- Nell'ambiente pulito, `pytest -W error`: 335 test superati senza avvisi.

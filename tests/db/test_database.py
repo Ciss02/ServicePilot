@@ -63,9 +63,7 @@ def test_existing_user_table_receives_password_hash_column(database_engine) -> N
     create_database(database_engine)
     create_database(database_engine)
 
-    columns = {
-        column["name"] for column in inspect(database_engine).get_columns("users")
-    }
+    columns = {column["name"] for column in inspect(database_engine).get_columns("users")}
     with database_engine.connect() as connection:
         preserved_email, password_hash = connection.execute(
             text("SELECT email, password_hash FROM users")
@@ -81,19 +79,13 @@ def test_existing_ticket_table_receives_unique_creation_key(database_engine) -> 
         connection.execute(
             text("CREATE TABLE tickets (id INTEGER PRIMARY KEY, title TEXT NOT NULL)")
         )
-        connection.execute(
-            text("INSERT INTO tickets (title) VALUES ('Ticket locale esistente')")
-        )
+        connection.execute(text("INSERT INTO tickets (title) VALUES ('Ticket locale esistente')"))
 
     create_database(database_engine)
     create_database(database_engine)
 
-    columns = {
-        column["name"] for column in inspect(database_engine).get_columns("tickets")
-    }
-    indexes = {
-        index["name"]: index for index in inspect(database_engine).get_indexes("tickets")
-    }
+    columns = {column["name"] for column in inspect(database_engine).get_columns("tickets")}
+    indexes = {index["name"]: index for index in inspect(database_engine).get_indexes("tickets")}
     with database_engine.connect() as connection:
         preserved_title = connection.execute(text("SELECT title FROM tickets")).scalar_one()
 
@@ -116,9 +108,7 @@ def test_existing_ticket_table_receives_classification_review_status(
     create_database(database_engine)
     create_database(database_engine)
 
-    columns = {
-        column["name"] for column in inspect(database_engine).get_columns("tickets")
-    }
+    columns = {column["name"] for column in inspect(database_engine).get_columns("tickets")}
     with database_engine.connect() as connection:
         title, review_status = connection.execute(
             text("SELECT title, classification_review_status FROM tickets")
@@ -141,9 +131,7 @@ def test_existing_ticket_receives_ai_solution_columns(database_engine) -> None:
     create_database(database_engine)
     create_database(database_engine)
 
-    columns = {
-        column["name"] for column in inspect(database_engine).get_columns("tickets")
-    }
+    columns = {column["name"] for column in inspect(database_engine).get_columns("tickets")}
     with database_engine.connect() as connection:
         row = connection.execute(
             text(
@@ -175,8 +163,7 @@ def test_existing_knowledge_document_receives_extraction_state(database_engine) 
         )
         connection.execute(
             text(
-                "INSERT INTO knowledge_documents (original_filename) "
-                "VALUES ('procedura-locale.md')"
+                "INSERT INTO knowledge_documents (original_filename) VALUES ('procedura-locale.md')"
             )
         )
 
@@ -184,8 +171,7 @@ def test_existing_knowledge_document_receives_extraction_state(database_engine) 
     create_database(database_engine)
 
     columns = {
-        column["name"]
-        for column in inspect(database_engine).get_columns("knowledge_documents")
+        column["name"] for column in inspect(database_engine).get_columns("knowledge_documents")
     }
     with database_engine.connect() as connection:
         row = connection.execute(
@@ -218,17 +204,14 @@ def test_existing_knowledge_document_receives_extraction_state(database_engine) 
 
 def test_existing_knowledge_segment_receives_embedding_column(database_engine) -> None:
     with database_engine.begin() as connection:
-        connection.execute(
-            text("CREATE TABLE knowledge_segments (id INTEGER PRIMARY KEY)")
-        )
+        connection.execute(text("CREATE TABLE knowledge_segments (id INTEGER PRIMARY KEY)"))
         connection.execute(text("INSERT INTO knowledge_segments DEFAULT VALUES"))
 
     create_database(database_engine)
     create_database(database_engine)
 
     columns = {
-        column["name"]
-        for column in inspect(database_engine).get_columns("knowledge_segments")
+        column["name"] for column in inspect(database_engine).get_columns("knowledge_segments")
     }
     with database_engine.connect() as connection:
         embedding_json = connection.execute(
@@ -285,8 +268,7 @@ def test_proposed_action_table_keeps_proposal_separate_from_ticket(
     create_database(database_engine)
 
     columns = {
-        column["name"]
-        for column in inspect(database_engine).get_columns("proposed_actions")
+        column["name"] for column in inspect(database_engine).get_columns("proposed_actions")
     }
     assert columns == {
         "id",
@@ -319,18 +301,14 @@ def test_existing_proposed_actions_receive_decision_and_result_columns(
             )
         )
         connection.execute(
-            text(
-                "INSERT INTO proposed_actions (ticket_id, status) "
-                "VALUES (7, 'pending_approval')"
-            )
+            text("INSERT INTO proposed_actions (ticket_id, status) VALUES (7, 'pending_approval')")
         )
 
     create_database(database_engine)
     create_database(database_engine)
 
     columns = {
-        column["name"]
-        for column in inspect(database_engine).get_columns("proposed_actions")
+        column["name"] for column in inspect(database_engine).get_columns("proposed_actions")
     }
     with database_engine.connect() as connection:
         row = connection.execute(
@@ -391,4 +369,3 @@ def test_ticket_rejects_unknown_requester(database_engine) -> None:
 
         with pytest.raises(IntegrityError):
             session.commit()
-

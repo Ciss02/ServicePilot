@@ -1,18 +1,5 @@
 """Concetti e regole condivisi del dominio ServicePilot."""
 
-from app.domain.vocabulary import (
-    ActionDecision,
-    ActionStatus,
-    ActionType,
-    AuditActorType,
-    AuditEventType,
-    Impact,
-    Priority,
-    Role,
-    TicketCategory,
-    TicketStatus,
-    Urgency,
-)
 from app.domain.action_contracts import (
     ActionProposalCreate,
     ActionProposalRead,
@@ -28,6 +15,19 @@ from app.domain.ticket_contracts import (
     TicketUpdate,
 )
 from app.domain.ticket_workflow import ALLOWED_STATUS_TRANSITIONS, can_transition_status
+from app.domain.vocabulary import (
+    ActionDecision,
+    ActionStatus,
+    ActionType,
+    AuditActorType,
+    AuditEventType,
+    Impact,
+    Priority,
+    Role,
+    TicketCategory,
+    TicketStatus,
+    Urgency,
+)
 
 __all__ = [
     "ActionProposalCreate",

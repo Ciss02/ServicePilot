@@ -5,7 +5,6 @@ from collections.abc import Mapping
 
 from app.domain.vocabulary import Role
 
-
 MIN_DEMO_PASSWORD_LENGTH = 12
 DEMO_PASSWORD_ENV_BY_ROLE: dict[Role, str] = {
     Role.EMPLOYEE: "SERVICEPILOT_DEMO_EMPLOYEE_PASSWORD",
@@ -30,8 +29,7 @@ def validate_demo_passwords(passwords: Mapping[Role, str]) -> dict[Role, str]:
             )
         if len(password) < MIN_DEMO_PASSWORD_LENGTH:
             raise DemoCredentialsError(
-                f"{variable_name} deve contenere almeno "
-                f"{MIN_DEMO_PASSWORD_LENGTH} caratteri"
+                f"{variable_name} deve contenere almeno {MIN_DEMO_PASSWORD_LENGTH} caratteri"
             )
         validated[role] = password
     return validated

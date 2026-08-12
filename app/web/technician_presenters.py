@@ -11,10 +11,16 @@ from app.db.models import Site, Ticket, User
 from app.domain.vocabulary import Impact, Priority, Role, TicketCategory, TicketStatus, Urgency
 from app.web.ticket_presenters import CATEGORY_LABELS, PRIORITY_LABELS, STATUS_LABELS
 
-
 TechnicianStatusFilter = Literal[
-    "open", "waiting", "completed", "new", "in_progress",
-    "waiting_for_requester", "waiting_for_vendor", "resolved", "closed",
+    "open",
+    "waiting",
+    "completed",
+    "new",
+    "in_progress",
+    "waiting_for_requester",
+    "waiting_for_vendor",
+    "resolved",
+    "closed",
 ]
 TechnicianAssignmentFilter = Literal["all", "mine", "unassigned"]
 TechnicianPriorityFilter = Literal["all", "p1", "p2", "p3", "p4", "pending"]
@@ -90,14 +96,10 @@ def present_technician_tickets(
         if ticket.assigned_technician_id is not None
     )
     sites = (
-        list(session.scalars(select(Site).where(Site.id.in_(site_ids))).all())
-        if site_ids
-        else []
+        list(session.scalars(select(Site).where(Site.id.in_(site_ids))).all()) if site_ids else []
     )
     users = (
-        list(session.scalars(select(User).where(User.id.in_(user_ids))).all())
-        if user_ids
-        else []
+        list(session.scalars(select(User).where(User.id.in_(user_ids))).all()) if user_ids else []
     )
     sites_by_id = {site.id: site.name for site in sites}
     users_by_id = {user.id: user for user in users}
@@ -113,9 +115,7 @@ def present_technician_tickets(
                 title=ticket.title,
                 description=ticket.description,
                 requester_name=(
-                    requester.display_name
-                    if requester
-                    else "Richiedente non disponibile"
+                    requester.display_name if requester else "Richiedente non disponibile"
                 ),
                 requester_email=requester.email if requester else "—",
                 site_name=sites_by_id.get(ticket.site_id, "Sede non disponibile"),
@@ -127,31 +127,21 @@ def present_technician_tickets(
                 ),
                 category_code=ticket.category.value if ticket.category else "",
                 category_label=(
-                    CATEGORY_LABELS[ticket.category]
-                    if ticket.category
-                    else "Da classificare"
+                    CATEGORY_LABELS[ticket.category] if ticket.category else "Da classificare"
                 ),
                 subcategory=ticket.subcategory or "",
                 impact_code=ticket.impact.value if ticket.impact else "",
-                impact_label=(
-                    IMPACT_LABELS[ticket.impact] if ticket.impact else "Da definire"
-                ),
+                impact_label=(IMPACT_LABELS[ticket.impact] if ticket.impact else "Da definire"),
                 urgency_code=ticket.urgency.value if ticket.urgency else "",
-                urgency_label=(
-                    URGENCY_LABELS[ticket.urgency] if ticket.urgency else "Da definire"
-                ),
+                urgency_label=(URGENCY_LABELS[ticket.urgency] if ticket.urgency else "Da definire"),
                 priority_code=ticket.priority.value if ticket.priority else "pending",
                 priority_label=(
-                    PRIORITY_LABELS[ticket.priority]
-                    if ticket.priority
-                    else "Priorità da calcolare"
+                    PRIORITY_LABELS[ticket.priority] if ticket.priority else "Priorità da calcolare"
                 ),
                 assigned_group=ticket.assigned_group or "",
                 classification_review_status=ticket.classification_review_status.value,
                 assigned_technician_id=ticket.assigned_technician_id,
-                technician_name=(
-                    technician.display_name if technician else "Non assegnato"
-                ),
+                technician_name=(technician.display_name if technician else "Non assegnato"),
                 status_code=ticket.status.value,
                 status_label=STATUS_LABELS[ticket.status],
                 technician_note=ticket.technician_note or "",
@@ -206,9 +196,7 @@ def filter_and_sort_technician_tickets(
         filtered = [ticket for ticket in filtered if ticket.status.value == status_filter]
     if assignment_filter == "mine":
         filtered = [
-            ticket
-            for ticket in filtered
-            if ticket.assigned_technician_id == current_user_id
+            ticket for ticket in filtered if ticket.assigned_technician_id == current_user_id
         ]
     elif assignment_filter == "unassigned":
         filtered = [ticket for ticket in filtered if ticket.assigned_technician_id is None]

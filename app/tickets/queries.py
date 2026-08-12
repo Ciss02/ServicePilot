@@ -19,9 +19,7 @@ def visible_tickets_query(current_user: User) -> Select[tuple[Ticket]]:
 def list_visible_tickets(session: Session, current_user: User) -> list[Ticket]:
     """Restituisce i ticket autorizzati, dal più recente."""
 
-    query = visible_tickets_query(current_user).order_by(
-        Ticket.created_at.desc(), Ticket.id.desc()
-    )
+    query = visible_tickets_query(current_user).order_by(Ticket.created_at.desc(), Ticket.id.desc())
     return list(session.scalars(query).all())
 
 

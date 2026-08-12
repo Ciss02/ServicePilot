@@ -9,7 +9,6 @@ from fastapi.testclient import TestClient
 from app.main import app as portal_app
 from app.simulated_services.main import app as simulated_services_app
 
-
 REQUEST_ID = "d96fb76d-9bd1-49dc-a397-88f7dc07df42"
 
 SUCCESS_CASES = (
@@ -107,9 +106,7 @@ def test_each_action_can_return_the_same_controlled_failure(
         "action_type": action_type,
         "result": "failed",
         "error_code": "simulated_service_unavailable",
-        "message": (
-            "Errore demo: il servizio simulato non è temporaneamente disponibile."
-        ),
+        "message": ("Errore demo: il servizio simulato non è temporaneamente disponibile."),
         "retryable": True,
     }
 
@@ -161,9 +158,7 @@ def test_request_id_is_returned_as_a_valid_uuid(client: TestClient) -> None:
 
 
 def test_simulated_endpoints_are_not_exposed_by_the_portal() -> None:
-    portal_paths = {
-        route.path for route in portal_app.routes if hasattr(route, "path")
-    }
+    portal_paths = {route.path for route in portal_app.routes if hasattr(route, "path")}
 
     assert "/assignments" not in portal_paths
     assert "/requester-communications" not in portal_paths

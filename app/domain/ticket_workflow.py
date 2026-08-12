@@ -2,7 +2,6 @@
 
 from app.domain.vocabulary import TicketStatus
 
-
 ALLOWED_STATUS_TRANSITIONS: dict[TicketStatus, frozenset[TicketStatus]] = {
     TicketStatus.NEW: frozenset({TicketStatus.IN_PROGRESS}),
     TicketStatus.IN_PROGRESS: frozenset(
@@ -15,12 +14,8 @@ ALLOWED_STATUS_TRANSITIONS: dict[TicketStatus, frozenset[TicketStatus]] = {
     TicketStatus.WAITING_FOR_REQUESTER: frozenset(
         {TicketStatus.IN_PROGRESS, TicketStatus.RESOLVED}
     ),
-    TicketStatus.WAITING_FOR_VENDOR: frozenset(
-        {TicketStatus.IN_PROGRESS, TicketStatus.RESOLVED}
-    ),
-    TicketStatus.RESOLVED: frozenset(
-        {TicketStatus.IN_PROGRESS, TicketStatus.CLOSED}
-    ),
+    TicketStatus.WAITING_FOR_VENDOR: frozenset({TicketStatus.IN_PROGRESS, TicketStatus.RESOLVED}),
+    TicketStatus.RESOLVED: frozenset({TicketStatus.IN_PROGRESS, TicketStatus.CLOSED}),
     TicketStatus.CLOSED: frozenset(),
 }
 

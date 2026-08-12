@@ -17,7 +17,6 @@ from app.domain.vocabulary import (
     ClassificationReviewStatus,
 )
 
-
 MAX_AUDIT_DETAILS_LENGTH = 4_000
 
 
@@ -224,8 +223,7 @@ def record_ticket_update_events(
     classification_changed = classification_before != classification_after
     classification_reviewed = (
         classification_changed
-        and ticket.classification_review_status
-        is ClassificationReviewStatus.HUMAN_REVIEWED
+        and ticket.classification_review_status is ClassificationReviewStatus.HUMAN_REVIEWED
     )
     if classification_reviewed:
         events.append(
@@ -330,11 +328,7 @@ def record_action_decision(
         ticket_id=action.ticket_id,
         actor_type=AuditActorType.HUMAN,
         actor_user_id=reviewer.id,
-        event_type=(
-            AuditEventType.ACTION_APPROVED
-            if approved
-            else AuditEventType.ACTION_REJECTED
-        ),
+        event_type=(AuditEventType.ACTION_APPROVED if approved else AuditEventType.ACTION_REJECTED),
         summary="Azione proposta approvata" if approved else "Azione proposta rifiutata",
         details={
             "action_type": action.action_type.value,
@@ -373,11 +367,7 @@ def record_action_execution_result(
             if succeeded
             else AuditEventType.ACTION_EXECUTION_FAILED
         ),
-        summary=(
-            "Azione simulata completata"
-            if succeeded
-            else "Azione simulata non riuscita"
-        ),
+        summary=("Azione simulata completata" if succeeded else "Azione simulata non riuscita"),
         details={
             "action_type": action.action_type.value,
             "reference": action.execution_reference,
@@ -411,8 +401,6 @@ def list_audit_events(
         statement = statement.where(AuditEvent.ticket_id == ticket_id)
     return list(
         session.scalars(
-            statement.order_by(AuditEvent.created_at.desc(), AuditEvent.id.desc()).limit(
-                limit
-            )
+            statement.order_by(AuditEvent.created_at.desc(), AuditEvent.id.desc()).limit(limit)
         ).all()
     )

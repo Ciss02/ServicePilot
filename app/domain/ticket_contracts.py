@@ -23,7 +23,6 @@ from app.domain.vocabulary import (
     Urgency,
 )
 
-
 Identifier = Annotated[int, Field(strict=True, gt=0)]
 AffectedUsers = Annotated[int, Field(strict=True, ge=1, le=10_000)]
 Title = Annotated[str, Field(min_length=5, max_length=120)]

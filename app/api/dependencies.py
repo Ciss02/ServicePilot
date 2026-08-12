@@ -15,7 +15,6 @@ from app.security.sessions import (
     session_is_expired,
 )
 
-
 DatabaseSession = Annotated[Session, Depends(get_session)]
 SessionCookie = Annotated[str | None, Cookie(alias=SESSION_COOKIE_NAME)]
 INVALID_SESSION = "Sessione non valida o scaduta"

@@ -7,13 +7,12 @@ from dataclasses import dataclass, field
 from app.ai.configuration import (
     AI_MAX_ATTEMPTS_ENV,
     AI_TIMEOUT_ENV,
+    DEFAULT_MAX_ATTEMPTS,
+    DEFAULT_TIMEOUT_SECONDS,
     GEMINI_API_KEY_ENV,
     AIConfigurationError,
     AIProvider,
-    DEFAULT_MAX_ATTEMPTS,
-    DEFAULT_TIMEOUT_SECONDS,
 )
-
 
 EMBEDDING_PROVIDER_ENV = "SERVICEPILOT_EMBEDDING_PROVIDER"
 EMBEDDING_MODEL_ENV = "SERVICEPILOT_EMBEDDING_MODEL"
@@ -42,13 +41,9 @@ class EmbeddingSettings:
                 f"{EMBEDDING_DIMENSIONS_ENV} deve essere compreso tra 128 e 3072"
             )
         if not 1 <= self.timeout_seconds <= 60:
-            raise AIConfigurationError(
-                f"{AI_TIMEOUT_ENV} deve essere compreso tra 1 e 60"
-            )
+            raise AIConfigurationError(f"{AI_TIMEOUT_ENV} deve essere compreso tra 1 e 60")
         if not 1 <= self.max_attempts <= 3:
-            raise AIConfigurationError(
-                f"{AI_MAX_ATTEMPTS_ENV} deve essere compreso tra 1 e 3"
-            )
+            raise AIConfigurationError(f"{AI_MAX_ATTEMPTS_ENV} deve essere compreso tra 1 e 3")
         if self.provider is AIProvider.GEMINI and not self.api_key:
             raise AIConfigurationError(
                 f"Variabile d'ambiente obbligatoria non configurata: {GEMINI_API_KEY_ENV}"
@@ -64,9 +59,7 @@ def _read_integer(
     try:
         return int(raw_value)
     except ValueError as error:
-        raise AIConfigurationError(
-            f"{variable_name} deve contenere un numero intero"
-        ) from error
+        raise AIConfigurationError(f"{variable_name} deve contenere un numero intero") from error
 
 
 def load_embedding_settings(

@@ -32,8 +32,7 @@ from app.domain import (
     ActionType,
     RequesterCommunicationPayload,
 )
-from app.domain.vocabulary import Role, TicketStatus
-from app.domain.vocabulary import AuditEventType
+from app.domain.vocabulary import AuditEventType, Role, TicketStatus
 
 
 class ActionServiceStub:
@@ -107,15 +106,11 @@ def decision_context(tmp_path):
             ticket,
             ActionProposalCreate(
                 action_type=ActionType.NOTIFY_REQUESTER,
-                rationale=(
-                    "Il richiedente deve ricevere un aggiornamento fittizio controllato."
-                ),
+                rationale=("Il richiedente deve ricevere un aggiornamento fittizio controllato."),
                 payload=RequesterCommunicationPayload(
                     message="La verifica demo è in corso e seguirà un aggiornamento."
                 ),
-                expected_effect=(
-                    "Registrare una comunicazione demo senza inviare messaggi reali."
-                ),
+                expected_effect=("Registrare una comunicazione demo senza inviare messaggi reali."),
             ),
         )
         context = {

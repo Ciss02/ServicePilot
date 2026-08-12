@@ -6,8 +6,8 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.audit import record_ai_classification_result
 from app.ai.contracts import AIInvalidResponseError, AIModel, AIModelError
+from app.audit import record_ai_classification_result
 from app.db.models import Site, Ticket
 from app.domain.priority import calculate_priority
 from app.domain.ticket_contracts import ShortText
@@ -92,8 +92,7 @@ def suggest_ticket_classification(
                 "site": {"code": site.code, "name": site.name},
             },
             "allowed_categories": {
-                category.value: guidance
-                for category, guidance in CATEGORY_GUIDANCE.items()
+                category.value: guidance for category, guidance in CATEGORY_GUIDANCE.items()
             },
             "allowed_impacts": [item.value for item in Impact],
             "allowed_urgencies": [item.value for item in Urgency],
@@ -107,9 +106,7 @@ def suggest_ticket_classification(
         system_instruction=CLASSIFICATION_SYSTEM_INSTRUCTION,
     )
     if not isinstance(proposed, AIProposedTicketClassification):
-        raise AIInvalidResponseError(
-            "Il modello AI ha restituito una classificazione non valida"
-        )
+        raise AIInvalidResponseError("Il modello AI ha restituito una classificazione non valida")
 
     return TicketClassificationSuggestion(
         **proposed.model_dump(),
@@ -142,15 +139,11 @@ def classify_confirmed_ticket(
 
     site = session.get(Site, ticket.site_id)
     if site is None:
-        raise TicketClassificationPersistenceError(
-            "La sede del ticket non è disponibile"
-        )
+        raise TicketClassificationPersistenceError("La sede del ticket non è disponibile")
     try:
         suggestion = suggest_ticket_classification(ticket, site=site, ai_model=ai_model)
     except AIInvalidResponseError:
-        ticket.classification_review_status = (
-            ClassificationReviewStatus.AI_INVALID_RESPONSE
-        )
+        ticket.classification_review_status = ClassificationReviewStatus.AI_INVALID_RESPONSE
         return _save_classification_result(session, ticket)
     except AIModelError:
         ticket.classification_review_status = ClassificationReviewStatus.AI_UNAVAILABLE

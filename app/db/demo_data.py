@@ -123,9 +123,7 @@ DEMO_USERS = (
 DEMO_TICKETS = (
     TicketSeed(
         title="[DEMO] Linea produttiva non raggiungibile",
-        description=(
-            "Le postazioni demo della linea non comunicano con il sistema di controllo."
-        ),
+        description=("Le postazioni demo della linea non comunicano con il sistema di controllo."),
         requester_email="dipendente.plant@servicepilot.example",
         site_code="PLANT-DEMO",
         service="Controllo produzione",
@@ -157,9 +155,7 @@ DEMO_TICKETS = (
     ),
     TicketSeed(
         title="[DEMO] Accesso VPN intermittente",
-        description=(
-            "La connessione VPN demo si interrompe durante il lavoro da remoto."
-        ),
+        description=("La connessione VPN demo si interrompe durante il lavoro da remoto."),
         requester_email="dipendente.hq@servicepilot.example",
         site_code="HQ-DEMO",
         service="Accesso remoto",
@@ -175,9 +171,7 @@ DEMO_TICKETS = (
     ),
     TicketSeed(
         title="[DEMO] Richiesta installazione software",
-        description=(
-            "Serve installare uno strumento grafico fittizio sulla postazione demo."
-        ),
+        description=("Serve installare uno strumento grafico fittizio sulla postazione demo."),
         requester_email="dipendente.hq@servicepilot.example",
         site_code="HQ-DEMO",
         service="Gestione software",
@@ -191,9 +185,7 @@ DEMO_TICKETS = (
     ),
     TicketSeed(
         title="[DEMO] Stampante etichette bloccata",
-        description=(
-            "La stampante Zebra dimostrativa del magazzino non completa le etichette."
-        ),
+        description=("La stampante Zebra dimostrativa del magazzino non completa le etichette."),
         requester_email="dipendente.plant@servicepilot.example",
         site_code="WAREHOUSE-DEMO",
         service="Stampa etichette",
@@ -232,9 +224,7 @@ DEMO_ACTIONS = (
     ActionSeed(
         ticket_title="[DEMO] Linea produttiva non raggiungibile",
         action_type=ActionType.ASSIGN_TICKET,
-        rationale=(
-            "Il problema coinvolge la connettività dello scenario produttivo demo."
-        ),
+        rationale=("Il problema coinvolge la connettività dello scenario produttivo demo."),
         payload={
             "assigned_group": "Supporto sistemi produttivi",
             "assigned_technician_id": None,
@@ -246,34 +236,24 @@ DEMO_ACTIONS = (
     ActionSeed(
         ticket_title="[DEMO] Linea produttiva non raggiungibile",
         action_type=ActionType.NOTIFY_REQUESTER,
-        rationale=(
-            "Il richiedente deve sapere che la verifica tecnica demo è stata avviata."
-        ),
+        rationale=("Il richiedente deve sapere che la verifica tecnica demo è stata avviata."),
         payload={
             "message": (
                 "Abbiamo avviato la verifica della connettività della linea demo. "
                 "Ti aggiorneremo al termine dei controlli."
             )
         },
-        expected_effect=(
-            "Registrare una comunicazione demo chiara e visibile al richiedente."
-        ),
+        expected_effect=("Registrare una comunicazione demo chiara e visibile al richiedente."),
     ),
     ActionSeed(
         ticket_title="[DEMO] Linea produttiva non raggiungibile",
         action_type=ActionType.ESCALATE_VENDOR,
-        rationale=(
-            "La procedura demo prevede il coinvolgimento del partner della linea."
-        ),
+        rationale=("La procedura demo prevede il coinvolgimento del partner della linea."),
         payload={
             "vendor_name": "Automazione Partner Demo",
-            "summary": (
-                "Verificare la connettività fittizia tra controllo linea e rete demo."
-            ),
+            "summary": ("Verificare la connettività fittizia tra controllo linea e rete demo."),
         },
-        expected_effect=(
-            "Aprire un riferimento demo presso il fornitore senza contatti reali."
-        ),
+        expected_effect=("Aprire un riferimento demo presso il fornitore senza contatti reali."),
     ),
 )
 
@@ -351,9 +331,7 @@ def _upsert_tickets(
             "priority": calculate_priority(seed.impact, seed.urgency),
             "assigned_group": seed.assigned_group,
             "classification_review_status": ClassificationReviewStatus.HUMAN_REVIEWED,
-            "assigned_technician_id": (
-                assigned_technician.id if assigned_technician else None
-            ),
+            "assigned_technician_id": (assigned_technician.id if assigned_technician else None),
             "status": seed.status,
             "technician_note": seed.technician_note,
             "resolution": seed.resolution,
@@ -423,13 +401,9 @@ def _seed_audit_events(
     from app.audit.events import record_action_proposed, record_ticket_created
 
     existing_keys = set(
-        session.scalars(
-            select(AuditEvent.event_key).where(AuditEvent.event_key.is_not(None))
-        ).all()
+        session.scalars(select(AuditEvent.event_key).where(AuditEvent.event_key.is_not(None))).all()
     )
-    requester_by_title = {
-        seed.title: users_by_email[seed.requester_email] for seed in DEMO_TICKETS
-    }
+    requester_by_title = {seed.title: users_by_email[seed.requester_email] for seed in DEMO_TICKETS}
     for title, ticket in tickets_by_title.items():
         event_key = f"demo:ticket:{ticket.id}:created"
         if event_key not in existing_keys:
@@ -449,8 +423,7 @@ def _seed_audit_events(
                 action,
                 event_key=event_key,
                 created_at=(
-                    tickets_by_id[action.ticket_id].created_at
-                    + timedelta(seconds=position)
+                    tickets_by_id[action.ticket_id].created_at + timedelta(seconds=position)
                 ),
             )
 
@@ -482,9 +455,7 @@ def load_demo_data(
     """Crea le tabelle e salva l'intero dataset in una singola transazione."""
 
     passwords = (
-        load_demo_passwords()
-        if demo_passwords is None
-        else validate_demo_passwords(demo_passwords)
+        load_demo_passwords() if demo_passwords is None else validate_demo_passwords(demo_passwords)
     )
     create_database(target_engine)
     with Session(target_engine) as session:
@@ -495,4 +466,3 @@ def load_demo_data(
             session.rollback()
             raise
     return summary
-

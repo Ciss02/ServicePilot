@@ -19,7 +19,6 @@ from app.db.models import (
 from app.domain.vocabulary import Role
 from app.security.demo_credentials import validate_demo_passwords
 
-
 DEMO_RESET_CONFIRMATION = "RIPRISTINA DEMO"
 
 
@@ -81,9 +80,7 @@ def reset_demo_dataset(
     """Sostituisce i dati operativi con il dataset demo in una sola transazione."""
 
     validated_passwords = validate_demo_passwords(demo_passwords)
-    storage_filenames = list(
-        session.scalars(select(KnowledgeDocument.storage_filename)).all()
-    )
+    storage_filenames = list(session.scalars(select(KnowledgeDocument.storage_filename)).all())
     removed_documents = len(storage_filenames)
 
     try:

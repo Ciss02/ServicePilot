@@ -126,9 +126,7 @@ def test_indexing_stores_normalized_vectors_and_document_metadata(
 
     result = index_knowledge_document(session, vpn_document, model)
     segment = session.scalar(
-        select(KnowledgeSegment).where(
-            KnowledgeSegment.document_id == vpn_document.id
-        )
+        select(KnowledgeSegment).where(KnowledgeSegment.document_id == vpn_document.id)
     )
 
     assert result.status == INDEX_READY
@@ -187,9 +185,7 @@ def test_invalid_vectors_fail_without_leaving_partial_index(indexing_context) ->
         InvalidEmbeddingModel(),
     )
     segment = session.scalar(
-        select(KnowledgeSegment).where(
-            KnowledgeSegment.document_id == vpn_document.id
-        )
+        select(KnowledgeSegment).where(KnowledgeSegment.document_id == vpn_document.id)
     )
 
     assert result.status == INDEX_FAILED

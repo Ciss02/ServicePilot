@@ -18,7 +18,6 @@ from app.simulated_services.contracts import (
     SimulatedActionSuccess,
 )
 
-
 ACTION_SERVICE_BASE_URL_ENV = "SERVICEPILOT_ACTION_SERVICE_BASE_URL"
 ACTION_SERVICE_TIMEOUT_ENV = "SERVICEPILOT_ACTION_SERVICE_TIMEOUT_SECONDS"
 DEFAULT_ACTION_SERVICE_BASE_URL = "http://127.0.0.1:8011"
@@ -89,10 +88,7 @@ class ActionServiceClient:
             ensure_ascii=False,
         ).encode("utf-8")
         request = Request(
-            url=(
-                self._settings.base_url.rstrip("/")
-                + self._PATHS[proposal.action_type]
-            ),
+            url=(self._settings.base_url.rstrip("/") + self._PATHS[proposal.action_type]),
             data=body,
             headers={"Content-Type": "application/json; charset=utf-8"},
             method="POST",
@@ -110,9 +106,7 @@ class ActionServiceClient:
         except HTTPError as error:
             return self._controlled_http_failure(error)
         except (URLError, TimeoutError, socket.timeout, OSError) as error:
-            raise ActionServiceError(
-                "Il servizio simulato non è raggiungibile"
-            ) from error
+            raise ActionServiceError("Il servizio simulato non è raggiungibile") from error
         except (UnicodeDecodeError, ValidationError) as error:
             raise ActionServiceError(
                 "Il servizio simulato ha restituito una risposta non valida"
@@ -121,9 +115,7 @@ class ActionServiceClient:
     @staticmethod
     def _controlled_http_failure(error: HTTPError) -> ActionExecutionResult:
         try:
-            failure = SimulatedActionFailure.model_validate_json(
-                error.read().decode("utf-8")
-            )
+            failure = SimulatedActionFailure.model_validate_json(error.read().decode("utf-8"))
         except (UnicodeDecodeError, ValidationError) as parse_error:
             raise ActionServiceError(
                 "Il servizio simulato ha restituito un errore non valido"

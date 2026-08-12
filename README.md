@@ -95,6 +95,18 @@ Per eseguire i test automatici:
 .\.venv\Scripts\python.exe -m pytest
 ```
 
+Per eseguire gli stessi controlli di qualità usati da GitHub:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m ruff format --check .
+.\.venv\Scripts\python.exe -m pytest -W error
+```
+
+La configurazione e il significato dei risultati sono descritti in
+[`docs/QUALITY_CHECKS.md`](docs/QUALITY_CHECKS.md).
+
 Per creare il database SQLite locale e le tabelle iniziali:
 
 ```powershell
@@ -154,6 +166,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Approvazione umana delle azioni](docs/ACTION_APPROVAL.md)
 - [Audit log e cronologia dei ticket](docs/AUDIT_LOG.md)
 - [Strumenti amministrativi e ripristino demo](docs/ADMIN_TOOLS.md)
+- [Controlli automatici di qualità](docs/QUALITY_CHECKS.md)
 
 ### Avvertenza
 
@@ -225,6 +238,18 @@ Run the automated tests with:
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
 ```
+
+Run the same quality checks used by GitHub with:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m ruff format --check .
+.\.venv\Scripts\python.exe -m pytest -W error
+```
+
+See [`docs/QUALITY_CHECKS.md`](docs/QUALITY_CHECKS.md) for the configuration and result
+interpretation.
 
 Create the local SQLite database and its initial tables with:
 

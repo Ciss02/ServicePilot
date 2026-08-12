@@ -3,7 +3,6 @@
 import os
 from pathlib import Path
 
-
 KNOWLEDGE_STORAGE_DIRECTORY_ENV = "SERVICEPILOT_KNOWLEDGE_STORAGE_DIR"
 DEFAULT_KNOWLEDGE_STORAGE_DIRECTORY = Path("storage") / "knowledge"
 

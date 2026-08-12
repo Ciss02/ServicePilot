@@ -15,7 +15,6 @@ from app.domain import (
     Urgency,
 )
 
-
 DOMAIN_VALUES = [
     (
         ActionType,
@@ -76,7 +75,5 @@ def test_domain_values_are_complete_and_unique(
 
 
 @pytest.mark.parametrize(("enum_type", "_"), DOMAIN_VALUES)
-def test_domain_values_can_be_used_as_strings(
-    enum_type: type[StrEnum], _: set[str]
-) -> None:
+def test_domain_values_can_be_used_as_strings(enum_type: type[StrEnum], _: set[str]) -> None:
     assert all(str(member) == member.value for member in enum_type)

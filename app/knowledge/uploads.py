@@ -14,13 +14,10 @@ from sqlalchemy.orm import Session
 
 from app.db.models import KnowledgeDocument, User
 
-
 MAX_DOCUMENT_SIZE_BYTES = 5 * 1024 * 1024
 ALLOWED_DOCUMENT_EXTENSIONS = frozenset({".pdf", ".md", ".markdown"})
 PDF_CONTENT_TYPES = frozenset({"application/pdf", "application/octet-stream"})
-MARKDOWN_CONTENT_TYPES = frozenset(
-    {"text/markdown", "text/plain", "application/octet-stream"}
-)
+MARKDOWN_CONTENT_TYPES = frozenset({"text/markdown", "text/plain", "application/octet-stream"})
 READ_CHUNK_SIZE = 64 * 1024
 
 
@@ -65,18 +62,14 @@ def _read_limited(upload: UploadFile) -> bytes:
     total_size = 0
     upload.file.seek(0)
     while total_size <= MAX_DOCUMENT_SIZE_BYTES:
-        chunk = upload.file.read(
-            min(READ_CHUNK_SIZE, MAX_DOCUMENT_SIZE_BYTES + 1 - total_size)
-        )
+        chunk = upload.file.read(min(READ_CHUNK_SIZE, MAX_DOCUMENT_SIZE_BYTES + 1 - total_size))
         if not chunk:
             break
         parts.append(chunk)
         total_size += len(chunk)
 
     if total_size > MAX_DOCUMENT_SIZE_BYTES:
-        raise KnowledgeDocumentValidationError(
-            "Il documento supera il limite massimo di 5 MB."
-        )
+        raise KnowledgeDocumentValidationError("Il documento supera il limite massimo di 5 MB.")
     if total_size == 0:
         raise KnowledgeDocumentValidationError("Il documento è vuoto.")
     return b"".join(parts)
@@ -107,9 +100,7 @@ def _validate_content(extension: str, content_type: str, content: bytes) -> str:
             "Il file Markdown deve contenere testo UTF-8 valido."
         ) from error
     if "\x00" in text:
-        raise KnowledgeDocumentValidationError(
-            "Il file Markdown contiene dati binari non ammessi."
-        )
+        raise KnowledgeDocumentValidationError("Il file Markdown contiene dati binari non ammessi.")
     return "text/markdown"
 
 

@@ -5,13 +5,6 @@ from app.knowledge.configuration import (
     KNOWLEDGE_STORAGE_DIRECTORY_ENV,
     get_knowledge_storage_directory,
 )
-from app.knowledge.uploads import (
-    ALLOWED_DOCUMENT_EXTENSIONS,
-    MAX_DOCUMENT_SIZE_BYTES,
-    KnowledgeDocumentPersistenceError,
-    KnowledgeDocumentValidationError,
-    store_knowledge_document,
-)
 from app.knowledge.extraction import (
     EXTRACTION_FAILED,
     EXTRACTION_PENDING,
@@ -21,12 +14,6 @@ from app.knowledge.extraction import (
     KnowledgeDocumentProcessingError,
     build_segment_drafts,
     process_knowledge_document,
-)
-from app.knowledge.management import (
-    DocumentDeletionResult,
-    KnowledgeDocumentDeletionError,
-    KnowledgeDocumentNotFoundError,
-    delete_knowledge_document,
 )
 from app.knowledge.indexing import (
     INDEX_FAILED,
@@ -39,6 +26,12 @@ from app.knowledge.indexing import (
     KnowledgeSearchValidationError,
     index_knowledge_document,
     search_knowledge,
+)
+from app.knowledge.management import (
+    DocumentDeletionResult,
+    KnowledgeDocumentDeletionError,
+    KnowledgeDocumentNotFoundError,
+    delete_knowledge_document,
 )
 from app.knowledge.solutions import (
     MIN_SOLUTION_SOURCE_SCORE,
@@ -54,6 +47,13 @@ from app.knowledge.solutions import (
     generate_ticket_solution,
     list_ticket_solution_sources,
     suggest_sourced_solution,
+)
+from app.knowledge.uploads import (
+    ALLOWED_DOCUMENT_EXTENSIONS,
+    MAX_DOCUMENT_SIZE_BYTES,
+    KnowledgeDocumentPersistenceError,
+    KnowledgeDocumentValidationError,
+    store_knowledge_document,
 )
 
 __all__ = [

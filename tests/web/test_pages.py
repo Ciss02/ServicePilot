@@ -10,14 +10,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy import Engine, func, select
 from sqlalchemy.orm import Session
 
-from app.ai import AIUnavailableError
-from app.ai.dependencies import get_ai_model, get_embedding_model
 from app.actions import ActionExecutionResult
 from app.actions.dependencies import get_action_service_client
+from app.ai import AIUnavailableError
+from app.ai.dependencies import get_ai_model, get_embedding_model
 from app.audit import record_action_proposed, record_ticket_created
 from app.db import (
-    AuthSession,
     AuditEvent,
+    AuthSession,
     KnowledgeDocument,
     KnowledgeSegment,
     ProposedAction,
@@ -29,7 +29,6 @@ from app.db import (
     create_database,
     get_session,
 )
-from app.knowledge import KNOWLEDGE_STORAGE_DIRECTORY_ENV
 from app.domain.vocabulary import (
     ActionStatus,
     ActionType,
@@ -41,9 +40,10 @@ from app.domain.vocabulary import (
     TicketStatus,
     Urgency,
 )
+from app.knowledge import KNOWLEDGE_STORAGE_DIRECTORY_ENV
 from app.main import create_app
-from app.security.passwords import hash_password
 from app.security.demo_credentials import DEMO_PASSWORD_ENV_BY_ROLE
+from app.security.passwords import hash_password
 from app.security.sessions import SESSION_COOKIE_NAME
 
 
@@ -166,9 +166,7 @@ def web_client(tmp_path, monkeypatch) -> Iterator[tuple[TestClient, Engine, str]
                         ),
                         Ticket(
                             title="Ticket riservato a un altro dipendente",
-                            description=(
-                                "Questa descrizione fittizia non deve apparire altrove."
-                            ),
+                            description=("Questa descrizione fittizia non deve apparire altrove."),
                             requester_id=other_employee.id,
                             site_id=site.id,
                             service="Servizio riservato demo",
@@ -179,29 +177,23 @@ def web_client(tmp_path, monkeypatch) -> Iterator[tuple[TestClient, Engine, str]
                 )
                 session.flush()
                 action_ticket = session.scalar(
-                    select(Ticket).where(
-                        Ticket.title == "VPN demo in attesa di informazioni"
-                    )
+                    select(Ticket).where(Ticket.title == "VPN demo in attesa di informazioni")
                 )
                 proposed_action = ProposedAction(
-                        ticket_id=action_ticket.id,
-                        action_type=ActionType.NOTIFY_REQUESTER,
-                        rationale=(
-                            "Il richiedente attende un aggiornamento demo sulla verifica."
-                        ),
-                        payload_json=json.dumps(
-                            {
-                                "message": (
-                                    "La verifica VPN demo è in corso. "
-                                    "Ti aggiorneremo dopo il controllo."
-                                )
-                            },
-                            ensure_ascii=False,
-                        ),
-                        expected_effect=(
-                            "Registrare una comunicazione demo senza invii reali."
-                        ),
-                    )
+                    ticket_id=action_ticket.id,
+                    action_type=ActionType.NOTIFY_REQUESTER,
+                    rationale=("Il richiedente attende un aggiornamento demo sulla verifica."),
+                    payload_json=json.dumps(
+                        {
+                            "message": (
+                                "La verifica VPN demo è in corso. "
+                                "Ti aggiorneremo dopo il controllo."
+                            )
+                        },
+                        ensure_ascii=False,
+                    ),
+                    expected_effect=("Registrare una comunicazione demo senza invii reali."),
+                )
                 session.add(proposed_action)
                 session.flush()
                 record_ticket_created(session, action_ticket, employee)
@@ -450,9 +442,7 @@ def test_admin_can_consult_and_filter_the_full_audit_log(web_client) -> None:
     login_web(client, "admin.web@servicepilot.example", password)
     with Session(database_engine) as session:
         ticket_id = session.scalar(
-            select(Ticket.id).where(
-                Ticket.title == "VPN demo in attesa di informazioni"
-            )
+            select(Ticket.id).where(Ticket.title == "VPN demo in attesa di informazioni")
         )
 
     response = client.get("/app/audit")
@@ -533,9 +523,7 @@ def test_non_admin_cannot_open_or_upload_knowledge_documents(
     assert reset.status_code == 303
     assert reset.headers["location"] == "/app"
     with Session(database_engine) as session:
-        assert session.scalar(
-            select(func.count()).select_from(KnowledgeDocument)
-        ) == 0
+        assert session.scalar(select(func.count()).select_from(KnowledgeDocument)) == 0
 
 
 def test_admin_uploads_markdown_and_sees_it_in_the_library(
@@ -567,9 +555,7 @@ def test_admin_uploads_markdown_and_sees_it_in_the_library(
         assert document.original_filename == "procedura-wifi-demo.md"
         assert document.content_type == "text/markdown"
         segments = session.scalars(
-            select(KnowledgeSegment).where(
-                KnowledgeSegment.document_id == document.id
-            )
+            select(KnowledgeSegment).where(KnowledgeSegment.document_id == document.id)
         ).all()
         assert len(segments) == 1
         assert segments[0].source_section == "Wi-Fi demo"
@@ -621,9 +607,7 @@ def test_admin_reprocesses_and_then_deletes_a_document(web_client, tmp_path) -> 
     assert "Documento rielaborato" in page.text
     with Session(database_engine) as session:
         segments = session.scalars(
-            select(KnowledgeSegment).where(
-                KnowledgeSegment.document_id == document_id
-            )
+            select(KnowledgeSegment).where(KnowledgeSegment.document_id == document_id)
         ).all()
         assert len(segments) == 1
         assert segments[0].source_section == "Versione aggiornata"
@@ -721,9 +705,7 @@ def test_invalid_admin_upload_shows_error_and_changes_nothing(
     assert "Caricamento non eseguito" in response.text
     assert "non contiene un documento PDF" in response.text
     with Session(database_engine) as session:
-        assert session.scalar(
-            select(func.count()).select_from(KnowledgeDocument)
-        ) == 0
+        assert session.scalar(select(func.count()).select_from(KnowledgeDocument)) == 0
     storage_directory = tmp_path / "knowledge-storage"
     assert not storage_directory.exists() or not list(storage_directory.iterdir())
 
@@ -761,11 +743,14 @@ def test_admin_sees_when_a_valid_document_has_no_text_to_segment(
         )
         assert document is not None
         assert document.extraction_status == "failed"
-        assert session.scalar(
-            select(func.count())
-            .select_from(KnowledgeSegment)
-            .where(KnowledgeSegment.document_id == document.id)
-        ) == 0
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(KnowledgeSegment)
+                .where(KnowledgeSegment.document_id == document.id)
+            )
+            == 0
+        )
 
 
 def test_admin_search_finds_a_known_procedure_with_its_source(web_client) -> None:
@@ -947,9 +932,7 @@ def test_employee_can_open_own_ticket_detail(web_client) -> None:
     login_web(client, "dipendente.web@servicepilot.example", password)
     with Session(database_engine) as session:
         ticket_id = session.scalar(
-            select(Ticket.id).where(
-                Ticket.title == "VPN demo in attesa di informazioni"
-            )
+            select(Ticket.id).where(Ticket.title == "VPN demo in attesa di informazioni")
         )
 
     response = client.get(f"/app/tickets/{ticket_id}")
@@ -968,9 +951,7 @@ def test_employee_cannot_open_another_employee_ticket(web_client) -> None:
     login_web(client, "dipendente.web@servicepilot.example", password)
     with Session(database_engine) as session:
         hidden_ticket_id = session.scalar(
-            select(Ticket.id).where(
-                Ticket.title == "Ticket riservato a un altro dipendente"
-            )
+            select(Ticket.id).where(Ticket.title == "Ticket riservato a un altro dipendente")
         )
 
     response = client.get(f"/app/tickets/{hidden_ticket_id}")
@@ -1020,21 +1001,13 @@ def test_technician_queue_defaults_to_open_tickets_and_operational_filters(
     assert "3 di 4" in response.text
     assert "Tutti gli stati" not in response.text
     assert "#technical-ticket-list" not in response.text
-    assert (
-        'href="/app?status=open&assignment=all&priority=all&sort=priority"'
-        in response.text
-    )
-    assert (
-        'href="/app?status=completed&assignment=all&priority=all&sort=priority"'
-        in response.text
-    )
+    assert 'href="/app?status=open&assignment=all&priority=all&sort=priority"' in response.text
+    assert 'href="/app?status=completed&assignment=all&priority=all&sort=priority"' in response.text
     summary_markup = response.text.split('<div class="technical-summary"', 1)[1]
     summary_markup = summary_markup.split("</div>", 1)[0]
     assert summary_markup.count('aria-current="true"') == 1
     assert "ticket aperti" in summary_markup
-    assert '.technical-summary a[aria-current="true"]' in client.get(
-        "/static/styles.css"
-    ).text
+    assert '.technical-summary a[aria-current="true"]' in client.get("/static/styles.css").text
 
     filtered = client.get("/app?status=new&assignment=unassigned&priority=pending")
 
@@ -1084,10 +1057,7 @@ def test_technical_summary_preserves_priority_and_sort_without_page_anchor(
     response = client.get("/app?status=open&priority=p2&sort=oldest")
 
     assert response.status_code == 200
-    assert (
-        'href="/app?status=waiting&assignment=all&priority=p2&sort=oldest"'
-        in response.text
-    )
+    assert 'href="/app?status=waiting&assignment=all&priority=p2&sort=oldest"' in response.text
     assert "#technical-ticket-list" not in response.text
 
 
@@ -1120,9 +1090,7 @@ def test_technician_sees_action_details_before_deciding(web_client) -> None:
     login_web(client, "tecnico.web@servicepilot.example", password)
     with Session(database_engine) as session:
         ticket_id = session.scalar(
-            select(Ticket.id).where(
-                Ticket.title == "VPN demo in attesa di informazioni"
-            )
+            select(Ticket.id).where(Ticket.title == "VPN demo in attesa di informazioni")
         )
 
     response = client.get(f"/app/tickets/{ticket_id}")
@@ -1166,9 +1134,7 @@ def test_technician_approval_calls_service_once_and_shows_result(web_client) -> 
         assert stored.reviewed_by_user_id is not None
         event_types = list(
             session.scalars(
-                select(AuditEvent.event_type).where(
-                    AuditEvent.ticket_id == ticket_id
-                )
+                select(AuditEvent.event_type).where(AuditEvent.ticket_id == ticket_id)
             ).all()
         )
         assert "action_approved" in event_types
@@ -1205,9 +1171,7 @@ def test_web_rejection_never_calls_the_service(web_client) -> None:
         assert session.get(ProposedAction, action_id).status is ActionStatus.REJECTED
         event_types = list(
             session.scalars(
-                select(AuditEvent.event_type).where(
-                    AuditEvent.ticket_id == ticket_id
-                )
+                select(AuditEvent.event_type).where(AuditEvent.ticket_id == ticket_id)
             ).all()
         )
         assert "action_rejected" in event_types
@@ -1238,10 +1202,7 @@ def test_employee_cannot_decide_a_proposed_action_from_the_web(web_client) -> No
     assert response.headers["location"] == "/app"
     assert service.calls == []
     with Session(database_engine) as session:
-        assert (
-            session.get(ProposedAction, action_id).status
-            is ActionStatus.PENDING_APPROVAL
-        )
+        assert session.get(ProposedAction, action_id).status is ActionStatus.PENDING_APPROVAL
 
 
 def test_technician_can_open_full_ticket_detail(web_client) -> None:
@@ -1249,9 +1210,7 @@ def test_technician_can_open_full_ticket_detail(web_client) -> None:
     login_web(client, "tecnico.web@servicepilot.example", password)
     with Session(database_engine) as session:
         ticket_id = session.scalar(
-            select(Ticket.id).where(
-                Ticket.title == "Ticket riservato a un altro dipendente"
-            )
+            select(Ticket.id).where(Ticket.title == "Ticket riservato a un altro dipendente")
         )
 
     response = client.get(f"/app/tickets/{ticket_id}")
@@ -1315,9 +1274,7 @@ def test_technician_generates_sourced_solution_without_resolving_ticket(
     )
 
     assert response.status_code == 303
-    assert response.headers["location"] == (
-        f"/app/tickets/{ticket_id}?solution_attempted=true"
-    )
+    assert response.headers["location"] == (f"/app/tickets/{ticket_id}?solution_attempted=true")
     detail = client.get(response.headers["location"])
     assert detail.status_code == 200
     assert "Suggerimento tecnico con fonti" in detail.text
@@ -1360,9 +1317,7 @@ def test_technician_sees_prudent_message_for_weak_sources(web_client) -> None:
     client.app.dependency_overrides[get_embedding_model] = WebKeywordEmbeddingModel
     with Session(database_engine) as session:
         ticket = session.scalar(
-            select(Ticket).where(
-                Ticket.title == "Ticket riservato a un altro dipendente"
-            )
+            select(Ticket).where(Ticket.title == "Ticket riservato a un altro dipendente")
         )
         admin_id = session.scalar(
             select(User.id).where(User.email == "admin.web@servicepilot.example")
@@ -1434,9 +1389,7 @@ def test_technical_detail_explains_ai_classification_state(
     login_web(client, "tecnico.web@servicepilot.example", password)
     with Session(database_engine) as session:
         ticket = session.scalar(
-            select(Ticket).where(
-                Ticket.title == "Ticket riservato a un altro dipendente"
-            )
+            select(Ticket).where(Ticket.title == "Ticket riservato a un altro dipendente")
         )
         ticket.classification_review_status = review_status
         session.commit()
@@ -1456,9 +1409,7 @@ def test_technician_explicitly_reviews_and_corrects_classification(
     login_web(client, "tecnico.web@servicepilot.example", password)
     with Session(database_engine) as session:
         ticket_id = session.scalar(
-            select(Ticket.id).where(
-                Ticket.title == "VPN demo in attesa di informazioni"
-            )
+            select(Ticket.id).where(Ticket.title == "VPN demo in attesa di informazioni")
         )
 
     response = client.post(
@@ -1485,10 +1436,7 @@ def test_technician_explicitly_reviews_and_corrects_classification(
         assert ticket.subcategory == "Accesso remoto"
         assert ticket.priority is Priority.P2
         assert ticket.assigned_group == "Supporto rete"
-        assert (
-            ticket.classification_review_status
-            is ClassificationReviewStatus.HUMAN_REVIEWED
-        )
+        assert ticket.classification_review_status is ClassificationReviewStatus.HUMAN_REVIEWED
 
     detail = client.get(response.headers["location"])
     assert "Classificazione verificata" in detail.text
@@ -1500,9 +1448,7 @@ def test_web_review_requires_complete_classification_and_group(web_client) -> No
     login_web(client, "tecnico.web@servicepilot.example", password)
     with Session(database_engine) as session:
         ticket_id = session.scalar(
-            select(Ticket.id).where(
-                Ticket.title == "Ticket riservato a un altro dipendente"
-            )
+            select(Ticket.id).where(Ticket.title == "Ticket riservato a un altro dipendente")
         )
 
     response = client.post(
@@ -1522,10 +1468,7 @@ def test_web_review_requires_complete_classification_and_group(web_client) -> No
     with Session(database_engine) as session:
         ticket = session.get(Ticket, ticket_id)
         assert ticket is not None
-        assert (
-            ticket.classification_review_status
-            is ClassificationReviewStatus.PENDING
-        )
+        assert ticket.classification_review_status is ClassificationReviewStatus.PENDING
 
 
 def test_technician_completes_a_ticket_lifecycle_from_the_web(web_client) -> None:
@@ -1533,9 +1476,7 @@ def test_technician_completes_a_ticket_lifecycle_from_the_web(web_client) -> Non
     login_web(client, "tecnico.web@servicepilot.example", password)
     with Session(database_engine) as session:
         ticket_id = session.scalar(
-            select(Ticket.id).where(
-                Ticket.title == "Ticket riservato a un altro dipendente"
-            )
+            select(Ticket.id).where(Ticket.title == "Ticket riservato a un altro dipendente")
         )
         technician_id = session.scalar(
             select(User.id).where(User.email == "tecnico.web@servicepilot.example")
@@ -1750,11 +1691,7 @@ def test_ai_extraction_goes_directly_to_confirmation_when_data_is_complete(
     )
     response = client.post(
         "/app/new-ticket/problem",
-        data={
-            "description": (
-                "Nella Sede Web Demo la VPN non funziona per due persone."
-            )
-        },
+        data={"description": ("Nella Sede Web Demo la VPN non funziona per due persone.")},
     )
 
     assert response.status_code == 200
@@ -1910,9 +1847,7 @@ def test_confirmation_creates_exactly_one_ticket(web_client) -> None:
     with Session(database_engine) as session:
         site_id = session.scalar(select(Site.id).where(Site.code == "WEB-DEMO"))
         requester_id = session.scalar(
-            select(User.id).where(
-                User.email == "dipendente.web@servicepilot.example"
-            )
+            select(User.id).where(User.email == "dipendente.web@servicepilot.example")
         )
         tickets_before = session.scalar(select(func.count()).select_from(Ticket))
 
@@ -1989,9 +1924,7 @@ def test_confirmation_saves_ai_classification_for_technical_review(
     assert response.status_code == 303
     with Session(database_engine) as session:
         ticket = session.scalar(
-            select(Ticket).where(
-                Ticket.creation_key == confirmation_data["creation_key"]
-            )
+            select(Ticket).where(Ticket.creation_key == confirmation_data["creation_key"])
         )
         assert ticket is not None
         assert ticket.category is TicketCategory.NETWORK_AND_CONNECTIVITY
@@ -2000,10 +1933,7 @@ def test_confirmation_saves_ai_classification_for_technical_review(
         assert ticket.urgency is Urgency.HIGH
         assert ticket.priority is Priority.P2
         assert ticket.assigned_group == "Supporto rete"
-        assert (
-            ticket.classification_review_status
-            is ClassificationReviewStatus.AI_SUGGESTED
-        )
+        assert ticket.classification_review_status is ClassificationReviewStatus.AI_SUGGESTED
 
 
 def test_ai_timeout_keeps_web_ticket_usable_for_manual_review(web_client) -> None:
@@ -2034,16 +1964,11 @@ def test_ai_timeout_keeps_web_ticket_usable_for_manual_review(web_client) -> Non
     assert response.status_code == 303
     with Session(database_engine) as session:
         ticket = session.scalar(
-            select(Ticket).where(
-                Ticket.creation_key == confirmation_data["creation_key"]
-            )
+            select(Ticket).where(Ticket.creation_key == confirmation_data["creation_key"])
         )
         assert ticket is not None
         assert ticket.category is None
-        assert (
-            ticket.classification_review_status
-            is ClassificationReviewStatus.AI_UNAVAILABLE
-        )
+        assert ticket.classification_review_status is ClassificationReviewStatus.AI_UNAVAILABLE
         ticket_id = ticket.id
 
     client.post("/logout", follow_redirects=False)

@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from app.db.models import AuditEvent, Ticket, User
 from app.domain.vocabulary import AuditActorType, AuditEventType
 
-
 EVENT_TYPE_LABELS = {
     AuditEventType.TICKET_CREATED: "Creazione",
     AuditEventType.TICKET_UPDATED: "Aggiornamento",
@@ -149,17 +148,11 @@ def present_audit_events(
             identifier = details.get(key)
             if isinstance(identifier, int):
                 user_ids.add(identifier)
-    users = (
-        session.scalars(select(User).where(User.id.in_(user_ids))).all()
-        if user_ids
-        else []
-    )
+    users = session.scalars(select(User).where(User.id.in_(user_ids))).all() if user_ids else []
     users_by_id = {user.id: user for user in users}
     ticket_ids = {event.ticket_id for event in events}
     tickets = (
-        session.scalars(select(Ticket).where(Ticket.id.in_(ticket_ids))).all()
-        if ticket_ids
-        else []
+        session.scalars(select(Ticket).where(Ticket.id.in_(ticket_ids))).all() if ticket_ids else []
     )
     tickets_by_id = {ticket.id: ticket for ticket in tickets}
 

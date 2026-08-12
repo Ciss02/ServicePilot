@@ -10,8 +10,8 @@ from sqlalchemy import delete, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.audit import record_ai_solution_result
 from app.ai.contracts import AIInvalidResponseError, AIModel, AIModelError, EmbeddingModel
+from app.audit import record_ai_solution_result
 from app.db.models import (
     KnowledgeDocument,
     KnowledgeSegment,
@@ -23,7 +23,6 @@ from app.knowledge.indexing import (
     KnowledgeSearchResult,
     search_knowledge,
 )
-
 
 SOLUTION_PENDING = "pending"
 SOLUTION_GENERATED = "generated"
@@ -143,15 +142,11 @@ def suggest_sourced_solution(
         system_instruction=SOLUTION_SYSTEM_INSTRUCTION,
     )
     if not isinstance(proposed, AIProposedSourcedSolution):
-        raise AIInvalidResponseError(
-            "Il modello AI ha restituito un suggerimento non valido"
-        )
+        raise AIInvalidResponseError("Il modello AI ha restituito un suggerimento non valido")
 
     allowed_source_ids = {match.segment_id for match in matches}
     if not set(proposed.cited_source_ids) <= allowed_source_ids:
-        raise AIInvalidResponseError(
-            "Il modello AI ha citato una fonte non recuperata"
-        )
+        raise AIInvalidResponseError("Il modello AI ha citato una fonte non recuperata")
     return proposed
 
 
@@ -166,9 +161,7 @@ def _save_solution_failure(
 
     try:
         session.execute(
-            delete(TicketSolutionSource).where(
-                TicketSolutionSource.ticket_id == ticket.id
-            )
+            delete(TicketSolutionSource).where(TicketSolutionSource.ticket_id == ticket.id)
         )
         ticket.ai_suggested_solution = None
         ticket.ai_solution_status = status
@@ -215,9 +208,7 @@ def generate_ticket_solution(
             message=NO_SOLUTION_SOURCES_MESSAGE,
         )
 
-    reliable_matches = [
-        match for match in matches if match.score >= MIN_SOLUTION_SOURCE_SCORE
-    ]
+    reliable_matches = [match for match in matches if match.score >= MIN_SOLUTION_SOURCE_SCORE]
     if not reliable_matches:
         return _save_solution_failure(
             session,
@@ -250,9 +241,7 @@ def generate_ticket_solution(
     matches_by_id = {match.segment_id: match for match in reliable_matches}
     try:
         session.execute(
-            delete(TicketSolutionSource).where(
-                TicketSolutionSource.ticket_id == ticket.id
-            )
+            delete(TicketSolutionSource).where(TicketSolutionSource.ticket_id == ticket.id)
         )
         ticket.ai_suggested_solution = proposed.solution
         ticket.ai_solution_status = SOLUTION_GENERATED

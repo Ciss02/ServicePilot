@@ -13,7 +13,6 @@ from app.domain.action_contracts import (
 )
 from app.domain.vocabulary import ActionType
 
-
 Identifier = Annotated[int, Field(strict=True, gt=0)]
 ServiceMessage = Annotated[str, Field(min_length=10, max_length=500)]
 ServiceReference = Annotated[str, Field(min_length=5, max_length=80)]
@@ -69,8 +68,6 @@ class SimulatedActionFailure(_SimulatedServiceContract):
     ticket_id: Identifier
     action_type: ActionType
     result: Literal[SimulatedServiceResult.FAILED] = SimulatedServiceResult.FAILED
-    error_code: Literal["simulated_service_unavailable"] = (
-        "simulated_service_unavailable"
-    )
+    error_code: Literal["simulated_service_unavailable"] = "simulated_service_unavailable"
     message: ServiceMessage
     retryable: bool = True
