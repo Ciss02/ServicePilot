@@ -87,29 +87,33 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Documento, sezione, passaggio e punteggio visibili nel dettaglio del ticket.
 - Citazioni inventate rifiutate e suggerimenti invalidati se una procedura viene
   rielaborata.
+- Stop prudenziale prima di Gemini quando non esistono fonti o nessuna raggiunge la
+  soglia iniziale di similarità `0,55`.
+- Risultati deboli esclusi dal contesto del modello e messaggio operativo mostrato al
+  tecnico senza modificare la soluzione finale.
 
 ## Milestone attiva
 
-**Milestone 6 - Knowledge base e RAG**
+**Milestone 7 - Azioni, audit e amministrazione**
 
 ## Ultima attività completata
 
-**SP-063 - Soluzione con fonti**
+**SP-064 - Risposta prudente**
 
-Il dettaglio tecnico recupera al massimo tre passaggi indicizzati e genera su richiesta
-un suggerimento strutturato. Il backend accetta soltanto identificativi realmente
-recuperati, salva testo e fonti insieme e mantiene separata la soluzione finale del
-tecnico. Test e sviluppo non chiamano Gemini.
+Il backend filtra i passaggi recuperati prima di chiamare Gemini e genera soltanto se
+almeno una fonte raggiunge la soglia `0,55`. Senza fonti sufficienti rimuove eventuali
+suggerimenti precedenti, non consuma una chiamata al modello e spiega al tecnico se
+verificare il ticket o aggiungere documentazione più specifica.
 
 ## Prossima attività
 
-**SP-064 - Risposta prudente**
+**SP-070 - Modello delle azioni proposte**
 
 Risultato atteso:
 
-- definire quando i risultati sono assenti o troppo deboli;
-- non generare una soluzione quando le fonti non sono sufficienti;
-- spiegare chiaramente al tecnico perché serve una verifica o nuova documentazione.
+- salvare tipo, motivazione, dati, stato ed effetto previsto di un'azione;
+- mantenere la proposta separata dalla sua esecuzione;
+- preparare la base per l'approvazione esplicita del tecnico.
 
 ## Blocchi o decisioni aperte
 
@@ -119,11 +123,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-064.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-070.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-064` con il codice dell'attività successiva.
+Sostituire `SP-070` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -377,4 +381,13 @@ Prima di terminare verificare che:
   rielaborata.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-063.
 - `pytest`: 267 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificato che una ricerca senza risultati non chiami il modello e non salvi fonti.
+- Verificato che risultati tutti sotto la soglia `0,55` fermino la generazione prima di
+  Gemini e rimuovano eventuali suggerimenti non più sostenuti.
+- Verificato che soltanto i risultati sopra soglia vengano inclusi nel contesto AI.
+- Verificato il messaggio web che invita il tecnico a controllare il ticket o aggiungere
+  una procedura più specifica.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-064.
+- `pytest`: 270 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

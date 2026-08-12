@@ -2,7 +2,8 @@
 
 SP-062 trasforma i segmenti di SP-061 in vettori confrontabili e recupera i passaggi
 più pertinenti rispetto a una domanda tecnica. SP-063 riutilizza questi risultati per
-generare un suggerimento tecnico con fonti verificabili.
+generare un suggerimento tecnico con fonti verificabili; SP-064 impedisce la generazione
+quando nessun risultato raggiunge la soglia prudenziale `0,55`.
 
 ## Quale problema risolve
 
@@ -34,6 +35,9 @@ L'adapter verifica che Gemini restituisca:
 I vettori vengono normalizzati prima del salvataggio. La ricerca usa la similarità del
 coseno: due vettori che puntano nella stessa direzione ricevono un punteggio più alto.
 Il punteggio ordina i risultati, ma non è una certezza o una decisione tecnica.
+Per la generazione RAG, i risultati sotto `0,55` vengono esclusi prima della chiamata al
+modello. Il laboratorio amministrativo continua invece a mostrarli per rendere possibile
+la valutazione e la futura calibrazione della soglia.
 
 ## Dove vengono salvati
 
@@ -78,8 +82,8 @@ e limiti possono cambiare: verificare sempre il listino prima di un uso non dimo
 - domanda vuota o troppo lunga: la ricerca viene fermata prima della chiamata.
 
 La futura reindicizzazione amministrativa permetterà di riallineare documenti creati
-con un modello precedente. SP-064 stabilirà quando i risultati sono troppo deboli per
-proporre una risposta.
+con un modello precedente. La soglia iniziale di SP-064 dovrà essere rivalutata quando
+sarà disponibile un insieme più ampio di domande e procedure dimostrative.
 
 ## Chi può usare la funzionalità
 
@@ -94,6 +98,7 @@ Dipendenti e tecnici non possono modificare l'indice tramite questa attività.
 - un provider disattivato lascia il documento pronto da indicizzare;
 - una domanda sulla connessione remota recupera per prima la procedura VPN nota;
 - ogni risultato conserva documento, sezione, testo e punteggio;
+- risultati assenti o tutti sotto soglia non avviano la generazione AI;
 - il percorso web mostra risultati ordinati senza chiamate Gemini reali;
 - un database precedente riceve i campi dell'indice senza perdere dati.
 

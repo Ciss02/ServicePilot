@@ -29,6 +29,15 @@ SOLUTION_GENERATED = "generated"
 SOLUTION_UNAVAILABLE = "unavailable"
 SOLUTION_INVALID_RESPONSE = "invalid_response"
 MAX_SOLUTION_SOURCES = 3
+MIN_SOLUTION_SOURCE_SCORE = 0.55
+NO_SOLUTION_SOURCES_MESSAGE = (
+    "La knowledge base non contiene passaggi indicizzati da consultare. "
+    "Indicizza una procedura pertinente e riprova."
+)
+WEAK_SOLUTION_SOURCES_MESSAGE = (
+    "I passaggi trovati sono troppo poco pertinenti al problema. "
+    "Verifica i dettagli del ticket oppure aggiungi una procedura più specifica."
+)
 
 SolutionText = Annotated[
     str,
@@ -201,11 +210,26 @@ def generate_ticket_solution(
             session,
             ticket,
             status=SOLUTION_UNAVAILABLE,
-            message="La knowledge base non contiene passaggi indicizzati.",
+            message=NO_SOLUTION_SOURCES_MESSAGE,
+        )
+
+    reliable_matches = [
+        match for match in matches if match.score >= MIN_SOLUTION_SOURCE_SCORE
+    ]
+    if not reliable_matches:
+        return _save_solution_failure(
+            session,
+            ticket,
+            status=SOLUTION_UNAVAILABLE,
+            message=WEAK_SOLUTION_SOURCES_MESSAGE,
         )
 
     try:
-        proposed = suggest_sourced_solution(ticket, matches, ai_model=ai_model)
+        proposed = suggest_sourced_solution(
+            ticket,
+            reliable_matches,
+            ai_model=ai_model,
+        )
     except AIInvalidResponseError:
         return _save_solution_failure(
             session,
@@ -221,7 +245,7 @@ def generate_ticket_solution(
             message="Il modello AI non è disponibile in questo momento.",
         )
 
-    matches_by_id = {match.segment_id: match for match in matches}
+    matches_by_id = {match.segment_id: match for match in reliable_matches}
     try:
         session.execute(
             delete(TicketSolutionSource).where(

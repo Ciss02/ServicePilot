@@ -126,7 +126,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-063 - Soluzione con fonti**
   Generare un suggerimento mostrando documento e sezione utilizzati.
   Verifica: fonti visibili e collegate ai passaggi recuperati.
-- [ ] **SP-064 - Risposta prudente**
+- [x] **SP-064 - Risposta prudente**
   Dichiarare quando le fonti non sono sufficienti.
   Verifica: test con ricerca senza risultati e fonti deboli.
 
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-064**. La milestone attiva è **Milestone 6**.
+La prossima attività è **SP-070**. La milestone attiva è **Milestone 7**.

@@ -297,6 +297,13 @@ class WebSourcedSolutionModelStub:
         )
 
 
+class WebSolutionModelThatMustNotRun:
+    """Rende evidente se una fonte debole arriva per errore al modello."""
+
+    def generate_structured(self, **_kwargs):
+        raise AssertionError("Gemini non deve partire con fonti deboli")
+
+
 def test_login_page_has_accessible_responsive_structure(web_client) -> None:
     client, _, _ = web_client
 
@@ -987,6 +994,67 @@ def test_employee_cannot_generate_ai_solution(web_client) -> None:
         ticket = session.get(Ticket, ticket_id)
         assert ticket.ai_solution_status == "pending"
         assert ticket.ai_suggested_solution is None
+
+
+def test_technician_sees_prudent_message_for_weak_sources(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+    client.app.dependency_overrides[get_ai_model] = WebSolutionModelThatMustNotRun
+    client.app.dependency_overrides[get_embedding_model] = WebKeywordEmbeddingModel
+    with Session(database_engine) as session:
+        ticket = session.scalar(
+            select(Ticket).where(
+                Ticket.title == "Ticket riservato a un altro dipendente"
+            )
+        )
+        admin_id = session.scalar(
+            select(User.id).where(User.email == "admin.web@servicepilot.example")
+        )
+        document = KnowledgeDocument(
+            original_filename="procedura-vpn-non-pertinente.md",
+            storage_filename="procedura-vpn-non-pertinente-web.md",
+            content_type="text/markdown",
+            size_bytes=160,
+            checksum_sha256="c" * 64,
+            extraction_status="ready",
+            index_status="ready",
+            embedding_model=WebKeywordEmbeddingModel.model_name,
+            embedding_dimensions=WebKeywordEmbeddingModel.dimensions,
+            uploaded_by_user_id=admin_id,
+        )
+        session.add(document)
+        session.flush()
+        session.add(
+            KnowledgeSegment(
+                document_id=document.id,
+                position=0,
+                source_section="VPN demo",
+                content="Riavviare la connessione VPN demo e verificarne la stabilità.",
+                character_count=63,
+                embedding_json=json.dumps([1.0, 0.0, 0.0]),
+            )
+        )
+        session.commit()
+        ticket_id = ticket.id
+
+    response = client.post(
+        f"/app/tickets/{ticket_id}/suggest-solution",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    detail = client.get(response.headers["location"])
+    assert detail.status_code == 200
+    assert "Nessuna soluzione generata" in detail.text
+    assert "troppo poco pertinenti" in detail.text
+    assert "Verifica i dettagli del ticket" in detail.text
+    assert "aggiungi una procedura più specifica" in detail.text
+    with Session(database_engine) as session:
+        stored_ticket = session.get(Ticket, ticket_id)
+        assert stored_ticket.ai_solution_status == "unavailable"
+        assert stored_ticket.ai_suggested_solution is None
+        assert stored_ticket.resolution is None
+        assert session.scalar(select(TicketSolutionSource)) is None
 
 
 @pytest.mark.parametrize(
