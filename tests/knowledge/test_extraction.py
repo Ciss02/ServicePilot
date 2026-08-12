@@ -22,6 +22,7 @@ from app.domain.vocabulary import Role
 from app.knowledge import (
     EXTRACTION_FAILED,
     EXTRACTION_READY,
+    MAX_EXTRACTED_CHARACTERS,
     MAX_SEGMENT_CHARACTERS,
     process_knowledge_document,
     store_knowledge_document,
@@ -134,6 +135,24 @@ def test_long_section_is_split_without_losing_its_source(extraction_context) -> 
     assert all(len(segment.content) <= MAX_SEGMENT_CHARACTERS for segment in segments)
     assert {segment.source_section for segment in segments} == {"Procedura estesa"}
     assert [segment.position for segment in segments] == list(range(len(segments)))
+
+
+def test_extracted_text_over_safety_limit_does_not_create_segments(extraction_context) -> None:
+    session, admin, storage_directory = extraction_context
+    content = ("# Documento espanso\n\n" + "a" * (MAX_EXTRACTED_CHARACTERS + 1)).encode()
+    document = store_knowledge_document(
+        session,
+        make_upload("documento-espanso.md", content, "text/markdown"),
+        uploaded_by=admin,
+        storage_directory=storage_directory,
+    )
+
+    result = process_knowledge_document(session, document, storage_directory)
+
+    assert result.status == EXTRACTION_FAILED
+    assert result.segment_count == 0
+    assert "500.000 caratteri" in document.extraction_error
+    assert session.scalars(select(KnowledgeSegment)).all() == []
 
 
 def test_pdf_segments_use_page_number_as_source(extraction_context) -> None:

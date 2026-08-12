@@ -52,6 +52,8 @@ senza chiave e senza rete.
 | `SERVICEPILOT_AI_TIMEOUT_SECONDS` | `15` | Interrompe richieste troppo lente |
 | `SERVICEPILOT_AI_MAX_ATTEMPTS` | `2` | Limita il tentativo iniziale e l'eventuale retry |
 | `SERVICEPILOT_AI_MAX_OUTPUT_TOKENS` | `1024` | Limita lunghezza e costo della risposta |
+| `SERVICEPILOT_AI_REQUESTS_PER_MINUTE` | `10` | Ferma picchi di richieste prima della rete |
+| `SERVICEPILOT_AI_REQUESTS_PER_DAY` | `100` | Impone un tetto giornaliero locale alla demo |
 
 Per una prova manuale, copiare `.env.example` in `.env`, impostare soltanto dati
 fittizi e avviare Uvicorn caricando quel file:
@@ -69,6 +71,7 @@ nei comandi salvati o nella documentazione.
 - la chiave può mancare quando Gemini è attivo;
 - la richiesta può superare il timeout;
 - Gemini può restituire un errore o dati non conformi allo schema.
+- il limite locale per minuto o giorno può essere raggiunto.
 
 L'adapter trasforma questi casi in errori comuni di ServicePilot senza mostrare la
 chiave o i dettagli interni del provider. La gestione visibile e il percorso di
@@ -91,3 +94,8 @@ I test in `tests/ai/` usano un client Gemini simulato e verificano:
 - chiusura del client dopo ogni uso;
 - rifiuto di risposte vuote o non valide;
 - sostituzione di Gemini con un modello finto senza chiamate esterne.
+- blocco di generazione ed embedding prima di costruire il client quando la quota è finita.
+
+I limiti locali sono condivisi tra generazione ed embedding nel singolo processo. Limiti
+residui e protezioni da applicare nel deploy sono documentati in
+[`SECURITY_AND_DEMO_LIMITS.md`](SECURITY_AND_DEMO_LIMITS.md).

@@ -1,18 +1,15 @@
 """Configurazione condivisa del cookie di sessione."""
 
-import os
-
 from fastapi import Response
 
+from app.security.configuration import load_security_settings
 from app.security.sessions import SESSION_COOKIE_NAME, SESSION_DURATION_SECONDS
-
-SECURE_COOKIES_ENV = "SERVICEPILOT_SECURE_COOKIES"
 
 
 def secure_cookies_enabled() -> bool:
     """Usa cookie HTTPS quando la configurazione lo richiede."""
 
-    return os.getenv(SECURE_COOKIES_ENV, "false").casefold() == "true"
+    return load_security_settings().secure_cookies
 
 
 def set_session_cookie(response: Response, token: str) -> None:

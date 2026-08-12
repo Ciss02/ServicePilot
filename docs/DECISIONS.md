@@ -742,3 +742,34 @@ L'installazione pulita dimostra che il progetto dichiara davvero tutto ciò che 
 Ruff riunisce controllo degli errori, import e formattazione in uno strumento veloce,
 mentre la versione bloccata rende il risultato stabile nel tempo. Permessi minimi e
 assenza di segreti mantengono il controllo adatto anche a pull request pubbliche.
+
+## D-031 - Protezioni locali e limiti espliciti per la demo pubblica
+
+**Data:** 13 agosto 2026
+**Stato:** confermata durante SP-081
+
+**Decisione:**
+
+- mantenere chiavi e password soltanto lato server e fuori da Git;
+- rifiutare l'avvio pubblico se i cookie `Secure` non sono attivi;
+- limitare gli host ammessi e controllare `Origin` o `Referer` sugli invii browser;
+- aggiungere CSP, protezione dai frame, `nosniff`, politica referrer e HSTS su HTTPS;
+- limitare a 10 i tentativi di login al minuto per client;
+- eliminare sessioni scadute e conservarne al massimo 20 per account;
+- fermare documenti oltre 500.000 caratteri estratti o 500 segmenti;
+- condividere nel processo un tetto di 10 richieste AI al minuto e 100 al giorno tra
+  generazione ed embedding;
+- non aggiungere nuove dipendenze per questi controlli;
+- dichiarare che i contatori in memoria richiedono una singola istanza e che un deploy
+  distribuito dovrà usare un archivio condiviso;
+- accettare per l'MVP l'assenza di antivirus soltanto con upload amministrativi e dati
+  sintetici.
+
+**Motivazione:**
+
+La demo pubblica usa account condivisi e una chiave AI pagabile, quindi deve limitare sia
+gli abusi rapidi sia il consumo giornaliero. Applicare i controlli nei punti comuni evita
+che una nuova rotta li dimentichi. Fermare configurazioni pubbliche incoerenti è più
+sicuro che avviare l'app con un avviso ignorabile. I contatori in memoria sono semplici
+e adeguati alla singola istanza prevista per l'MVP; i limiti residui sono documentati
+esplicitamente per non presentarli come protezioni da produzione distribuita.

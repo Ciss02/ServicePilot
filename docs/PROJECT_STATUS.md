@@ -120,6 +120,17 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Formattazione Python uniforme e controllo degli import tramite Ruff 0.16.2.
 - Workflow GitHub Actions su pull request e ramo `main` con installazione pulita,
   controllo delle dipendenze, lint, formattazione e test senza chiamate AI reali.
+- Revisione della sicurezza pubblica documentata per segreti, upload, sessioni, browser
+  e consumo AI, con limiti residui dichiarati.
+- Modalità demo pubblica che richiede cookie HTTPS e host esplicitamente ammessi.
+- Controllo dell'origine sugli invii browser e intestazioni CSP, anti-frame, `nosniff`,
+  referrer, permessi, cache e HSTS.
+- Login limitato a 10 tentativi al minuto per client e massimo 20 sessioni attive per
+  account, con pulizia automatica di quelle scadute.
+- Chiamate AI ed embedding condivise sotto un tetto locale di 10 al minuto e 100 al
+  giorno, applicato prima di costruire il client esterno.
+- Testo documentale limitato a 500.000 caratteri estratti e 500 segmenti prima degli
+  embedding.
 
 ## Milestone attiva
 
@@ -127,21 +138,21 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-080 - Controlli automatici**
+**SP-081 - Sicurezza e limiti della demo**
 
-Il progetto usa un unico formato Python e una sequenza ufficiale di controlli locali.
-GitHub Actions ricrea l'ambiente con Python 3.13 per ogni pull request verso `main`,
-controlla le dipendenze, analizza codice e formattazione ed esegue l'intera suite di test.
+La demo applica protezioni centralizzate a browser, login, sessioni, documenti e chiamate
+AI. La revisione distingue i problemi risolti dai limiti ancora accettati: i contatori
+vivono nel singolo processo e gli upload amministrativi non hanno scansione antivirus.
 
 ## Prossima attività
 
-**SP-081 - Sicurezza e limiti della demo**
+**SP-082 - Deploy e ripristino**
 
 Risultato atteso:
 
-- controllare segreti, upload, sessioni e limiti delle chiamate AI;
-- documentare i rischi e le protezioni della demo pubblica;
-- risolvere eventuali problemi critici prima del deploy.
+- scegliere e configurare il provider di deploy;
+- pubblicare la demo con HTTPS, segreti lato server e una sola istanza;
+- verificare il ripristino del dataset da una sessione anonima.
 
 ## Blocchi o decisioni aperte
 
@@ -151,11 +162,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-081.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-082.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-081` con il codice dell'attività successiva.
+Sostituire `SP-082` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -486,3 +497,15 @@ Prima di terminare verificare che:
   `requirements-dev.txt`.
 - Nell'ambiente pulito, `pip check`, Ruff e formattazione sono passati.
 - Nell'ambiente pulito, `pytest -W error`: 335 test superati senza avvisi.
+- Verificato che `.env`, database e archivio documentale restino esclusi da Git.
+- Verificata l'assenza di pattern noti di chiavi Gemini, token GitHub e chiavi private nei
+  file pubblicabili.
+- Verificati limiti AI condivisi al minuto e al giorno, incluso il blocco prima della
+  costruzione del client esterno.
+- Verificati limite login, pulizia e massimo delle sessioni, host e origine ammessi,
+  intestazioni di sicurezza e obbligo dei cookie HTTPS nella modalità pubblica.
+- Verificato il rifiuto dell'elaborazione oltre 500.000 caratteri estratti senza creare
+  segmenti o chiamare gli embedding.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Ruff: controllo superato e 145 file Python conformi alla formattazione.
+- `pytest -W error`: 348 test superati senza avvisi.

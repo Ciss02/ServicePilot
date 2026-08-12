@@ -20,6 +20,8 @@ from app.db.models import (
 
 MAX_SEGMENT_CHARACTERS = 1200
 SEGMENT_OVERLAP_CHARACTERS = 150
+MAX_EXTRACTED_CHARACTERS = 500_000
+MAX_DOCUMENT_SEGMENTS = 500
 EXTRACTION_PENDING = "pending"
 EXTRACTION_READY = "ready"
 EXTRACTION_FAILED = "failed"
@@ -159,9 +161,15 @@ def build_segment_drafts(document: KnowledgeDocument, path: Path) -> list[Segmen
     else:
         raise ValueError("Il formato del documento non è supportato per l'estrazione.")
 
+    extracted_characters = sum(len(source.content) for source in sources)
+    if extracted_characters > MAX_EXTRACTED_CHARACTERS:
+        raise ValueError("Il testo estratto supera il limite massimo di 500.000 caratteri.")
+
     drafts: list[SegmentDraft] = []
     for source in sources:
         for content in _split_text(source.content):
+            if len(drafts) >= MAX_DOCUMENT_SEGMENTS:
+                raise ValueError("Il documento supera il limite massimo di 500 segmenti.")
             drafts.append(
                 SegmentDraft(
                     position=len(drafts),

@@ -42,6 +42,16 @@ from app.ai.ticket_extraction import (
     TicketIntakeField,
     extract_ticket_details,
 )
+from app.ai.usage_limits import (
+    AI_REQUESTS_PER_DAY_ENV,
+    AI_REQUESTS_PER_MINUTE_ENV,
+    AIUsageLimitConfigurationError,
+    AIUsageLimiter,
+    AIUsageLimitExceeded,
+    AIUsageLimitSettings,
+    get_ai_usage_limiter,
+    load_ai_usage_limit_settings,
+)
 
 __all__ = [
     "AIInvalidResponseError",
@@ -52,6 +62,12 @@ __all__ = [
     "AIProviderError",
     "AISettings",
     "AIUnavailableError",
+    "AIUsageLimitConfigurationError",
+    "AIUsageLimitExceeded",
+    "AIUsageLimitSettings",
+    "AIUsageLimiter",
+    "AI_REQUESTS_PER_DAY_ENV",
+    "AI_REQUESTS_PER_MINUTE_ENV",
     "DEFAULT_EMBEDDING_DIMENSIONS",
     "DEFAULT_EMBEDDING_MODEL",
     "EMBEDDING_DIMENSIONS_ENV",
@@ -73,7 +89,9 @@ __all__ = [
     "build_embedding_model",
     "classify_confirmed_ticket",
     "extract_ticket_details",
+    "get_ai_usage_limiter",
     "load_ai_settings",
     "load_embedding_settings",
+    "load_ai_usage_limit_settings",
     "suggest_ticket_classification",
 ]

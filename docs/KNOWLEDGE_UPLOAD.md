@@ -37,6 +37,10 @@ Il tipo generico `application/octet-stream` viene accettato perché alcuni brows
 usano per file Markdown o PDF; in quel caso il contenuto reale continua comunque a
 essere verificato.
 
+Dopo l'estrazione, SP-081 accetta al massimo 500.000 caratteri e 500 segmenti per
+documento. Questo secondo tetto protegge da PDF piccoli ma molto compressi e impedisce
+che un singolo upload produca migliaia di righe o una richiesta embedding eccessiva.
+
 ## Dove vengono salvati i dati
 
 La tabella `knowledge_documents` contiene soltanto i metadati. I file vengono salvati
@@ -71,6 +75,8 @@ non possono salvare documenti neppure inviando direttamente la richiesta HTTP.
 - un errore del database rimuove il file già scritto;
 - i test web verificano accesso amministrativo, diniego agli altri ruoli, messaggio di
   successo e messaggio di errore.
+- un documento che supera il limite del testo estratto viene marcato come fallito senza
+  creare segmenti né chiamare il provider embedding.
 
 SP-061 usa ora i documenti conservati per estrarre il testo e dividerlo in segmenti
 con riferimenti alla fonte. Il comportamento è descritto in
