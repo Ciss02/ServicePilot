@@ -2,7 +2,8 @@
 
 SP-070 introduce la base persistente delle azioni suggerite dall'agente. Una proposta
 descrive un possibile passo successivo, ma non lo applica al ticket e non contatta
-alcun servizio. Approvazione, simulazione REST e audit verranno aggiunti nelle attività
+alcun servizio. I simulatori REST separati sono ora disponibili con SP-071;
+approvazione, collegamento dell'esecuzione e audit verranno aggiunti nelle attività
 successive della Milestone 7.
 
 ## Quale problema risolve

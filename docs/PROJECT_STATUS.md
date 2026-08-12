@@ -95,6 +95,10 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
   escalation verso un fornitore fittizio.
 - Motivazione, payload specifico, effetto previsto e stato `pending_approval` salvati in
   una tabella separata senza applicare modifiche al ticket.
+- Applicazione FastAPI separata con servizi REST fittizi per assegnazione, comunicazione
+  al richiedente ed escalation al fornitore.
+- Successi `200` ed errori demo `503` deterministici, con riferimenti stabili e senza
+  effetti reali, persistenza o esposizione nelle rotte del portale.
 
 ## Milestone attiva
 
@@ -102,21 +106,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-070 - Modello delle azioni proposte**
+**SP-071 - Servizi REST simulati**
 
-Il backend valida e salva le intenzioni dell'agente in `proposed_actions`. Ogni tipo ha
-dati specifici controllati e nasce in attesa di approvazione. Il semplice salvataggio
-non cambia assegnazione, note, stato o soluzione del ticket e non chiama alcun servizio.
+Tre endpoint HTTP locali imitano assegnazione, comunicazione ed escalation. Ogni
+richiesta è validata, produce un riferimento ripetibile in caso di successo oppure un
+errore `503` controllato. L'app dei simulatori resta separata dal portale e non esegue o
+salva alcun effetto reale.
 
 ## Prossima attività
 
-**SP-071 - Servizi REST simulati**
+**SP-072 - Approvazione del tecnico**
 
 Risultato atteso:
 
-- simulare assegnazione, comunicazione ed escalation tramite servizi REST locali;
-- produrre successi e fallimenti ripetibili;
-- mantenere i servizi simulati separati dalla futura approvazione del tecnico.
+- mostrare al tecnico payload, motivazione ed effetto previsto dell'azione;
+- permettere approvazione o rifiuto espliciti soltanto a tecnico e amministratore;
+- chiamare il servizio simulato esclusivamente dopo l'approvazione.
 
 ## Blocchi o decisioni aperte
 
@@ -126,7 +131,7 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-071.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-072.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
@@ -406,4 +411,13 @@ Prima di terminare verificare che:
   precedente senza perdita dei ticket esistenti.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-070.
 - `pytest`: 291 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificati i successi ripetibili dei tre servizi REST simulati con riferimenti stabili.
+- Verificati errori `503` intenzionali e identici su assegnazione, comunicazione ed
+  escalation, senza dipendere dal caso o da servizi esterni.
+- Verificati il rifiuto `422` di UUID, identificativi, payload e campi inattesi non
+  validi.
+- Verificato che gli endpoint simulati non siano inclusi nell'applicazione del portale.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-071.
+- `pytest`: 305 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
