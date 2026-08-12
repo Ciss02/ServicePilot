@@ -12,7 +12,21 @@ from app.ai.contracts import (
     AIModelError,
     AIProviderError,
     AIUnavailableError,
+    EmbeddingInvalidResponseError,
+    EmbeddingModel,
+    EmbeddingProviderError,
+    EmbeddingUnavailableError,
 )
+from app.ai.embedding_configuration import (
+    DEFAULT_EMBEDDING_DIMENSIONS,
+    DEFAULT_EMBEDDING_MODEL,
+    EMBEDDING_DIMENSIONS_ENV,
+    EMBEDDING_MODEL_ENV,
+    EMBEDDING_PROVIDER_ENV,
+    EmbeddingSettings,
+    load_embedding_settings,
+)
+from app.ai.embedding_models import build_embedding_model
 from app.ai.factory import build_ai_model
 from app.ai.ticket_classification import (
     AIProposedTicketClassification,
@@ -38,6 +52,16 @@ __all__ = [
     "AIProviderError",
     "AISettings",
     "AIUnavailableError",
+    "DEFAULT_EMBEDDING_DIMENSIONS",
+    "DEFAULT_EMBEDDING_MODEL",
+    "EMBEDDING_DIMENSIONS_ENV",
+    "EMBEDDING_MODEL_ENV",
+    "EMBEDDING_PROVIDER_ENV",
+    "EmbeddingInvalidResponseError",
+    "EmbeddingModel",
+    "EmbeddingProviderError",
+    "EmbeddingSettings",
+    "EmbeddingUnavailableError",
     "AIProposedTicketClassification",
     "AIExtractedTicketDetails",
     "AvailableSite",
@@ -46,8 +70,10 @@ __all__ = [
     "TicketClassificationPersistenceError",
     "TicketClassificationSuggestion",
     "build_ai_model",
+    "build_embedding_model",
     "classify_confirmed_ticket",
     "extract_ticket_details",
     "load_ai_settings",
+    "load_embedding_settings",
     "suggest_ticket_classification",
 ]

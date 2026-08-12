@@ -4,6 +4,9 @@ SP-061 trasforma i documenti già controllati in passaggi piccoli e rintracciabi
 Questi passaggi saranno l'input della futura ricerca di SP-062; in questa attività non
 vengono ancora creati embedding e non viene chiamato alcun modello AI.
 
+SP-062 usa ora questi passaggi come descritto in
+[`KNOWLEDGE_SEARCH.md`](KNOWLEDGE_SEARCH.md).
+
 ## Quale problema risolve
 
 Un file intero è troppo grande e poco preciso per rispondere a una domanda. Dividerlo

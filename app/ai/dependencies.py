@@ -5,7 +5,8 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from app.ai.contracts import AIModel
+from app.ai.contracts import AIModel, EmbeddingModel
+from app.ai.embedding_models import build_embedding_model
 from app.ai.factory import build_ai_model
 
 
@@ -17,3 +18,13 @@ def get_ai_model() -> AIModel:
 
 
 AIModelDependency = Annotated[AIModel, Depends(get_ai_model)]
+
+
+@lru_cache(maxsize=1)
+def get_embedding_model() -> EmbeddingModel:
+    """Costruisce una sola istanza dell'adapter embedding per il processo web."""
+
+    return build_embedding_model()
+
+
+EmbeddingModelDependency = Annotated[EmbeddingModel, Depends(get_embedding_model)]

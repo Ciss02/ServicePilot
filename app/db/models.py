@@ -109,6 +109,14 @@ class KnowledgeDocument(Base):
             "extraction_status IN ('pending', 'ready', 'failed')",
             name="ck_knowledge_documents_extraction_status",
         ),
+        CheckConstraint(
+            "index_status IN ('pending', 'ready', 'failed')",
+            name="ck_knowledge_documents_index_status",
+        ),
+        CheckConstraint(
+            "embedding_dimensions IS NULL OR embedding_dimensions > 0",
+            name="ck_knowledge_documents_embedding_dimensions",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -123,6 +131,15 @@ class KnowledgeDocument(Base):
         String(20), nullable=False, default="pending", server_default="pending"
     )
     extraction_error: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    index_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending", server_default="pending"
+    )
+    index_error: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    embedding_model: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    embedding_dimensions: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    indexed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     uploaded_by_user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True
     )
@@ -155,6 +172,7 @@ class KnowledgeSegment(Base):
     source_section: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     character_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    embedding_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
     )

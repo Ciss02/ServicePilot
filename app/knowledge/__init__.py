@@ -22,6 +22,18 @@ from app.knowledge.extraction import (
     build_segment_drafts,
     process_knowledge_document,
 )
+from app.knowledge.indexing import (
+    INDEX_FAILED,
+    INDEX_PENDING,
+    INDEX_READY,
+    IndexingResult,
+    KnowledgeIndexingError,
+    KnowledgeSearchError,
+    KnowledgeSearchResult,
+    KnowledgeSearchValidationError,
+    index_knowledge_document,
+    search_knowledge,
+)
 
 __all__ = [
     "ALLOWED_DOCUMENT_EXTENSIONS",
@@ -33,11 +45,21 @@ __all__ = [
     "EXTRACTION_PENDING",
     "EXTRACTION_READY",
     "ExtractionResult",
+    "INDEX_FAILED",
+    "INDEX_PENDING",
+    "INDEX_READY",
+    "IndexingResult",
     "KnowledgeDocumentPersistenceError",
     "KnowledgeDocumentProcessingError",
     "KnowledgeDocumentValidationError",
+    "KnowledgeIndexingError",
+    "KnowledgeSearchError",
+    "KnowledgeSearchResult",
+    "KnowledgeSearchValidationError",
     "get_knowledge_storage_directory",
     "build_segment_drafts",
     "process_knowledge_document",
+    "index_knowledge_document",
+    "search_knowledge",
     "store_knowledge_document",
 ]
