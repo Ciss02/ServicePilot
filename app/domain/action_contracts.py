@@ -14,6 +14,9 @@ ExpectedEffect = Annotated[str, Field(min_length=10, max_length=1_000)]
 Message = Annotated[str, Field(min_length=5, max_length=2_000)]
 VendorName = Annotated[str, Field(min_length=2, max_length=120)]
 EscalationSummary = Annotated[str, Field(min_length=10, max_length=2_000)]
+ExecutionReference = Annotated[str, Field(min_length=5, max_length=80)]
+ExecutionMessage = Annotated[str, Field(min_length=10, max_length=500)]
+ExecutionErrorCode = Annotated[str, Field(min_length=3, max_length=100)]
 
 
 class _ActionContract(BaseModel):
@@ -79,5 +82,10 @@ class ActionProposalRead(ActionProposalCreate):
     id: Identifier
     ticket_id: Identifier
     status: ActionStatus
+    reviewed_by_user_id: Identifier | None = None
+    decided_at: datetime | None = None
+    execution_reference: ExecutionReference | None = None
+    execution_message: ExecutionMessage | None = None
+    execution_error_code: ExecutionErrorCode | None = None
     created_at: datetime
     updated_at: datetime

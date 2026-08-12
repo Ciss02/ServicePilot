@@ -146,8 +146,15 @@ tipi inventati dal modello.
 | `failed` | Il servizio simulato ha restituito un errore controllato. |
 
 SP-070 crea esclusivamente lo stato `pending_approval`. SP-071 rende disponibili
-successi ed errori dei servizi simulati, ma non cambia ancora lo stato persistente della
-proposta. Transizioni e permessi verranno implementati con approvazione e audit.
+successi ed errori dei servizi simulati. SP-072 applica le transizioni soltanto dopo una
+decisione esplicita di tecnico o amministratore; SP-073 aggiungerà l'audit generale.
+
+## Decisioni sull'azione
+
+| Valore interno | Significato |
+| --- | --- |
+| `approve` | Autorizza una singola chiamata al servizio simulato. |
+| `reject` | Rifiuta la proposta senza chiamare alcun servizio. |
 
 ## Scenari dei servizi simulati
 

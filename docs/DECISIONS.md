@@ -631,3 +631,31 @@ operativi accessibili tramite il portale e senza anticipare il controllo umano. 
 errore selezionato, invece che casuale, rende test e demo prevedibili. Il riuso dei
 contratti impedisce che proposta e servizio accettino forme diverse degli stessi dati,
 mentre l'assenza di persistenza mantiene chiara la responsabilità futura dell'audit.
+
+## D-027 - Approvazione persistente prima dell'esecuzione
+
+**Data:** 12 agosto 2026
+**Stato:** confermata durante SP-072
+
+**Decisione:**
+
+- mostrare le proposte soltanto nel dettaglio tecnico del ticket;
+- permettere `approve` e `reject` esclusivamente a tecnico e amministratore autenticati;
+- ricontrollare proposta, ticket, stato e payload nel backend;
+- prenotare una decisione con un aggiornamento condizionale eseguito una sola volta;
+- salvare `approved` e poi `executing` prima della chiamata REST;
+- non chiamare alcun servizio in caso di rifiuto o controllo fallito;
+- non eseguire retry automatici delle azioni;
+- salvare decisore, data, riferimento, messaggio ed eventuale codice di errore;
+- trattare indisponibilità e risposte non valide come `failed`, senza falso successo;
+- aggiungere tre proposte interamente fittizie al dataset demo;
+- rinviare il registro generale e immutabile degli eventi a SP-073.
+
+**Motivazione:**
+
+Salvare l'autorizzazione prima della chiamata rende dimostrabile che il servizio non è
+partito autonomamente. Lo stato `executing` impedisce a un doppio invio di ripetere
+l'effetto e conserva una traccia prudente anche se il processo si interrompe. Evitare
+retry automatici privilegia la sicurezza rispetto alla comodità. I dati essenziali
+sulla proposta rendono leggibile l'esito immediato, mentre l'audit separato della
+prossima attività ricostruirà l'intera sequenza degli eventi.

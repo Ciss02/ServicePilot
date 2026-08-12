@@ -2069,6 +2069,262 @@ main {
   color: var(--ink-soft);
 }
 
+.proposed-actions-card {
+  overflow: hidden;
+  border-color: rgba(28, 55, 92, 0.2);
+  background: linear-gradient(145deg, #ffffff 0%, #f4f6fa 100%);
+}
+
+.proposed-actions-heading {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.proposed-actions-heading h2 {
+  margin: 0;
+}
+
+.human-approval-badge {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #fff1d9;
+  color: #895313;
+  font-size: 0.61rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.proposed-actions-intro {
+  max-width: 70ch;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+
+.proposed-actions-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.proposed-action {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-left: 4px solid #d49a35;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 30px rgba(16, 45, 44, 0.07);
+}
+
+.proposed-action-succeeded {
+  border-left-color: #2c805d;
+}
+
+.proposed-action-rejected,
+.proposed-action-failed {
+  border-left-color: #b6534f;
+}
+
+.proposed-action-executing,
+.proposed-action-approved {
+  border-left-color: #315f91;
+}
+
+.proposed-action-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.proposed-action-header > div {
+  display: grid;
+  gap: 3px;
+}
+
+.proposed-action-header > div > span,
+.action-explanation-grid span {
+  color: var(--ink-soft);
+  font-size: 0.61rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.proposed-action-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.action-status {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #fff1d9;
+  color: #895313;
+  font-size: 0.61rem;
+  font-weight: 850;
+}
+
+.action-status-succeeded {
+  background: #e5f4ec;
+  color: #236d4d;
+}
+
+.action-status-rejected,
+.action-status-failed {
+  background: #fae9e7;
+  color: #913d39;
+}
+
+.action-status-approved,
+.action-status-executing {
+  background: #e8eff8;
+  color: #315f91;
+}
+
+.action-explanation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.action-explanation-grid > div {
+  padding: 13px;
+  border-radius: 10px;
+  background: #f6f8f9;
+}
+
+.action-explanation-grid p,
+.action-decision-summary p,
+.proposed-actions-empty p {
+  margin: 5px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.action-payload {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0 20px 17px;
+}
+
+.action-payload div {
+  display: grid;
+  grid-template-columns: 105px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.action-payload dt {
+  color: var(--ink-soft);
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.action-payload dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.action-approval-note {
+  display: grid;
+  gap: 2px;
+  margin: 0 20px 14px;
+  padding: 11px 13px;
+  border-left: 3px solid #d49a35;
+  background: #fff9ee;
+  color: #6d4c20;
+  font-size: 0.68rem;
+}
+
+.action-decision-form {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 0 20px 20px;
+}
+
+.action-reject-button {
+  padding: 11px 15px;
+  border: 1px solid #c7cfcc;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.action-reject-button:hover {
+  border-color: #913d39;
+  color: #913d39;
+}
+
+.action-approve-button {
+  min-width: 178px;
+  justify-content: center;
+}
+
+.action-decision-summary {
+  margin: 0 20px 20px;
+  padding: 13px 15px;
+  border-radius: 10px;
+  background: #f2f5f4;
+}
+
+.action-decision-summary code {
+  overflow-wrap: anywhere;
+  color: var(--navy);
+  font-size: 0.69rem;
+}
+
+.action-feedback {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.action-feedback-success {
+  background: #e5f4ec;
+  color: #236d4d;
+}
+
+.action-feedback-failed,
+.action-feedback-rejected {
+  background: #fae9e7;
+  color: #913d39;
+}
+
+.action-feedback-warning {
+  background: #fff1d9;
+  color: #895313;
+}
+
+.proposed-actions-empty {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px dashed #b8c5c2;
+  border-radius: 12px;
+  text-align: center;
+}
+
 .management-panel {
   position: sticky;
   top: 20px;
@@ -2900,6 +3156,36 @@ main {
 
   .detail-card {
     padding: 24px;
+  }
+
+  .proposed-actions-heading,
+  .proposed-action-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .human-approval-badge,
+  .action-status {
+    align-self: flex-start;
+  }
+
+  .action-explanation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-payload div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .action-decision-form {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .action-approve-button,
+  .action-reject-button {
+    width: 100%;
   }
 
   .support-update,

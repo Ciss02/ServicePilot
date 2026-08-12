@@ -32,6 +32,14 @@ from app.ai import (
     extract_ticket_details,
 )
 from app.ai.dependencies import AIModelDependency, EmbeddingModelDependency
+from app.actions import (
+    ActionAlreadyDecidedError,
+    ActionDecisionPersistenceError,
+    ActionNotFoundError,
+    ActionProposalDataError,
+    decide_action_proposal,
+)
+from app.actions.dependencies import ActionServiceClientDependency
 from app.api.dependencies import (
     DatabaseSession,
     SessionCookie,
@@ -46,7 +54,7 @@ from app.domain.ticket_intake import (
     TicketProblemInput,
 )
 from app.domain.ticket_workflow import ALLOWED_STATUS_TRANSITIONS
-from app.domain.vocabulary import Role
+from app.domain.vocabulary import ActionDecision, Role
 from app.knowledge import (
     EXTRACTION_FAILED,
     EXTRACTION_PENDING,
@@ -105,6 +113,7 @@ from app.web.technician_presenters import (
     present_technician_tickets,
     summarize_technician_queue,
 )
+from app.web.action_presenters import present_action_proposals
 from app.web.ticket_presenters import (
     EmployeeTicketFilter,
     EmployeeTicketView,
@@ -412,6 +421,8 @@ def _technical_ticket_context(
     classification_reviewed: bool = False,
     solution_attempted: bool = False,
     solution_error: str | None = None,
+    action_result: str | None = None,
+    action_error: str | None = None,
 ) -> dict[str, object]:
     """Prepara dettaglio, scelte consentite e valori del modulo tecnico."""
 
@@ -429,6 +440,15 @@ def _technical_ticket_context(
         "resolution": ticket_view.resolution,
     }
     context = _workspace_context(current_user, f"Gestisci {ticket_view.code}")
+    try:
+        action_proposals = present_action_proposals(session, ticket.id)
+        action_load_error = None
+    except ActionProposalDataError:
+        action_proposals = []
+        action_load_error = (
+            "Le azioni salvate non possono essere mostrate in modo affidabile."
+        )
+
     context.update(
         {
             "ticket": ticket_view,
@@ -448,6 +468,9 @@ def _technical_ticket_context(
             "solution_attempted": solution_attempted,
             "solution_error": solution_error,
             "solution_sources": list_ticket_solution_sources(session, ticket.id),
+            "action_proposals": action_proposals,
+            "action_result": action_result,
+            "action_error": action_error or action_load_error,
         }
     )
     return context
@@ -1191,6 +1214,7 @@ def employee_ticket_detail(
     updated: Annotated[bool, Query()] = False,
     classification_reviewed: Annotated[bool, Query()] = False,
     solution_attempted: Annotated[bool, Query()] = False,
+    action_result: Annotated[str | None, Query()] = None,
 ) -> Response:
     """Mostra il dettaglio personale o gli strumenti riservati al tecnico."""
 
@@ -1214,6 +1238,7 @@ def employee_ticket_detail(
                 updated=updated,
                 classification_reviewed=classification_reviewed,
                 solution_attempted=solution_attempted,
+                action_result=action_result,
             ),
             headers={"Cache-Control": "no-store"},
         )
@@ -1295,6 +1320,84 @@ def suggest_technical_ticket_solution(
 
     return RedirectResponse(
         url=f"/app/tickets/{ticket_id}?solution_attempted=true",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post(
+    "/app/tickets/{ticket_id}/actions/{action_id}/decision",
+    response_class=HTMLResponse,
+)
+def decide_technical_action(
+    request: Request,
+    ticket_id: WebTicketId,
+    action_id: Annotated[
+        int,
+        PathParameter(gt=0, description="Identificativo positivo della proposta"),
+    ],
+    session: DatabaseSession,
+    current_user: WebUser,
+    service_client: ActionServiceClientDependency,
+    decision: Annotated[ActionDecision, Form()],
+) -> Response:
+    """Approva o rifiuta una proposta e chiama il simulatore solo se approvata."""
+
+    if current_user.role not in {Role.TECHNICIAN, Role.ADMIN}:
+        return RedirectResponse(url="/app", status_code=status.HTTP_303_SEE_OTHER)
+
+    ticket = session.get(Ticket, ticket_id)
+    if ticket is None:
+        return templates.TemplateResponse(
+            request=request,
+            name="technician_ticket_not_found.html",
+            context=_workspace_context(current_user, "Ticket non trovato"),
+            status_code=status.HTTP_404_NOT_FOUND,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    try:
+        result = decide_action_proposal(
+            session,
+            ticket_id=ticket_id,
+            action_id=action_id,
+            reviewer=current_user,
+            decision=decision,
+            service_client=service_client,
+        )
+    except ActionNotFoundError:
+        return templates.TemplateResponse(
+            request=request,
+            name="technician_ticket_not_found.html",
+            context=_workspace_context(current_user, "Azione non trovata"),
+            status_code=status.HTTP_404_NOT_FOUND,
+            headers={"Cache-Control": "no-store"},
+        )
+    except ActionAlreadyDecidedError:
+        return RedirectResponse(
+            url=f"/app/tickets/{ticket_id}?action_result=already_decided",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    except (ActionProposalDataError, ActionDecisionPersistenceError):
+        session.rollback()
+        ticket = session.get(Ticket, ticket_id)
+        return templates.TemplateResponse(
+            request=request,
+            name="technician_ticket_detail.html",
+            context=_technical_ticket_context(
+                session,
+                current_user,
+                ticket,
+                action_error=(
+                    "Non siamo riusciti a completare la decisione in modo sicuro. "
+                    "Nessuna nuova chiamata verrà ripetuta automaticamente."
+                ),
+            ),
+            status_code=status.HTTP_409_CONFLICT,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    return RedirectResponse(
+        url=f"/app/tickets/{ticket_id}?action_result={result.status.value}",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 

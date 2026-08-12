@@ -20,6 +20,32 @@ class ActionProposalDataError(RuntimeError):
     """Una proposta salvata contiene dati non più validi o leggibili."""
 
 
+def read_action_proposal(row: ProposedAction) -> ActionProposalRead:
+    """Converte una riga persistente nel contratto specifico e controllato."""
+
+    try:
+        return ActionProposalRead.model_validate(
+            {
+                "id": row.id,
+                "ticket_id": row.ticket_id,
+                "action_type": row.action_type,
+                "rationale": row.rationale,
+                "payload": json.loads(row.payload_json),
+                "expected_effect": row.expected_effect,
+                "status": row.status,
+                "reviewed_by_user_id": row.reviewed_by_user_id,
+                "decided_at": row.decided_at,
+                "execution_reference": row.execution_reference,
+                "execution_message": row.execution_message,
+                "execution_error_code": row.execution_error_code,
+                "created_at": row.created_at,
+                "updated_at": row.updated_at,
+            }
+        )
+    except (json.JSONDecodeError, TypeError, ValidationError) as error:
+        raise ActionProposalDataError from error
+
+
 def create_action_proposal(
     session: Session,
     ticket: Ticket,
@@ -60,22 +86,4 @@ def list_action_proposals(
         .where(ProposedAction.ticket_id == ticket_id)
         .order_by(ProposedAction.created_at.desc(), ProposedAction.id.desc())
     ).all()
-    try:
-        return [
-            ActionProposalRead.model_validate(
-                {
-                    "id": row.id,
-                    "ticket_id": row.ticket_id,
-                    "action_type": row.action_type,
-                    "rationale": row.rationale,
-                    "payload": json.loads(row.payload_json),
-                    "expected_effect": row.expected_effect,
-                    "status": row.status,
-                    "created_at": row.created_at,
-                    "updated_at": row.updated_at,
-                }
-            )
-            for row in rows
-        ]
-    except (json.JSONDecodeError, TypeError, ValidationError) as error:
-        raise ActionProposalDataError from error
+    return [read_action_proposal(row) for row in rows]

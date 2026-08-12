@@ -67,6 +67,13 @@ class ActionStatus(StrEnum):
     FAILED = "failed"
 
 
+class ActionDecision(StrEnum):
+    """Decisioni esplicite disponibili a tecnico e amministratore."""
+
+    APPROVE = "approve"
+    REJECT = "reject"
+
+
 class TicketStatus(StrEnum):
     """Stati possibili di un ticket già creato."""
 

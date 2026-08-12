@@ -1,15 +1,18 @@
 """Dataset sintetico e caricamento ripetibile per la demo."""
 
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 
-from app.db.models import Site, Ticket, User
+from app.db.models import ProposedAction, Site, Ticket, User
 from app.db.session import create_database, engine
 from app.domain.priority import calculate_priority
 from app.domain.vocabulary import (
+    ActionStatus,
+    ActionType,
     ClassificationReviewStatus,
     Impact,
     Role,
@@ -57,6 +60,17 @@ class TicketSeed:
     assigned_technician_email: str | None = None
     technician_note: str | None = None
     resolution: str | None = None
+
+
+@dataclass(frozen=True)
+class ActionSeed:
+    """Proposta completamente fittizia collegata a uno scenario demo."""
+
+    ticket_title: str
+    action_type: ActionType
+    rationale: str
+    payload: dict[str, object]
+    expected_effect: str
 
 
 @dataclass(frozen=True)
@@ -213,6 +227,55 @@ DEMO_TICKETS = (
     ),
 )
 
+DEMO_ACTIONS = (
+    ActionSeed(
+        ticket_title="[DEMO] Linea produttiva non raggiungibile",
+        action_type=ActionType.ASSIGN_TICKET,
+        rationale=(
+            "Il problema coinvolge la connettività dello scenario produttivo demo."
+        ),
+        payload={
+            "assigned_group": "Supporto sistemi produttivi",
+            "assigned_technician_id": None,
+        },
+        expected_effect=(
+            "Registrare l'assegnazione demo al gruppo specializzato nella produzione."
+        ),
+    ),
+    ActionSeed(
+        ticket_title="[DEMO] Linea produttiva non raggiungibile",
+        action_type=ActionType.NOTIFY_REQUESTER,
+        rationale=(
+            "Il richiedente deve sapere che la verifica tecnica demo è stata avviata."
+        ),
+        payload={
+            "message": (
+                "Abbiamo avviato la verifica della connettività della linea demo. "
+                "Ti aggiorneremo al termine dei controlli."
+            )
+        },
+        expected_effect=(
+            "Registrare una comunicazione demo chiara e visibile al richiedente."
+        ),
+    ),
+    ActionSeed(
+        ticket_title="[DEMO] Linea produttiva non raggiungibile",
+        action_type=ActionType.ESCALATE_VENDOR,
+        rationale=(
+            "La procedura demo prevede il coinvolgimento del partner della linea."
+        ),
+        payload={
+            "vendor_name": "Automazione Partner Demo",
+            "summary": (
+                "Verificare la connettività fittizia tra controllo linea e rete demo."
+            ),
+        },
+        expected_effect=(
+            "Aprire un riferimento demo presso il fornitore senza contatti reali."
+        ),
+    ),
+)
+
 
 def _upsert_sites(session: Session) -> dict[str, Site]:
     sites_by_code: dict[str, Site] = {}
@@ -301,6 +364,40 @@ def _upsert_tickets(
                 setattr(ticket, field_name, value)
 
 
+def _upsert_actions(session: Session) -> None:
+    for seed in DEMO_ACTIONS:
+        ticket = session.scalar(select(Ticket).where(Ticket.title == seed.ticket_title))
+        action = session.scalar(
+            select(ProposedAction).where(
+                ProposedAction.ticket_id == ticket.id,
+                ProposedAction.action_type == seed.action_type,
+                ProposedAction.rationale == seed.rationale,
+            )
+        )
+        values = {
+            "ticket_id": ticket.id,
+            "action_type": seed.action_type,
+            "rationale": seed.rationale,
+            "payload_json": json.dumps(
+                seed.payload,
+                ensure_ascii=False,
+                sort_keys=True,
+            ),
+            "expected_effect": seed.expected_effect,
+            "status": ActionStatus.PENDING_APPROVAL,
+            "reviewed_by_user_id": None,
+            "decided_at": None,
+            "execution_reference": None,
+            "execution_message": None,
+            "execution_error_code": None,
+        }
+        if action is None:
+            session.add(ProposedAction(**values))
+        else:
+            for field_name, value in values.items():
+                setattr(action, field_name, value)
+
+
 def seed_demo_data(
     session: Session,
     demo_passwords: Mapping[Role, str],
@@ -310,6 +407,8 @@ def seed_demo_data(
     sites_by_code = _upsert_sites(session)
     users_by_email = _upsert_users(session, demo_passwords)
     _upsert_tickets(session, sites_by_code, users_by_email)
+    session.flush()
+    _upsert_actions(session)
     session.flush()
 
     return SeedSummary(

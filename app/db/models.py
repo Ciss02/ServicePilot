@@ -332,6 +332,19 @@ class ProposedAction(Base):
         default=ActionStatus.PENDING_APPROVAL,
         server_default=ActionStatus.PENDING_APPROVAL.value,
     )
+    reviewed_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    decided_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    execution_reference: Mapped[str | None] = mapped_column(
+        String(80), nullable=True
+    )
+    execution_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    execution_error_code: Mapped[str | None] = mapped_column(
+        String(100), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
     )

@@ -39,8 +39,8 @@ SP-071 non salva dati. Con `success` restituisce `200`, stato `succeeded`, messa
 un riferimento stabile derivato dal `request_id`. Ripetere la stessa richiesta produce
 lo stesso risultato, senza duplicare effetti perché non esistono effetti reali.
 
-La futura SP-072 collegherà questi servizi alle proposte approvate; SP-073 conserverà
-l'approvazione e l'esito nell'audit log.
+SP-072 collega questi servizi alle proposte soltanto dopo l'approvazione; SP-073
+conserverà la sequenza completa nell'audit log.
 
 ## Cosa può andare storto
 
