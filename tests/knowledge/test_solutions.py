@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.ai import AIInvalidResponseError, AIUnavailableError
 from app.db import (
+    AuditEvent,
     KnowledgeDocument,
     KnowledgeSegment,
     Site,
@@ -17,7 +18,7 @@ from app.db import (
     build_engine,
     create_database,
 )
-from app.domain.vocabulary import Role
+from app.domain.vocabulary import AuditEventType, Role
 from app.knowledge import (
     MIN_SOLUTION_SOURCE_SCORE,
     NO_SOLUTION_SOURCES_MESSAGE,
@@ -180,6 +181,9 @@ def test_generation_saves_solution_and_only_the_cited_passage(solution_context) 
         assert sources[0].filename == "procedura-vpn-demo.md"
         assert sources[0].source_section == "VPN > Nuovo tentativo"
         assert "attendere trenta secondi" in sources[0].content
+        audit_event = session.scalar(select(AuditEvent))
+        assert audit_event.event_type is AuditEventType.AI_SOLUTION_GENERATED
+        assert json.loads(audit_event.details_json)["source_count"] == 1
 
 
 def test_model_cannot_cite_a_source_not_retrieved_by_backend(solution_context) -> None:
@@ -218,6 +222,9 @@ def test_invalid_citation_is_saved_as_controlled_failure(solution_context) -> No
         assert ticket.ai_solution_status == SOLUTION_INVALID_RESPONSE
         assert ticket.ai_suggested_solution is None
         assert session.scalar(select(TicketSolutionSource)) is None
+        assert session.scalar(select(AuditEvent)).event_type is (
+            AuditEventType.AI_SOLUTION_INVALID
+        )
 
 
 def test_unavailable_ai_keeps_ticket_usable_without_sources(solution_context) -> None:
@@ -236,6 +243,9 @@ def test_unavailable_ai_keeps_ticket_usable_without_sources(solution_context) ->
         assert ticket.ai_suggested_solution is None
         assert ticket.resolution is None
         assert session.scalar(select(TicketSolutionSource)) is None
+        assert session.scalar(select(AuditEvent)).event_type is (
+            AuditEventType.AI_SOLUTION_UNAVAILABLE
+        )
 
 
 def test_generation_stops_before_ai_when_search_has_no_results(solution_context) -> None:

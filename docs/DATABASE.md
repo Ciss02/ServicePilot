@@ -23,10 +23,12 @@ tra ticket, utenti e sedi.
   ordine e punteggio della ricerca.
 - `proposed_actions`: intenzioni dell'agente collegate al ticket, con tipo, motivazione,
   payload JSON, effetto previsto, stato, decisore ed esito del servizio simulato.
+- `audit_events`: eventi append-only collegati al ticket, con origine, tipo, riepilogo,
+  dettagli controllati, autore umano facoltativo e azione collegata facoltativa.
 
 La classificazione può essere vuota quando il ticket nasce perché, nel flusso MVP,
 viene proposta dopo la conferma. La priorità sarà sempre calcolata dal backend prima
-di essere salvata. Allegati, cronologia e audit richiederanno attività dedicate.
+di essere salvata. Gli allegati richiederanno un'attività dedicata.
 
 ## Configurazione
 
@@ -67,6 +69,10 @@ modifiche strutturali future.
 - creazione della proposta separata da assegnazione, comunicazione ed escalation reali.
 - decisore e data salvati prima dell'esecuzione; riferimento, messaggio o errore salvati
   dopo la risposta del simulatore.
+- eventi di audit collegati a ticket esistenti, con origine e tipo limitati al
+  vocabolario del dominio;
+- riepilogo tra 5 e 300 caratteri e dettagli JSON fino a 4.000 caratteri;
+- modifica e cancellazione degli eventi già caricati bloccate dall'applicazione.
 
 I test usano file SQLite temporanei e non modificano `servicepilot.db`.
 

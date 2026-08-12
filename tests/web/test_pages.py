@@ -14,8 +14,10 @@ from app.ai import AIUnavailableError
 from app.ai.dependencies import get_ai_model, get_embedding_model
 from app.actions import ActionExecutionResult
 from app.actions.dependencies import get_action_service_client
+from app.audit import record_action_proposed, record_ticket_created
 from app.db import (
     AuthSession,
+    AuditEvent,
     KnowledgeDocument,
     KnowledgeSegment,
     ProposedAction,
@@ -178,8 +180,7 @@ def web_client(tmp_path, monkeypatch) -> Iterator[tuple[TestClient, Engine, str]
                         Ticket.title == "VPN demo in attesa di informazioni"
                     )
                 )
-                session.add(
-                    ProposedAction(
+                proposed_action = ProposedAction(
                         ticket_id=action_ticket.id,
                         action_type=ActionType.NOTIFY_REQUESTER,
                         rationale=(
@@ -198,7 +199,10 @@ def web_client(tmp_path, monkeypatch) -> Iterator[tuple[TestClient, Engine, str]
                             "Registrare una comunicazione demo senza invii reali."
                         ),
                     )
-                )
+                session.add(proposed_action)
+                session.flush()
+                record_ticket_created(session, action_ticket, employee)
+                record_action_proposed(session, proposed_action)
                 session.commit()
 
     def override_session() -> Iterator[Session]:
@@ -436,6 +440,48 @@ def test_admin_can_open_knowledge_upload_page(web_client) -> None:
     assert 'name="q"' in response.text
     assert 'enctype="multipart/form-data"' in response.text
     assert 'aria-current="page"' in response.text
+
+
+def test_admin_can_consult_and_filter_the_full_audit_log(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "admin.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        ticket_id = session.scalar(
+            select(Ticket.id).where(
+                Ticket.title == "VPN demo in attesa di informazioni"
+            )
+        )
+
+    response = client.get("/app/audit")
+    filtered = client.get(f"/app/audit?actor=ai&ticket_id={ticket_id}")
+
+    assert response.status_code == 200
+    assert "Audit log" in response.text
+    assert "Sola lettura" in response.text
+    assert "Ticket creato e confermato" in response.text
+    assert "Nuova azione proposta dall&#39;assistente" in response.text
+    assert "Richiedente Audit" not in response.text
+    assert filtered.status_code == 200
+    assert "Nuova azione proposta dall&#39;assistente" in filtered.text
+    assert "Ticket creato e confermato" not in filtered.text
+    assert 'aria-current="page"' in filtered.text
+
+
+@pytest.mark.parametrize(
+    "email",
+    [
+        "dipendente.web@servicepilot.example",
+        "tecnico.web@servicepilot.example",
+    ],
+)
+def test_non_admin_cannot_open_the_full_audit_log(web_client, email: str) -> None:
+    client, _, password = web_client
+    login_web(client, email, password)
+
+    response = client.get("/app/audit", follow_redirects=False)
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/app"
 
 
 @pytest.mark.parametrize(
@@ -952,6 +998,9 @@ def test_technician_sees_action_details_before_deciding(web_client) -> None:
     assert "La verifica VPN demo è in corso" in response.text
     assert "Approva ed esegui" in response.text
     assert "Rifiuta proposta" in response.text
+    assert "Cronologia del ticket" in response.text
+    assert "Ticket creato e confermato" in response.text
+    assert "Nuova azione proposta" in response.text
 
 
 def test_technician_approval_calls_service_once_and_shows_result(web_client) -> None:
@@ -978,6 +1027,16 @@ def test_technician_approval_calls_service_once_and_shows_result(web_client) -> 
         assert stored.status is ActionStatus.SUCCEEDED
         assert stored.execution_reference == "COM-WEB-DEMO"
         assert stored.reviewed_by_user_id is not None
+        event_types = list(
+            session.scalars(
+                select(AuditEvent.event_type).where(
+                    AuditEvent.ticket_id == ticket_id
+                )
+            ).all()
+        )
+        assert "action_approved" in event_types
+        assert "action_execution_started" in event_types
+        assert "action_execution_succeeded" in event_types
 
     detail = client.get(response.headers["location"])
     assert "Azione approvata e completata" in detail.text
@@ -1007,6 +1066,15 @@ def test_web_rejection_never_calls_the_service(web_client) -> None:
     assert service.calls == []
     with Session(database_engine) as session:
         assert session.get(ProposedAction, action_id).status is ActionStatus.REJECTED
+        event_types = list(
+            session.scalars(
+                select(AuditEvent.event_type).where(
+                    AuditEvent.ticket_id == ticket_id
+                )
+            ).all()
+        )
+        assert "action_rejected" in event_types
+        assert "action_execution_started" not in event_types
 
     detail = client.get(response.headers["location"])
     assert "Nessun servizio è stato chiamato" in detail.text

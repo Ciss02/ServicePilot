@@ -659,3 +659,30 @@ l'effetto e conserva una traccia prudente anche se il processo si interrompe. Ev
 retry automatici privilegia la sicurezza rispetto alla comodità. I dati essenziali
 sulla proposta rendono leggibile l'esito immediato, mentre l'audit separato della
 prossima attività ricostruirà l'intera sequenza degli eventi.
+
+## D-028 - Audit applicativo append-only e dettagli minimizzati
+
+**Data:** 13 agosto 2026
+**Stato:** confermata durante SP-073
+
+**Decisione:**
+
+- conservare gli eventi in una tabella applicativa collegata al ticket;
+- distinguere origine umana, AI e automatica tramite un vocabolario chiuso;
+- registrare creazione, modifiche, classificazione, soluzione, proposte, decisioni ed
+  esiti delle azioni;
+- salvare l'evento nella stessa transazione dell'operazione principale;
+- non copiare password, segreti, prompt, payload completi, note o soluzioni nel JSON;
+- bloccare tramite ORM modifica e cancellazione degli eventi già persistiti;
+- mostrare la timeline a tecnico e amministratore nel ticket;
+- riservare all'amministratore la vista completa con filtri;
+- limitare la vista complessiva agli ultimi 100 risultati nell'MVP;
+- dichiarare che il database locale non è un archivio esterno antimanomissione.
+
+**Motivazione:**
+
+Una riga separata per evento rende ricostruibile il percorso senza dedurlo soltanto dallo
+stato finale del ticket. La transazione condivisa evita eventi falsi o operazioni prive
+di traccia. Minimizzare i dettagli riduce duplicazione e rischio di esposizione, mentre
+la separazione tra timeline tecnica e registro amministrativo mantiene i permessi
+coerenti con la specifica.

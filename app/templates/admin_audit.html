@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% set active_section = "audit" %}
+{% block app_navigation %}{% include "_technical_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <section class="audit-admin shell" aria-labelledby="audit-title">
+    <header class="audit-admin-hero">
+      <div>
+        <p class="eyebrow">Controllo amministrativo</p>
+        <h1 id="audit-title">Audit log</h1>
+        <p>Una vista unica degli eventi umani, AI e automatici che compongono il percorso dei ticket.</p>
+      </div>
+      <div class="audit-readonly-badge"><span aria-hidden="true">↗</span><strong>Sola lettura</strong><small>Gli eventi non si riscrivono</small></div>
+    </header>
+
+    <div class="audit-summary-grid" aria-label="Riepilogo eventi">
+      <a href="/app/audit" class="audit-summary audit-summary-all {% if selected_actor == 'all' %}is-selected{% endif %}"><span>Tutti gli eventi</span><strong>{{ total_events }}</strong></a>
+      <a href="/app/audit?actor=human" class="audit-summary audit-summary-human {% if selected_actor == 'human' %}is-selected{% endif %}"><span>Persone</span><strong>{{ human_events }}</strong></a>
+      <a href="/app/audit?actor=ai" class="audit-summary audit-summary-ai {% if selected_actor == 'ai' %}is-selected{% endif %}"><span>Assistente AI</span><strong>{{ ai_events }}</strong></a>
+      <a href="/app/audit?actor=system" class="audit-summary audit-summary-system {% if selected_actor == 'system' %}is-selected{% endif %}"><span>Sistema</span><strong>{{ system_events }}</strong></a>
+    </div>
+
+    <form class="audit-filter" method="get" action="/app/audit">
+      {% if selected_actor != "all" %}<input type="hidden" name="actor" value="{{ selected_actor }}">{% endif %}
+      <div><label for="ticket_id">Filtra per ticket</label><span>Inserisci il numero, per esempio 1 per SP-0001</span></div>
+      <input id="ticket_id" name="ticket_id" type="number" min="1" value="{{ ticket_filter }}" placeholder="Numero ticket">
+      <button class="secondary-button" type="submit">Applica filtro</button>
+      {% if ticket_filter %}<a href="/app/audit{% if selected_actor != 'all' %}?actor={{ selected_actor }}{% endif %}">Rimuovi</a>{% endif %}
+    </form>
+
+    <section class="audit-log-panel" aria-labelledby="audit-list-title">
+      <div class="audit-log-heading"><div><p class="card-label">Ultimi 100 risultati</p><h2 id="audit-list-title">Eventi registrati</h2></div><span>{{ audit_events | length }} mostrati</span></div>
+      {% if audit_events %}
+        <div class="audit-admin-list">
+          {% for event in audit_events %}
+            <article class="audit-admin-event audit-event-{{ event.actor_class }}">
+              <div class="audit-admin-time"><strong>{{ event.created_time }}</strong><span>{{ event.created_date }}</span></div>
+              <span class="audit-admin-marker" aria-hidden="true"></span>
+              <div class="audit-admin-event-body">
+                <header><div><span class="audit-event-type">{{ event.event_label }}</span><h3>{{ event.summary }}</h3></div><a href="/app/tickets/{{ event.ticket_id }}#ticket-history">{{ event.ticket_code }}</a></header>
+                <p class="audit-ticket-title">{{ event.ticket_title }}</p>
+                <p class="audit-actor"><span class="audit-actor-dot" aria-hidden="true"></span>{{ event.actor_name }} <small>{{ event.actor_label }}</small></p>
+                {% if event.detail_items %}<dl class="audit-event-details">{% for item in event.detail_items %}<div><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div>{% endfor %}</dl>{% endif %}
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="audit-empty"><strong>Nessun evento corrisponde ai filtri</strong><p>Rimuovi il filtro oppure completa un'operazione su un ticket.</p></div>
+      {% endif %}
+    </section>
+  </section>
+{% endblock %}

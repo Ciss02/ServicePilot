@@ -3,6 +3,7 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.audit import TicketAuditSnapshot, record_ticket_update_events
 from app.db.models import Site, Ticket, User
 from app.domain.ticket_contracts import TicketUpdate
 from app.domain.ticket_workflow import can_transition_status
@@ -54,12 +55,15 @@ def update_managed_ticket(
     session: Session,
     ticket_id: int,
     payload: TicketUpdate,
+    *,
+    updated_by: User,
 ) -> Ticket:
     """Controlla e salva in modo atomico un aggiornamento tecnico."""
 
     ticket = session.get(Ticket, ticket_id)
     if ticket is None:
         raise ManagedTicketNotFoundError
+    before = TicketAuditSnapshot.capture(ticket)
 
     if payload.site_id is not None and session.get(Site, payload.site_id) is None:
         raise ManagedSiteNotFoundError
@@ -109,6 +113,13 @@ def update_managed_ticket(
         )
 
     try:
+        session.flush()
+        record_ticket_update_events(
+            session,
+            ticket,
+            before=before,
+            actor=updated_by,
+        )
         session.commit()
         session.refresh(ticket)
     except IntegrityError as error:

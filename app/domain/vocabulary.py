@@ -74,6 +74,36 @@ class ActionDecision(StrEnum):
     REJECT = "reject"
 
 
+class AuditActorType(StrEnum):
+    """Origine riconoscibile di un evento del registro."""
+
+    HUMAN = "human"
+    AI = "ai"
+    SYSTEM = "system"
+
+
+class AuditEventType(StrEnum):
+    """Passaggi rilevanti che permettono di ricostruire un ticket."""
+
+    TICKET_CREATED = "ticket_created"
+    TICKET_UPDATED = "ticket_updated"
+    TICKET_STATUS_CHANGED = "ticket_status_changed"
+    TICKET_ASSIGNMENT_CHANGED = "ticket_assignment_changed"
+    AI_CLASSIFICATION_SUGGESTED = "ai_classification_suggested"
+    AI_CLASSIFICATION_UNAVAILABLE = "ai_classification_unavailable"
+    AI_CLASSIFICATION_INVALID = "ai_classification_invalid"
+    CLASSIFICATION_REVIEWED = "classification_reviewed"
+    AI_SOLUTION_GENERATED = "ai_solution_generated"
+    AI_SOLUTION_UNAVAILABLE = "ai_solution_unavailable"
+    AI_SOLUTION_INVALID = "ai_solution_invalid"
+    ACTION_PROPOSED = "action_proposed"
+    ACTION_APPROVED = "action_approved"
+    ACTION_REJECTED = "action_rejected"
+    ACTION_EXECUTION_STARTED = "action_execution_started"
+    ACTION_EXECUTION_SUCCEEDED = "action_execution_succeeded"
+    ACTION_EXECUTION_FAILED = "action_execution_failed"
+
+
 class TicketStatus(StrEnum):
     """Stati possibili di un ticket già creato."""
 

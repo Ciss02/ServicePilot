@@ -7,6 +7,7 @@ from sqlalchemy import func, inspect, select
 from sqlalchemy.orm import Session
 
 from app.db import (
+    AuditEvent,
     ProposedAction,
     Site,
     Ticket,
@@ -71,6 +72,9 @@ def test_demo_data_load_is_repeatable(database_engine) -> None:
         assert _count(session, User) == 5
         assert _count(session, Ticket) == 6
         assert session.scalar(select(func.count()).select_from(ProposedAction)) == 3
+        assert session.scalar(select(func.count()).select_from(AuditEvent)) == 9
+        event_keys = list(session.scalars(select(AuditEvent.event_key)).all())
+        assert len(event_keys) == len(set(event_keys))
 
 
 def test_missing_credentials_stop_before_database_changes(
