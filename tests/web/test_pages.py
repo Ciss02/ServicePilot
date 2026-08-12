@@ -43,6 +43,7 @@ from app.domain.vocabulary import (
 )
 from app.main import create_app
 from app.security.passwords import hash_password
+from app.security.demo_credentials import DEMO_PASSWORD_ENV_BY_ROLE
 from app.security.sessions import SESSION_COOKIE_NAME
 
 
@@ -51,6 +52,8 @@ def web_client(tmp_path, monkeypatch) -> Iterator[tuple[TestClient, Engine, str]
     """Avvia le pagine con un account fittizio e un database temporaneo."""
 
     password = secrets.token_urlsafe(18)
+    for variable_name in DEMO_PASSWORD_ENV_BY_ROLE.values():
+        monkeypatch.setenv(variable_name, password)
     monkeypatch.setenv(
         KNOWLEDGE_STORAGE_DIRECTORY_ENV,
         str(tmp_path / "knowledge-storage"),
@@ -504,11 +507,31 @@ def test_non_admin_cannot_open_or_upload_knowledge_documents(
         files={"document": ("procedura.md", b"# Demo\n", "text/markdown")},
         follow_redirects=False,
     )
+    reprocess = client.post(
+        "/app/knowledge/1/reprocess",
+        follow_redirects=False,
+    )
+    delete_document = client.post(
+        "/app/knowledge/1/delete",
+        data={"confirm_delete": "true"},
+        follow_redirects=False,
+    )
+    reset = client.post(
+        "/app/admin/demo-reset",
+        data={"confirmation": "RIPRISTINA DEMO"},
+        follow_redirects=False,
+    )
 
     assert page.status_code == 303
     assert page.headers["location"] == "/app"
     assert upload.status_code == 303
     assert upload.headers["location"] == "/app"
+    assert reprocess.status_code == 303
+    assert reprocess.headers["location"] == "/app"
+    assert delete_document.status_code == 303
+    assert delete_document.headers["location"] == "/app"
+    assert reset.status_code == 303
+    assert reset.headers["location"] == "/app"
     with Session(database_engine) as session:
         assert session.scalar(
             select(func.count()).select_from(KnowledgeDocument)
@@ -560,6 +583,120 @@ def test_admin_uploads_markdown_and_sees_it_in_the_library(
     assert "Markdown" in page.text
     assert "1 segmento" in page.text
     assert "Da indicizzare" in page.text
+    assert "Gestisci documento" in page.text
+    assert "Rielabora e reindicizza" in page.text
+    assert "Elimina documento" in page.text
+
+
+def test_admin_reprocesses_and_then_deletes_a_document(web_client, tmp_path) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "admin.web@servicepilot.example", password)
+    client.post(
+        "/app/knowledge",
+        files={
+            "document": (
+                "procedura-gestita-demo.md",
+                b"# Prima versione\n\nContenuto fittizio iniziale.\n",
+                "text/markdown",
+            )
+        },
+    )
+    with Session(database_engine) as session:
+        document = session.scalar(select(KnowledgeDocument))
+        document_id = document.id
+        stored_path = tmp_path / "knowledge-storage" / document.storage_filename
+    stored_path.write_text(
+        "# Versione aggiornata\n\nNuovo passaggio tecnico fittizio.",
+        encoding="utf-8",
+    )
+
+    reprocessed = client.post(
+        f"/app/knowledge/{document_id}/reprocess",
+        follow_redirects=False,
+    )
+
+    assert reprocessed.status_code == 303
+    assert "document_action=reprocessed" in reprocessed.headers["location"]
+    page = client.get(reprocessed.headers["location"])
+    assert "Documento rielaborato" in page.text
+    with Session(database_engine) as session:
+        segments = session.scalars(
+            select(KnowledgeSegment).where(
+                KnowledgeSegment.document_id == document_id
+            )
+        ).all()
+        assert len(segments) == 1
+        assert segments[0].source_section == "Versione aggiornata"
+        assert "Nuovo passaggio" in segments[0].content
+
+    missing_confirmation = client.post(f"/app/knowledge/{document_id}/delete")
+    assert missing_confirmation.status_code == 422
+    assert "Seleziona la conferma" in missing_confirmation.text
+    with Session(database_engine) as session:
+        assert session.get(KnowledgeDocument, document_id) is not None
+
+    deleted = client.post(
+        f"/app/knowledge/{document_id}/delete",
+        data={"confirm_delete": "true"},
+        follow_redirects=False,
+    )
+    assert deleted.status_code == 303
+    assert deleted.headers["location"] == "/app/knowledge?document_action=deleted"
+    assert "Documento eliminato" in client.get(deleted.headers["location"]).text
+    with Session(database_engine) as session:
+        assert session.get(KnowledgeDocument, document_id) is None
+    assert not stored_path.exists()
+
+
+def test_admin_reset_requires_phrase_and_restores_demo_dataset(
+    web_client,
+    tmp_path,
+) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "admin.web@servicepilot.example", password)
+    client.post(
+        "/app/knowledge",
+        files={
+            "document": (
+                "procedura-reset-demo.md",
+                b"# Reset demo\n\nDocumento fittizio da eliminare.\n",
+                "text/markdown",
+            )
+        },
+    )
+    with Session(database_engine) as session:
+        document = session.scalar(select(KnowledgeDocument))
+        stored_path = tmp_path / "knowledge-storage" / document.storage_filename
+
+    rejected = client.post(
+        "/app/admin/demo-reset",
+        data={"confirmation": "ripristina"},
+    )
+    assert rejected.status_code == 422
+    assert "Scrivi esattamente RIPRISTINA DEMO" in rejected.text
+    with Session(database_engine) as session:
+        assert session.scalar(select(func.count()).select_from(Ticket)) == 4
+        assert session.scalar(select(func.count()).select_from(KnowledgeDocument)) == 1
+
+    reset = client.post(
+        "/app/admin/demo-reset",
+        data={"confirmation": "RIPRISTINA DEMO"},
+        follow_redirects=False,
+    )
+    assert reset.status_code == 303
+    assert reset.headers["location"] == (
+        "/app/knowledge?demo_reset=true&reset_cleanup_warning=false"
+    )
+    result_page = client.get(reset.headers["location"])
+    assert result_page.status_code == 200
+    assert "Dataset dimostrativo ripristinato" in result_page.text
+    with Session(database_engine) as session:
+        assert session.scalar(select(func.count()).select_from(Ticket)) == 6
+        assert session.scalar(select(func.count()).select_from(ProposedAction)) == 3
+        assert session.scalar(select(func.count()).select_from(AuditEvent)) == 9
+        assert session.scalar(select(func.count()).select_from(KnowledgeDocument)) == 0
+        assert session.scalar(select(func.count()).select_from(AuthSession)) == 1
+    assert not stored_path.exists()
 
 
 def test_invalid_admin_upload_shows_error_and_changes_nothing(

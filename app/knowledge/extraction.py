@@ -173,7 +173,7 @@ def build_segment_drafts(document: KnowledgeDocument, path: Path) -> list[Segmen
     return drafts
 
 
-def _invalidate_solutions_for_document(
+def invalidate_solutions_for_document(
     session: Session,
     document_id: int,
 ) -> None:
@@ -211,7 +211,7 @@ def _save_failed_result(
     message: str,
 ) -> ExtractionResult:
     try:
-        _invalidate_solutions_for_document(session, document.id)
+        invalidate_solutions_for_document(session, document.id)
         session.execute(
             delete(KnowledgeSegment).where(
                 KnowledgeSegment.document_id == document.id
@@ -262,7 +262,7 @@ def process_knowledge_document(
         )
 
     try:
-        _invalidate_solutions_for_document(session, document.id)
+        invalidate_solutions_for_document(session, document.id)
         session.execute(
             delete(KnowledgeSegment).where(
                 KnowledgeSegment.document_id == document.id

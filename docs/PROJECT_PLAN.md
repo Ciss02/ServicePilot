@@ -146,7 +146,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-073 - Audit log**
   Registrare operazioni umane, AI, approvazioni ed esiti.
   Verifica: il percorso di un ticket è ricostruibile.
-- [ ] **SP-074 - Strumenti amministrativi**
+- [x] **SP-074 - Strumenti amministrativi**
   Gestire documenti, reindicizzazione e ripristino dei dati demo.
   Verifica: funzioni disponibili soltanto all'amministratore.
 
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-074**. La milestone attiva è **Milestone 7**.
+La prossima attività è **SP-080**. La milestone attiva è **Milestone 8**.

@@ -1,0 +1,1 @@
+"""Test degli strumenti amministrativi."""

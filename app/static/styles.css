@@ -2513,6 +2513,33 @@ main {
   font-weight: 900;
 }
 
+.admin-operation-feedback {
+  display: flex;
+  gap: 8px 18px;
+  align-items: baseline;
+  margin-top: 24px;
+  padding: 14px 18px;
+  border: 1px solid;
+  border-radius: 12px;
+  font-size: 0.76rem;
+}
+
+.admin-operation-feedback span {
+  color: var(--ink-soft);
+}
+
+.admin-operation-success {
+  border-color: #b9dac8;
+  background: #edf8f1;
+  color: #216348;
+}
+
+.admin-operation-warning {
+  border-color: #e8c7a1;
+  background: #fff8e9;
+  color: #85531d;
+}
+
 .knowledge-safety-note strong { font-size: 0.82rem; }
 
 .knowledge-safety-note p {
@@ -2788,6 +2815,84 @@ main {
   background: var(--surface);
 }
 
+.document-management {
+  grid-column: 1 / -1;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.document-management summary {
+  width: fit-content;
+  color: var(--navy);
+  font-size: 0.7rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.document-management-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 13px;
+}
+
+.document-management-actions form {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-muted);
+}
+
+.document-management-actions p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.document-management-actions button {
+  justify-self: start;
+  min-height: 40px;
+}
+
+.document-delete-form label {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  color: var(--ink-soft);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.document-delete-form input {
+  margin-top: 2px;
+  accent-color: var(--danger);
+}
+
+.danger-button {
+  padding: 10px 15px;
+  border: 1px solid var(--danger);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--danger);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.danger-button:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.danger-button:focus-visible,
+.document-management summary:focus-visible {
+  outline: 3px solid rgba(166, 52, 44, 0.24);
+  outline-offset: 3px;
+}
+
 .document-format {
   display: inline-grid;
   min-height: 46px;
@@ -2852,6 +2957,58 @@ main {
 
 .knowledge-empty-state {
   margin-top: 22px;
+}
+
+.demo-reset-zone {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.7fr);
+  gap: 38px;
+  align-items: center;
+  margin-top: 34px;
+  padding: 28px;
+  border: 1px solid #e5b8b2;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #fffaf7, #fff0ed);
+}
+
+.demo-reset-zone h2 {
+  margin: 4px 0 12px;
+  font-size: 1.6rem;
+}
+
+.demo-reset-zone p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.demo-reset-zone .demo-reset-preserved {
+  margin-top: 10px;
+}
+
+.demo-reset-zone form {
+  display: grid;
+  gap: 10px;
+}
+
+.demo-reset-zone label {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+
+.demo-reset-zone input {
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #c79089;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.demo-reset-zone .danger-button {
+  justify-self: start;
 }
 
 .audit-timeline-card {
@@ -3412,6 +3569,10 @@ main {
     justify-self: start;
   }
 
+  .demo-reset-zone {
+    grid-template-columns: 1fr;
+  }
+
   .audit-admin-hero {
     align-items: flex-start;
     flex-direction: column;
@@ -3789,6 +3950,18 @@ main {
   .knowledge-document-row > strong,
   .document-state {
     grid-column: 2;
+  }
+
+  .admin-operation-feedback {
+    display: grid;
+  }
+
+  .document-management-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-reset-zone {
+    padding: 21px;
   }
 
   .audit-section-heading,

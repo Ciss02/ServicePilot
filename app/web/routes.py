@@ -45,6 +45,11 @@ from app.actions import (
     decide_action_proposal,
 )
 from app.actions.dependencies import ActionServiceClientDependency
+from app.administration import (
+    DEMO_RESET_CONFIRMATION,
+    DemoResetError,
+    reset_demo_dataset,
+)
 from app.api.dependencies import (
     DatabaseSession,
     SessionCookie,
@@ -70,6 +75,8 @@ from app.knowledge import (
     KnowledgeDocumentPersistenceError,
     KnowledgeDocumentProcessingError,
     KnowledgeDocumentValidationError,
+    KnowledgeDocumentDeletionError,
+    KnowledgeDocumentNotFoundError,
     KnowledgeIndexingError,
     KnowledgeSearchError,
     KnowledgeSearchValidationError,
@@ -81,12 +88,14 @@ from app.knowledge import (
     process_knowledge_document,
     search_knowledge,
     store_knowledge_document,
+    delete_knowledge_document,
 )
 from app.security.authentication import (
     authenticate_user,
     revoke_user_session,
     start_user_session,
 )
+from app.security.demo_credentials import DemoCredentialsError, load_demo_passwords
 from app.security.session_cookie import delete_session_cookie, set_session_cookie
 from app.tickets.creation import (
     TicketPersistenceError,
@@ -294,6 +303,11 @@ def _knowledge_context(
     search_results: list[dict[str, object]] | None = None,
     search_error: str | None = None,
     error: str | None = None,
+    document_action: str | None = None,
+    document_error: str | None = None,
+    demo_reset: bool = False,
+    reset_cleanup_warning: bool = False,
+    reset_error: str | None = None,
 ) -> dict[str, object]:
     """Prepara l'elenco dei documenti senza rivelarne il percorso interno."""
 
@@ -368,6 +382,12 @@ def _knowledge_context(
             "search_results": search_results or [],
             "search_error": search_error,
             "upload_error": error,
+            "document_action": document_action,
+            "document_error": document_error,
+            "demo_reset": demo_reset,
+            "reset_cleanup_warning": reset_cleanup_warning,
+            "reset_error": reset_error,
+            "reset_confirmation": DEMO_RESET_CONFIRMATION,
         }
     )
     return context
@@ -776,6 +796,10 @@ def knowledge_documents(
     uploaded: Annotated[bool, Query()] = False,
     extraction: Annotated[str | None, Query()] = None,
     indexing: Annotated[str | None, Query()] = None,
+    document_action: Annotated[str | None, Query(max_length=30)] = None,
+    document_error: Annotated[str | None, Query(max_length=30)] = None,
+    demo_reset: Annotated[bool, Query()] = False,
+    reset_cleanup_warning: Annotated[bool, Query()] = False,
     q: Annotated[str, Query(max_length=500)] = "",
 ) -> Response:
     """Mostra all'amministratore l'upload e i documenti già conservati."""
@@ -817,6 +841,10 @@ def knowledge_documents(
             query=normalized_query,
             search_results=search_results,
             search_error=search_error,
+            document_action=document_action,
+            document_error=document_error,
+            demo_reset=demo_reset,
+            reset_cleanup_warning=reset_cleanup_warning,
         ),
         headers={"Cache-Control": "no-store"},
     )
@@ -921,6 +949,144 @@ def upload_knowledge_document(
         context=_knowledge_context(session, current_user, error=error),
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/app/knowledge/{document_id}/reprocess")
+def reprocess_knowledge_document(
+    session: DatabaseSession,
+    current_user: WebUser,
+    embedding_model: EmbeddingModelDependency,
+    document_id: Annotated[int, PathParameter(gt=0)],
+) -> Response:
+    """Riestrae il file e ricrea l'indice soltanto per l'amministratore."""
+
+    if redirect := _admin_only(current_user):
+        return redirect
+    document = session.get(KnowledgeDocument, document_id)
+    if document is None:
+        return RedirectResponse(
+            url="/app/knowledge?document_error=not_found",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    try:
+        extraction_result = process_knowledge_document(
+            session,
+            document,
+            get_knowledge_storage_directory(),
+        )
+        indexing_status = INDEX_PENDING
+        if extraction_result.status == EXTRACTION_READY:
+            indexing_status = index_knowledge_document(
+                session,
+                document,
+                embedding_model,
+            ).status
+    except (KnowledgeDocumentProcessingError, KnowledgeIndexingError):
+        return RedirectResponse(
+            url="/app/knowledge?document_error=reprocess_failed",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    return RedirectResponse(
+        url=(
+            "/app/knowledge?document_action=reprocessed"
+            f"&extraction={extraction_result.status}&indexing={indexing_status}"
+        ),
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/app/knowledge/{document_id}/delete")
+def remove_knowledge_document(
+    request: Request,
+    session: DatabaseSession,
+    current_user: WebUser,
+    document_id: Annotated[int, PathParameter(gt=0)],
+    confirm_delete: Annotated[bool, Form()] = False,
+) -> Response:
+    """Elimina una fonte soltanto dopo la conferma visibile nel modulo."""
+
+    if redirect := _admin_only(current_user):
+        return redirect
+    if not confirm_delete:
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_knowledge.html",
+            context=_knowledge_context(
+                session,
+                current_user,
+                document_error="confirm_delete",
+            ),
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            headers={"Cache-Control": "no-store"},
+        )
+    try:
+        result = delete_knowledge_document(
+            session,
+            document_id,
+            get_knowledge_storage_directory(),
+        )
+    except KnowledgeDocumentNotFoundError:
+        action = "not_found"
+    except KnowledgeDocumentDeletionError:
+        action = "delete_failed"
+    else:
+        action = "deleted" if result.stored_file_removed else "deleted_file_warning"
+    return RedirectResponse(
+        url=f"/app/knowledge?document_action={action}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/app/admin/demo-reset")
+def reset_demo_data(
+    request: Request,
+    session: DatabaseSession,
+    current_user: WebUser,
+    confirmation: Annotated[str, Form()] = "",
+) -> Response:
+    """Ripristina i dati operativi soltanto con la frase di conferma esatta."""
+
+    if redirect := _admin_only(current_user):
+        return redirect
+    if not secrets.compare_digest(confirmation.strip(), DEMO_RESET_CONFIRMATION):
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_knowledge.html",
+            context=_knowledge_context(
+                session,
+                current_user,
+                reset_error=(
+                    f"Scrivi esattamente {DEMO_RESET_CONFIRMATION} per confermare."
+                ),
+            ),
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            headers={"Cache-Control": "no-store"},
+        )
+    try:
+        result = reset_demo_dataset(
+            session,
+            load_demo_passwords(),
+            get_knowledge_storage_directory(),
+        )
+    except (DemoCredentialsError, DemoResetError) as error:
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_knowledge.html",
+            context=_knowledge_context(
+                session,
+                current_user,
+                reset_error=str(error),
+            ),
+            status_code=status.HTTP_409_CONFLICT,
+            headers={"Cache-Control": "no-store"},
+        )
+    return RedirectResponse(
+        url=(
+            "/app/knowledge?demo_reset=true"
+            f"&reset_cleanup_warning={str(result.file_cleanup_failures > 0).lower()}"
+        ),
+        status_code=status.HTTP_303_SEE_OTHER,
     )
 
 

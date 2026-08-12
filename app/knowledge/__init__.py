@@ -22,6 +22,12 @@ from app.knowledge.extraction import (
     build_segment_drafts,
     process_knowledge_document,
 )
+from app.knowledge.management import (
+    DocumentDeletionResult,
+    KnowledgeDocumentDeletionError,
+    KnowledgeDocumentNotFoundError,
+    delete_knowledge_document,
+)
 from app.knowledge.indexing import (
     INDEX_FAILED,
     INDEX_PENDING,
@@ -84,6 +90,10 @@ __all__ = [
     "get_knowledge_storage_directory",
     "build_segment_drafts",
     "process_knowledge_document",
+    "DocumentDeletionResult",
+    "KnowledgeDocumentDeletionError",
+    "KnowledgeDocumentNotFoundError",
+    "delete_knowledge_document",
     "index_knowledge_document",
     "search_knowledge",
     "generate_ticket_solution",

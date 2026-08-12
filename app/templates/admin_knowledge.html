@@ -20,6 +20,61 @@
       </aside>
     </header>
 
+    {% if document_action == "reprocessed" %}
+      <div class="admin-operation-feedback admin-operation-success" role="status">
+        <strong>Documento rielaborato.</strong>
+        <span>
+          {% if extraction == "failed" %}Il file non contiene testo leggibile: i vecchi segmenti non vengono mantenuti.
+          {% elif indexing == "ready" %}Testo, segmenti e indice sono stati ricreati dai contenuti conservati.
+          {% elif indexing == "failed" %}I segmenti sono aggiornati, ma l'indice non è disponibile.
+          {% else %}I segmenti sono aggiornati e restano pronti per la futura indicizzazione.{% endif %}
+        </span>
+      </div>
+    {% elif document_action == "deleted" %}
+      <div class="admin-operation-feedback admin-operation-success" role="status">
+        <strong>Documento eliminato.</strong>
+        <span>File, segmenti e riferimenti derivati non sono più disponibili.</span>
+      </div>
+    {% elif document_action == "deleted_file_warning" %}
+      <div class="admin-operation-feedback admin-operation-warning" role="alert">
+        <strong>Dati eliminati, pulizia del file da controllare.</strong>
+        <span>Il documento non è più usato dall'app, ma il file locale non è stato rimosso.</span>
+      </div>
+    {% elif document_action in ["not_found", "delete_failed"] %}
+      <div class="admin-operation-feedback admin-operation-warning" role="alert">
+        <strong>Operazione non completata.</strong>
+        <span>{% if document_action == "not_found" %}Il documento non esiste più.{% else %}Il documento è rimasto invariato: riprova più tardi.{% endif %}</span>
+      </div>
+    {% endif %}
+    {% if document_error %}
+      <div class="admin-operation-feedback admin-operation-warning" role="alert">
+        <strong>Gestione documento non eseguita.</strong>
+        <span>
+          {% if document_error == "confirm_delete" %}Seleziona la conferma prima di eliminare la fonte.
+          {% elif document_error == "not_found" %}Il documento non esiste più.
+          {% else %}La rielaborazione non è stata completata; i dati disponibili restano consultabili.{% endif %}
+        </span>
+      </div>
+    {% endif %}
+    {% if demo_reset %}
+      <div class="admin-operation-feedback admin-operation-success" role="status">
+        <strong>Dataset dimostrativo ripristinato.</strong>
+        <span>Sei ticket, tre azioni e la cronologia iniziale sono nuovamente disponibili.</span>
+      </div>
+      {% if reset_cleanup_warning %}
+        <div class="admin-operation-feedback admin-operation-warning" role="alert">
+          <strong>Controllo archivio necessario.</strong>
+          <span>Almeno un file locale non è stato rimosso, anche se non è più collegato alla demo.</span>
+        </div>
+      {% endif %}
+    {% endif %}
+    {% if reset_error %}
+      <div class="admin-operation-feedback admin-operation-warning" role="alert">
+        <strong>Ripristino non eseguito.</strong>
+        <span>{{ reset_error }}</span>
+      </div>
+    {% endif %}
+
     <div class="knowledge-grid">
       <section class="knowledge-upload-card" aria-labelledby="upload-title">
         <p class="card-label">Nuova fonte</p>
@@ -138,12 +193,29 @@
           {% for document in documents %}
             <article class="knowledge-document-row">
               <span class="document-format document-format-{{ document.format | lower }}">{{ document.format }}</span>
-              <div>
+              <div class="knowledge-document-identity">
                 <h3>{{ document.filename }}</h3>
                 <p>Caricato da {{ document.uploaded_by }} · {{ document.created_at }}</p>
               </div>
               <strong>{{ document.size }}</strong>
               <span class="document-state document-state-{{ document.state_class }}">{{ document.state }}</span>
+              <details class="document-management">
+                <summary>Gestisci documento</summary>
+                <div class="document-management-actions">
+                  <form method="post" action="/app/knowledge/{{ document.id }}/reprocess">
+                    <p>Rilegge il file e sostituisce segmenti e indice precedenti.</p>
+                    <button class="secondary-button" type="submit">Rielabora e reindicizza</button>
+                  </form>
+                  <form class="document-delete-form" method="post" action="/app/knowledge/{{ document.id }}/delete">
+                    <p>Elimina la fonte e invalida i suggerimenti AI che la citavano.</p>
+                    <label>
+                      <input name="confirm_delete" type="checkbox" value="true" required>
+                      Confermo l'eliminazione di questa fonte
+                    </label>
+                    <button class="danger-button" type="submit">Elimina documento</button>
+                  </form>
+                </div>
+              </details>
             </article>
           {% endfor %}
         </div>
@@ -153,6 +225,20 @@
           <div><h3>Nessuna procedura caricata</h3><p>Il primo documento valido comparirà qui.</p></div>
         </div>
       {% endif %}
+    </section>
+
+    <section class="demo-reset-zone" aria-labelledby="demo-reset-title">
+      <div>
+        <p class="card-label">Zona controllata</p>
+        <h2 id="demo-reset-title">Ripristina la demo</h2>
+        <p>Rimuove tutti i ticket creati durante le prove, i documenti caricati e le relative elaborazioni. Poi ricrea i 6 ticket, le 3 azioni e i 9 eventi iniziali.</p>
+        <p class="demo-reset-preserved"><strong>Restano disponibili:</strong> account, sedi e questa sessione amministrativa.</p>
+      </div>
+      <form method="post" action="/app/admin/demo-reset">
+        <label for="demo-reset-confirmation">Scrivi <strong>{{ reset_confirmation }}</strong></label>
+        <input id="demo-reset-confirmation" name="confirmation" type="text" autocomplete="off" spellcheck="false" required>
+        <button class="danger-button" type="submit">Ripristina dati dimostrativi</button>
+      </form>
     </section>
   </section>
 {% endblock %}

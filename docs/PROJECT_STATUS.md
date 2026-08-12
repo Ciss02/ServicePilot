@@ -112,29 +112,34 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Timeline cronologica disponibile nel dettaglio tecnico di ogni ticket.
 - Vista complessiva degli ultimi 100 eventi, con filtri, riservata all'amministratore.
 - Nove eventi iniziali fittizi caricati in modo ripetibile senza duplicati.
+- Rielaborazione amministrativa dei documenti con sostituzione di segmenti e indice.
+- Eliminazione controllata delle fonti e invalidazione dei suggerimenti che le citano.
+- Ripristino completo dei dati operativi tramite la frase `RIPRISTINA DEMO`.
+- Reset atomico di ticket, azioni, audit e knowledge base con account e sessione
+  amministrativa conservati.
 
 ## Milestone attiva
 
-**Milestone 7 - Azioni, audit e amministrazione**
+**Milestone 8 - Qualità, pubblicazione e portfolio**
 
 ## Ultima attività completata
 
-**SP-073 - Audit log**
+**SP-074 - Strumenti amministrativi**
 
-Il percorso dei ticket è ricostruibile tramite eventi distinti per persone, assistente
-AI e sistema. Gli eventi sono salvati insieme alle operazioni, non possono essere
-riscritti dall'applicazione e mostrano soltanto dettagli controllati. Tecnico e admin
-vedono la timeline del ticket; soltanto l'admin consulta il registro completo.
+L'amministratore può rielaborare o eliminare i documenti della knowledge base e
+ripristinare i dati operativi della demo con una conferma esplicita. Rielaborazione e
+eliminazione invalidano le fonti AI non più affidabili; il reset ricrea ticket, azioni e
+audit iniziali senza interrompere la sessione amministrativa.
 
 ## Prossima attività
 
-**SP-074 - Strumenti amministrativi**
+**SP-080 - Controlli automatici**
 
 Risultato atteso:
 
-- permettere all'amministratore di gestire e rielaborare i documenti;
-- aggiungere un ripristino controllato del dataset dimostrativo;
-- mantenere tutte queste operazioni non disponibili agli altri ruoli.
+- completare test, formattazione e controlli automatici su GitHub;
+- verificare l'esecuzione da un ambiente pulito;
+- rendere immediatamente visibili eventuali regressioni nelle pull request.
 
 ## Blocchi o decisioni aperte
 
@@ -144,11 +149,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-074.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-080.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-074` con il codice dell'attività successiva.
+Sostituire `SP-080` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -461,4 +466,12 @@ Prima di terminare verificare che:
 - Verificato il layout a 390 × 844 senza scorrimento orizzontale della pagina.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-073.
 - `pytest`: 330 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificate rielaborazione e sostituzione dei segmenti senza duplicati.
+- Verificata l'eliminazione di fonte, file e riferimenti AI derivati.
+- Verificati conferma obbligatoria e rifiuto di dipendente e tecnico.
+- Verificato il reset atomico a 6 ticket, 3 azioni e 9 eventi iniziali.
+- Verificate conservazione della sessione amministrativa e pulizia dei file caricati.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-074.
+- `pytest`: 335 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
