@@ -12,8 +12,14 @@ from app.ai.ticket_classification import (
     classify_confirmed_ticket,
     suggest_ticket_classification,
 )
+from app.ai.contracts import AIInvalidResponseError, AIUnavailableError
 from app.db import Site, Ticket, User, build_engine, create_database
-from app.domain.vocabulary import AssignmentGroup, Priority, Role
+from app.domain.vocabulary import (
+    AssignmentGroup,
+    ClassificationReviewStatus,
+    Priority,
+    Role,
+)
 
 
 class ClassificationModelStub:
@@ -40,6 +46,18 @@ class ClassificationModelStub:
         if isinstance(self.response, dict):
             return response_schema.model_validate(self.response)
         return self.response  # type: ignore[return-value]
+
+
+class FailingClassificationModelStub:
+    """Simula un errore controllato senza collegamenti esterni."""
+
+    def __init__(self, error: Exception) -> None:
+        self.error = error
+        self.calls = 0
+
+    def generate_structured(self, **_kwargs):
+        self.calls += 1
+        raise self.error
 
 
 def valid_proposal() -> dict[str, object]:
@@ -147,5 +165,61 @@ def test_classification_is_saved_once_with_deterministic_priority(tmp_path) -> N
         assert classified.urgency.value == "medium"
         assert classified.priority is Priority.P2
         assert classified.assigned_group == "Supporto rete"
+        assert (
+            classified.classification_review_status
+            is ClassificationReviewStatus.AI_SUGGESTED
+        )
         assert len(model.calls) == 1
+    engine.dispose()
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_status"),
+    [
+        (
+            AIUnavailableError("timeout simulato"),
+            ClassificationReviewStatus.AI_UNAVAILABLE,
+        ),
+        (
+            AIInvalidResponseError("risposta simulata non valida"),
+            ClassificationReviewStatus.AI_INVALID_RESPONSE,
+        ),
+    ],
+)
+def test_ai_failure_is_recorded_without_losing_or_retrying_the_ticket(
+    tmp_path,
+    error: Exception,
+    expected_status: ClassificationReviewStatus,
+) -> None:
+    engine = build_engine(f"sqlite:///{tmp_path / f'{expected_status.value}.db'}")
+    create_database(engine)
+    model = FailingClassificationModelStub(error)
+    with Session(engine) as session:
+        site = Site(code="FAIL-DEMO", name="Sede errore AI demo")
+        requester = User(
+            email=f"{expected_status.value}@servicepilot.example",
+            display_name="Dipendente Errore AI Demo",
+            role=Role.EMPLOYEE,
+        )
+        session.add_all([site, requester])
+        session.flush()
+        ticket = Ticket(
+            title="Richiesta demo da classificare",
+            description="Questa richiesta fittizia verifica un errore controllato.",
+            requester_id=requester.id,
+            site_id=site.id,
+            service="Servizio demo",
+            affected_users=1,
+        )
+        session.add(ticket)
+        session.commit()
+
+        classified = classify_confirmed_ticket(session, ticket, ai_model=model)
+        classified_again = classify_confirmed_ticket(session, ticket, ai_model=model)
+
+        assert classified_again is classified
+        assert classified.classification_review_status is expected_status
+        assert classified.category is None
+        assert classified.priority is None
+        assert model.calls == 1
     engine.dispose()

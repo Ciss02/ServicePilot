@@ -20,6 +20,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
 from app.domain.vocabulary import (
+    ClassificationReviewStatus,
     Impact,
     Priority,
     Role,
@@ -135,6 +136,12 @@ class Ticket(Base):
         _enum_column(Priority, "priority"), nullable=True
     )
     assigned_group: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    classification_review_status: Mapped[ClassificationReviewStatus] = mapped_column(
+        _enum_column(ClassificationReviewStatus, "classification_review_status"),
+        nullable=False,
+        default=ClassificationReviewStatus.PENDING,
+        server_default=ClassificationReviewStatus.PENDING.value,
+    )
     assigned_technician_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )

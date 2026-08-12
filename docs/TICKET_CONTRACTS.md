@@ -45,6 +45,7 @@ Impatto e urgenza devono essere presenti insieme, così il risultato è sempre c
 - titolo, descrizione, sede, servizio e numero di utenti coinvolti;
 - stato;
 - classificazione completa;
+- conferma umana esplicita della classificazione tramite `classification_reviewed=true`;
 - gruppo o tecnico assegnato;
 - nota tecnica o soluzione.
 
@@ -56,7 +57,8 @@ esplicita, fuori dal perimetro attuale.
 ## Lettura
 
 `TicketRead` rappresenta un ticket salvato. Oltre ai dati iniziali include ID, stato,
-classificazione facoltativa, assegnazione, note, soluzione e date. Può leggere
+classificazione facoltativa, stato della revisione, assegnazione, note, soluzione e
+date. Può leggere
 direttamente un modello SQLAlchemy, mantenendo separata la struttura della risposta
 dalla tabella del database.
 

@@ -10,6 +10,7 @@ from app.db.models import Site, Ticket, User
 from app.db.session import create_database, engine
 from app.domain.priority import calculate_priority
 from app.domain.vocabulary import (
+    ClassificationReviewStatus,
     Impact,
     Role,
     TicketCategory,
@@ -284,6 +285,7 @@ def _upsert_tickets(
             "urgency": seed.urgency,
             "priority": calculate_priority(seed.impact, seed.urgency),
             "assigned_group": seed.assigned_group,
+            "classification_review_status": ClassificationReviewStatus.HUMAN_REVIEWED,
             "assigned_technician_id": (
                 assigned_technician.id if assigned_technician else None
             ),

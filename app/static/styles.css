@@ -1986,6 +1986,70 @@ main {
   font-size: 0.69rem;
 }
 
+.classification-review {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 2px;
+  padding: 14px 15px;
+  border: 1px solid #d6d9d2;
+  border-left: 4px solid #87968e;
+  border-radius: 10px;
+  background: var(--surface-muted);
+}
+
+.classification-review p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.classification-review-badge {
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.classification-review-ai_suggested {
+  border-left-color: var(--accent-deep);
+  background: #f3f7e8;
+}
+
+.classification-review-human_reviewed {
+  border-left-color: #2f7664;
+  background: #edf7f1;
+}
+
+.classification-review-ai_unavailable,
+.classification-review-ai_invalid_response {
+  border-left-color: #c17627;
+  background: #fff7e8;
+}
+
+.classification-review-button {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 2px;
+  border: 1px solid var(--navy);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--navy);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.classification-review-button:hover {
+  background: var(--navy);
+  color: #fff;
+}
+
 .management-submit {
   margin: 22px 28px 28px;
 }

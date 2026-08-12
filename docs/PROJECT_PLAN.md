@@ -106,7 +106,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-052 - Classificazione suggerita**
   Proporre categoria, sottocategoria, impatto, urgenza e gruppo.
   Verifica: la priorità continua a essere calcolata dal backend.
-- [ ] **SP-053 - Revisione umana e gestione errori**
+- [x] **SP-053 - Revisione umana e gestione errori**
   Permettere correzioni e gestire timeout o risposte AI non valide.
   Verifica: il flusso rimane utilizzabile anche se il provider non risponde.
 
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-053**. La milestone attiva è **Milestone 5**.
+La prossima attività è **SP-060**. La milestone attiva è **Milestone 6**.

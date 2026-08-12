@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.db import Site, Ticket, User, build_engine, create_database, load_demo_data
 from app.domain.priority import calculate_priority
-from app.domain.vocabulary import Priority, Role
+from app.domain.vocabulary import ClassificationReviewStatus, Priority, Role
 from app.security.demo_credentials import (
     DEMO_PASSWORD_ENV_BY_ROLE,
     DemoCredentialsError,
@@ -183,5 +183,10 @@ def test_demo_records_are_synthetic_and_coherent(database_engine) -> None:
         assert all(ticket.urgency is not None for ticket in tickets)
         assert all(
             ticket.priority == calculate_priority(ticket.impact, ticket.urgency)
+            for ticket in tickets
+        )
+        assert all(
+            ticket.classification_review_status
+            is ClassificationReviewStatus.HUMAN_REVIEWED
             for ticket in tickets
         )

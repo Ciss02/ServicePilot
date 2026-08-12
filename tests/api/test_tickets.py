@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.ai.dependencies import get_ai_model
 from app.db import Site, Ticket, User, build_engine, create_database, get_session
 from app.api.dependencies import require_roles
-from app.domain.vocabulary import Priority, Role
+from app.domain.vocabulary import ClassificationReviewStatus, Priority, Role
 from app.main import create_app
 from app.security.passwords import hash_password
 
@@ -175,10 +175,58 @@ def test_create_ticket_saves_ai_suggestion_but_calculates_priority_in_backend(
     assert response.json()["urgency"] == "high"
     assert response.json()["priority"] == "p2"
     assert response.json()["assigned_group"] == "Supporto rete"
+    assert response.json()["classification_review_status"] == "ai_suggested"
     with Session(database_engine) as session:
         saved = session.get(Ticket, response.json()["id"])
         assert saved is not None
         assert saved.priority is Priority.P2
+
+
+def test_technician_corrects_and_confirms_ai_classification(api_client) -> None:
+    client, database_engine, password = api_client
+    client.app.dependency_overrides[get_ai_model] = APIClassificationModelStub
+    ticket_id = client.post("/tickets", json=valid_ticket_payload()).json()["id"]
+    login_as_technician(client, password)
+
+    response = client.patch(
+        f"/tickets/{ticket_id}",
+        json={
+            "classification": {
+                "category": "account_and_access",
+                "subcategory": "Accesso VPN",
+                "impact": "low",
+                "urgency": "medium",
+            },
+            "assigned_group": "Service desk",
+            "classification_reviewed": True,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["category"] == "account_and_access"
+    assert response.json()["priority"] == "p4"
+    assert response.json()["classification_review_status"] == "human_reviewed"
+    with Session(database_engine) as session:
+        saved = session.get(Ticket, ticket_id)
+        assert saved is not None
+        assert (
+            saved.classification_review_status
+            is ClassificationReviewStatus.HUMAN_REVIEWED
+        )
+
+
+def test_technician_cannot_confirm_an_incomplete_classification(api_client) -> None:
+    client, _, password = api_client
+    ticket_id = client.post("/tickets", json=valid_ticket_payload()).json()["id"]
+    login_as_technician(client, password)
+
+    response = client.patch(
+        f"/tickets/{ticket_id}",
+        json={"classification_reviewed": True},
+    )
+
+    assert response.status_code == 422
+    assert "Completa la classificazione" in response.json()["detail"]
 
 
 @pytest.mark.parametrize(

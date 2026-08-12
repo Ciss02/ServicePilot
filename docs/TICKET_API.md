@@ -22,8 +22,10 @@ mentre il server è in esecuzione.
 Il backend verifica forma e limiti dei dati, richiede la conferma esplicita e controlla
 che la sede esista. Il richiedente è sempre l'utente autenticato: inviare manualmente
 `requester_id` produce `422`. Se il salvataggio riesce restituisce `201 Created` con ID,
-stato `new`, date e classificazione inizialmente vuota. `confirmed` non viene conservato:
-è una condizione necessaria per eseguire l'operazione, non una proprietà del ticket.
+stato `new`, date e risultato del tentativo di classificazione AI. Se il provider non è
+disponibile, il ticket resta creato con classificazione vuota e stato di revisione
+`ai_unavailable`. `confirmed` non viene conservato: è una condizione necessaria per
+eseguire l'operazione, non una proprietà del ticket.
 
 ## Lettura
 
@@ -40,11 +42,14 @@ stato, note, soluzione e date. I campi non ancora valorizzati sono `null`.
 
 - correggere titolo, descrizione, sede, servizio e numero di utenti coinvolti;
 - applicare una classificazione completa, con priorità ricalcolata dal backend;
+- confermare esplicitamente la revisione con `"classification_reviewed": true`;
 - assegnare gruppo e tecnico;
 - aggiungere una nota o una soluzione;
 - cambiare lo stato seguendo il flusso consentito.
 
 Il tecnico assegnato deve esistere, essere attivo e avere ruolo `technician` o `admin`.
+La conferma della revisione richiede una classificazione completa; nella pagina web
+richiede anche il gruppo. Il valore `false` non è accettato come conferma.
 Il richiedente non è modificabile. Tutti i controlli avvengono prima del salvataggio,
 quindi un errore non lascia modifiche parziali. L'endpoint accetta soltanto utenti con
 ruolo `technician` o `admin`.

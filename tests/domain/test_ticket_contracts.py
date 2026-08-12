@@ -135,6 +135,15 @@ def test_ticket_update_accepts_complete_classification() -> None:
     assert update.classification.priority is Priority.P2
 
 
+def test_ticket_update_accepts_only_explicit_positive_human_review() -> None:
+    update = TicketUpdate.model_validate({"classification_reviewed": True})
+
+    assert update.classification_reviewed is True
+
+    with pytest.raises(ValidationError, match="classification_reviewed deve essere true"):
+        TicketUpdate.model_validate({"classification_reviewed": False})
+
+
 @pytest.mark.parametrize("data", [{}, {"title": None}], ids=["empty", "only-null"])
 def test_ticket_update_rejects_empty_request(data: dict[str, object]) -> None:
     with pytest.raises(ValidationError, match="specificare almeno un campo"):

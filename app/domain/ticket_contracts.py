@@ -14,7 +14,14 @@ from pydantic import (
 )
 
 from app.domain.priority import calculate_priority
-from app.domain.vocabulary import Impact, Priority, TicketCategory, TicketStatus, Urgency
+from app.domain.vocabulary import (
+    ClassificationReviewStatus,
+    Impact,
+    Priority,
+    TicketCategory,
+    TicketStatus,
+    Urgency,
+)
 
 
 Identifier = Annotated[int, Field(strict=True, gt=0)]
@@ -77,10 +84,20 @@ class TicketUpdate(_ContractModel):
     affected_users: AffectedUsers | None = None
     status: TicketStatus | None = None
     classification: TicketClassification | None = None
+    classification_reviewed: StrictBool | None = None
     assigned_group: ShortText | None = None
     assigned_technician_id: Identifier | None = None
     technician_note: Note | None = None
     resolution: Description | None = None
+
+    @field_validator("classification_reviewed")
+    @classmethod
+    def require_positive_review(cls, reviewed: bool | None) -> bool | None:
+        """La revisione viene registrata soltanto con una conferma positiva."""
+
+        if reviewed is False:
+            raise ValueError("classification_reviewed deve essere true")
+        return reviewed
 
     @model_validator(mode="after")
     def require_at_least_one_value(self) -> Self:
@@ -114,6 +131,7 @@ class TicketRead(_ContractModel):
     urgency: Urgency | None
     priority: Priority | None
     assigned_group: ShortText | None
+    classification_review_status: ClassificationReviewStatus
     assigned_technician_id: Identifier | None
     status: TicketStatus
     technician_note: Note | None

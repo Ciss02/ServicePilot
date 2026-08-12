@@ -75,6 +75,18 @@ def create_database(target_engine: Engine = engine) -> None:
             )
             connection.execute(text("PRAGMA optimize"))
 
+    ticket_columns = {
+        column["name"] for column in inspect(target_engine).get_columns("tickets")
+    }
+    if "classification_review_status" not in ticket_columns:
+        with target_engine.begin() as connection:
+            connection.execute(
+                text(
+                    "ALTER TABLE tickets ADD COLUMN classification_review_status "
+                    "VARCHAR(30) NOT NULL DEFAULT 'pending'"
+                )
+            )
+
 
 def get_session() -> Iterator[Session]:
     """Fornisce una sessione isolata e la chiude dopo ogni richiesta."""

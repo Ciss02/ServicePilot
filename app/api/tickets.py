@@ -5,11 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
 
-from app.ai import (
-    AIModelError,
-    TicketClassificationPersistenceError,
-    classify_confirmed_ticket,
-)
+from app.ai import TicketClassificationPersistenceError, classify_confirmed_ticket
 from app.ai.dependencies import AIModelDependency
 from app.api.dependencies import CurrentUser, TechnicalUser
 from app.db.models import Ticket
@@ -21,6 +17,7 @@ from app.tickets.creation import (
     create_confirmed_ticket,
 )
 from app.tickets.management import (
+    ClassificationReviewRequiredError,
     InvalidStatusTransitionError,
     ManagedSiteNotFoundError,
     ManagedTechnicianNotFoundError,
@@ -67,7 +64,7 @@ def create_ticket(
 
     try:
         return classify_confirmed_ticket(session, ticket, ai_model=ai_model)
-    except (AIModelError, TicketClassificationPersistenceError):
+    except TicketClassificationPersistenceError:
         return ticket
 
 
@@ -153,6 +150,11 @@ def update_ticket(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Per risolvere o chiudere il ticket è necessaria una soluzione",
+        )
+    except ClassificationReviewRequiredError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Completa la classificazione prima di confermare la revisione",
         )
     except TicketUpdatePersistenceError as error:
         raise HTTPException(

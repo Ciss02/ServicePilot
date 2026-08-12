@@ -110,3 +110,15 @@ SP-052 limita anche il gruppo suggerito a un elenco fittizio controllato:
 
 Il modello non può inventare un gruppo esterno. Il tecnico potrà correggere la proposta
 nel dettaglio operativo.
+
+## Stato della revisione della classificazione
+
+| Valore interno | Significato |
+| --- | --- |
+| `pending` | Nessuna proposta o verifica registrata, incluso un ticket locale precedente. |
+| `ai_suggested` | L'AI ha prodotto valori validi, ancora da verificare. |
+| `human_reviewed` | Un tecnico ha confermato esplicitamente i valori. |
+| `ai_unavailable` | Provider disattivato, timeout o errore temporaneo. |
+| `ai_invalid_response` | La risposta AI non ha superato i controlli del backend. |
+
+Lo stato non contiene prompt, risposte grezze o dettagli sensibili del provider.

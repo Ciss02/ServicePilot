@@ -63,29 +63,32 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Gruppi di supporto fittizi limitati a un vocabolario esplicito.
 - Priorità della proposta calcolata esclusivamente dalla matrice del backend.
 - Classificazione salvata dopo la conferma, senza duplicare chiamate su ticket completi.
+- Stato persistente che distingue proposta AI, verifica umana e fallimenti controllati.
+- Conferma tecnica esplicita con correzione e nuovo calcolo deterministico della priorità.
+- Messaggi visibili per provider non disponibile e risposta AI non valida.
 
 ## Milestone attiva
 
-**Milestone 5 - Classificazione AI**
+**Milestone 6 - Knowledge base e RAG**
 
 ## Ultima attività completata
 
-**SP-052 - Classificazione suggerita**
+**SP-053 - Revisione umana e gestione errori**
 
-ServicePilot classifica il ticket soltanto dopo la conferma. Categoria, impatto, urgenza
-e gruppo devono appartenere ai valori ammessi; la sottocategoria resta breve e
-controllata. Il modello non può inviare la priorità, che viene calcolata dal backend e
-salvata insieme alla proposta.
+Il dettaglio tecnico distingue una proposta AI dai valori verificati e offre una
+conferma umana separata dal normale aggiornamento. Timeout, provider disattivato e
+risposte non valide non fanno perdere il ticket: il tecnico riceve un messaggio sicuro
+e può completare manualmente la classificazione.
 
 ## Prossima attività
 
-**SP-053 - Revisione umana e gestione errori**
+**SP-060 - Upload sicuro dei documenti**
 
 Risultato atteso:
 
-- distinguere chiaramente la proposta AI dai dati verificati dal tecnico;
-- permettere correzioni e conferma della classificazione;
-- rendere visibili timeout o risposte non valide senza bloccare il flusso.
+- accettare documenti PDF e Markdown per la knowledge base;
+- controllare tipo e dimensione prima di conservarli;
+- rifiutare file non ammessi senza modifiche parziali.
 
 ## Blocchi o decisioni aperte
 
@@ -95,11 +98,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-053.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-060.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-053` con il codice dell'attività successiva.
+Sostituire `SP-060` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -289,4 +292,17 @@ Prima di terminare verificare che:
 - Verificato che un provider disattivato lasci il ticket creato e utilizzabile.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-052.
 - `pytest`: 201 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificati gli stati persistenti `pending`, proposta AI, verifica umana, provider non
+  disponibile e risposta non valida.
+- Verificato che timeout e risposte non valide conservino il ticket senza applicare
+  campi non controllati e senza ripetere automaticamente la chiamata.
+- Verificate correzione e conferma esplicita da pagina web e API tecnica.
+- Verificato che una classificazione incompleta non possa essere confermata.
+- Verificato il nuovo calcolo della priorità dopo la correzione del tecnico.
+- Verificato l'aggiornamento ripetibile del database SQLite locale senza perdita di dati.
+- Verificati nel browser proposta, conferma e messaggio di revisione senza errori nella
+  console; server locale aggiornato su `127.0.0.1:8010`.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-053.
+- `pytest`: 213 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

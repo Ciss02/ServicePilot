@@ -38,6 +38,16 @@ class AssignmentGroup(StrEnum):
     IT_SECURITY = "Sicurezza IT"
 
 
+class ClassificationReviewStatus(StrEnum):
+    """Stato sicuro della proposta AI e della successiva verifica umana."""
+
+    PENDING = "pending"
+    AI_SUGGESTED = "ai_suggested"
+    HUMAN_REVIEWED = "human_reviewed"
+    AI_UNAVAILABLE = "ai_unavailable"
+    AI_INVALID_RESPONSE = "ai_invalid_response"
+
+
 class TicketStatus(StrEnum):
     """Stati possibili di un ticket già creato."""
 

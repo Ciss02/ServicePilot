@@ -1,14 +1,15 @@
 # Classificazione AI suggerita
 
-SP-052 classifica un ticket subito dopo la sua creazione confermata. L'AI propone
+SP-052 classifica un ticket subito dopo la sua creazione confermata. SP-053 rende
+esplicita la successiva verifica umana e gli errori controllati. L'AI propone
 categoria, sottocategoria, impatto, urgenza e gruppo di supporto; ServicePilot controlla
 la proposta e calcola autonomamente la priorità.
 
 ## Quale problema risolve
 
 Il tecnico riceve un ticket già organizzato e può concentrarsi sulla verifica anziché
-partire da campi vuoti. La proposta non sostituisce la decisione umana: SP-053 renderà
-più esplicite revisione, correzione e gestione degli errori.
+partire da campi vuoti. La pagina distingue la proposta AI dai valori verificati e
+richiede una conferma esplicita del tecnico.
 
 ## Quali dati riceve
 
@@ -37,7 +38,8 @@ matrice deterministica `impatto × urgenza` per aggiungere la priorità.
 Solo dopo la conferma del dipendente il backend crea il ticket. La classificazione viene
 quindi salvata nei campi già esistenti della tabella `tickets`: categoria,
 sottocategoria, impatto, urgenza, priorità e gruppo assegnato. Non sono state aggiunte
-nuove tabelle o dipendenze.
+nuove tabelle o dipendenze. Il campo `classification_review_status` conserva soltanto
+lo stato sicuro del processo, non la risposta grezza o il messaggio del provider.
 
 Un ticket già classificato non viene inviato nuovamente al modello, evitando chiamate
 doppie durante un reinvio della conferma.
@@ -49,14 +51,16 @@ doppie durante un reinvio della conferma.
 - il salvataggio della classificazione può fallire;
 - la proposta può essere valida ma non corretta dal punto di vista operativo.
 
-Nei primi tre casi il ticket confermato resta creato e utilizzabile, ma senza proposta.
-La segnalazione visibile dell'errore e gli strumenti di revisione appartengono a SP-053.
+In caso di provider non disponibile o risposta non valida il ticket resta creato e
+utilizzabile. Il dettaglio tecnico mostra un messaggio distinto e invita a completare i
+campi manualmente. Nessun valore non valido viene applicato e lo stesso fallimento non
+produce chiamate ripetute durante un reinvio della conferma.
 
 ## Chi può usare la funzionalità
 
 La classificazione è un'operazione interna del backend. Il dipendente deve confermare il
-ticket prima che venga eseguita; tecnico e amministratore vedono poi i valori nel
-dettaglio operativo esistente.
+ticket prima che venga eseguita; soltanto tecnico e amministratore possono correggere e
+registrare la verifica tramite pagina operativa o API tecnica.
 
 ## Quale test dimostra che funziona
 
@@ -68,4 +72,7 @@ I test usano modelli simulati e verificano:
 - calcolo backend dei casi P1, P2, P3 e P4 tramite la matrice già testata;
 - salvataggio della proposta sul ticket confermato;
 - assenza di una seconda chiamata per un ticket già classificato;
-- creazione ancora funzionante quando l'AI è disattivata.
+- creazione ancora funzionante quando l'AI è disattivata;
+- stati distinti per proposta, timeout/provider non disponibile e risposta non valida;
+- conferma umana esplicita soltanto con classificazione e gruppo completi;
+- correzione del tecnico con priorità nuovamente calcolata dal backend.
