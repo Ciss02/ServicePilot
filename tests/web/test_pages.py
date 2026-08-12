@@ -14,6 +14,7 @@ from app.ai.dependencies import get_ai_model
 from app.db import (
     AuthSession,
     KnowledgeDocument,
+    KnowledgeSegment,
     Site,
     Ticket,
     User,
@@ -400,20 +401,30 @@ def test_admin_uploads_markdown_and_sees_it_in_the_library(
     )
 
     assert response.status_code == 303
-    assert response.headers["location"] == "/app/knowledge?uploaded=true"
+    assert response.headers["location"] == (
+        "/app/knowledge?uploaded=true&extraction=ready"
+    )
     with Session(database_engine) as session:
         document = session.scalar(select(KnowledgeDocument))
         assert document is not None
         assert document.original_filename == "procedura-wifi-demo.md"
         assert document.content_type == "text/markdown"
+        segments = session.scalars(
+            select(KnowledgeSegment).where(
+                KnowledgeSegment.document_id == document.id
+            )
+        ).all()
+        assert len(segments) == 1
+        assert segments[0].source_section == "Wi-Fi demo"
         stored_path = tmp_path / "knowledge-storage" / document.storage_filename
         assert stored_path.read_bytes().startswith(b"# Wi-Fi demo")
 
     page = client.get(response.headers["location"])
     assert page.status_code == 200
-    assert "Documento conservato correttamente" in page.text
+    assert "Documento elaborato correttamente" in page.text
     assert "procedura-wifi-demo.md" in page.text
     assert "Markdown" in page.text
+    assert "1 segmento" in page.text
 
 
 def test_invalid_admin_upload_shows_error_and_changes_nothing(
@@ -443,6 +454,46 @@ def test_invalid_admin_upload_shows_error_and_changes_nothing(
         ) == 0
     storage_directory = tmp_path / "knowledge-storage"
     assert not storage_directory.exists() or not list(storage_directory.iterdir())
+
+
+def test_admin_sees_when_a_valid_document_has_no_text_to_segment(
+    web_client,
+) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "admin.web@servicepilot.example", password)
+
+    response = client.post(
+        "/app/knowledge",
+        files={
+            "document": (
+                "solo-titolo-demo.md",
+                b"# Solo titolo demo\n",
+                "text/markdown",
+            )
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == (
+        "/app/knowledge?uploaded=true&extraction=failed"
+    )
+    page = client.get(response.headers["location"])
+    assert "Documento conservato, testo non estratto" in page.text
+    assert "Testo non estratto" in page.text
+    with Session(database_engine) as session:
+        document = session.scalar(
+            select(KnowledgeDocument).where(
+                KnowledgeDocument.original_filename == "solo-titolo-demo.md"
+            )
+        )
+        assert document is not None
+        assert document.extraction_status == "failed"
+        assert session.scalar(
+            select(func.count())
+            .select_from(KnowledgeSegment)
+            .where(KnowledgeSegment.document_id == document.id)
+        ) == 0
 
 
 def test_authenticated_visitor_is_redirected_away_from_login(web_client) -> None:

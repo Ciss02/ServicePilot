@@ -71,6 +71,11 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - File conservati con nome interno casuale in una cartella esclusa da Git.
 - Metadati persistenti con nome originale, formato, dimensione, impronta e autore.
 - Pulizia automatica dei file temporanei o definitivi quando il salvataggio fallisce.
+- Estrazione locale del testo dai documenti Markdown e dai PDF con testo selezionabile.
+- Titoli Markdown conservati come percorso di sezione e pagine PDF come fonte stabile.
+- Segmenti fino a 1.200 caratteri con sovrapposizione, ordine e documento di origine.
+- Stato persistente dell'estrazione con conteggio visibile nella knowledge base.
+- Sostituzione atomica dei segmenti che evita duplicati e risultati parziali.
 
 ## Milestone attiva
 
@@ -78,22 +83,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-060 - Upload sicuro dei documenti**
+**SP-061 - Estrazione e segmentazione**
 
-L'amministratore dispone di una pagina dedicata per caricare PDF e Markdown fittizi.
-Il backend verifica nome, estensione, tipo, contenuto e limite di 5 MB prima di salvare
-il file con un nome casuale e registrare i metadati. Ogni errore lascia archivio e
-database senza modifiche parziali.
+I documenti validi vengono elaborati localmente subito dopo l'upload. I titoli Markdown
+e le pagine PDF diventano riferimenti di fonte; il testo viene diviso in segmenti
+ordinati e salvato senza duplicati. La pagina amministrativa distingue documenti pronti,
+da elaborare o senza testo estraibile e mostra il numero reale di segmenti.
 
 ## Prossima attività
 
-**SP-061 - Estrazione e segmentazione**
+**SP-062 - Indicizzazione e ricerca**
 
 Risultato atteso:
 
-- estrarre testo leggibile dai PDF e dai documenti Markdown conservati;
-- dividere il testo in segmenti utili alla futura ricerca;
-- mantenere per ogni segmento documento e sezione di origine.
+- generare una rappresentazione ricercabile dei segmenti conservati;
+- recuperare i passaggi più pertinenti rispetto a una domanda tecnica;
+- mantenere nei risultati documento, sezione e testo della fonte.
 
 ## Blocchi o decisioni aperte
 
@@ -103,7 +108,7 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-061.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-062.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
@@ -322,4 +327,15 @@ Prima di terminare verificare che:
   `127.0.0.1:8010`.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-060.
 - `pytest`: 228 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificata l'estrazione locale di testo selezionabile da PDF reali e Markdown UTF-8.
+- Verificati riferimenti `Pagina N`, titoli Markdown annidati e collegamento al documento.
+- Verificata la suddivisione dei testi lunghi entro 1.200 caratteri con sovrapposizione.
+- Verificati stato `ready` o `failed`, assenza di righe parziali e rielaborazione senza
+  duplicati.
+- Verificato l'aggiornamento ripetibile di un database precedente senza perdere i
+  metadati del documento già presente.
+- Verificato il flusso web con elaborazione immediata e conteggio reale dei segmenti.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-061.
+- `pytest`: 235 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

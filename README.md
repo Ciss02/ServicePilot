@@ -135,6 +135,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Estrazione AI dei dati del ticket](docs/AI_TICKET_EXTRACTION.md)
 - [Classificazione AI suggerita](docs/AI_TICKET_CLASSIFICATION.md)
 - [Upload sicuro dei documenti](docs/KNOWLEDGE_UPLOAD.md)
+- [Estrazione e segmentazione della knowledge base](docs/KNOWLEDGE_EXTRACTION.md)
 
 ### Avvertenza
 

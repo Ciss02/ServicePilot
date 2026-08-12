@@ -2289,6 +2289,24 @@ main {
   font-weight: 850;
 }
 
+.document-state-ready {
+  color: #236d4d;
+  background: #eaf6ef;
+  border-color: #c8e7d5;
+}
+
+.document-state-pending {
+  color: #765a16;
+  background: #fff8df;
+  border-color: #ead99b;
+}
+
+.document-state-failed {
+  color: #9a3d36;
+  background: #fff0ed;
+  border-color: #edc6c1;
+}
+
 .knowledge-empty-state {
   margin-top: 22px;
 }

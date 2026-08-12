@@ -25,6 +25,7 @@ def test_database_creation_is_repeatable(database_engine) -> None:
     assert set(inspect(database_engine).get_table_names()) == {
         "auth_sessions",
         "knowledge_documents",
+        "knowledge_segments",
         "sites",
         "tickets",
         "users",
@@ -123,6 +124,42 @@ def test_existing_ticket_table_receives_classification_review_status(
     assert "classification_review_status" in columns
     assert title == "Ticket locale da conservare"
     assert review_status == "pending"
+
+
+def test_existing_knowledge_document_receives_extraction_state(database_engine) -> None:
+    with database_engine.begin() as connection:
+        connection.execute(
+            text(
+                "CREATE TABLE knowledge_documents ("
+                "id INTEGER PRIMARY KEY, original_filename VARCHAR(255) NOT NULL)"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO knowledge_documents (original_filename) "
+                "VALUES ('procedura-locale.md')"
+            )
+        )
+
+    create_database(database_engine)
+    create_database(database_engine)
+
+    columns = {
+        column["name"]
+        for column in inspect(database_engine).get_columns("knowledge_documents")
+    }
+    with database_engine.connect() as connection:
+        filename, extraction_status, extraction_error = connection.execute(
+            text(
+                "SELECT original_filename, extraction_status, extraction_error "
+                "FROM knowledge_documents"
+            )
+        ).one()
+
+    assert {"extraction_status", "extraction_error"} <= columns
+    assert filename == "procedura-locale.md"
+    assert extraction_status == "pending"
+    assert extraction_error is None
 
 
 def test_initial_records_can_be_saved(database_engine) -> None:

@@ -13,6 +13,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
     func,
     true,
 )
@@ -99,11 +100,15 @@ class Site(Base):
 
 
 class KnowledgeDocument(Base):
-    """Documento amministrativo conservato prima della futura indicizzazione."""
+    """Documento amministrativo conservato e preparato per la ricerca."""
 
     __tablename__ = "knowledge_documents"
     __table_args__ = (
         CheckConstraint("size_bytes > 0", name="ck_knowledge_documents_size"),
+        CheckConstraint(
+            "extraction_status IN ('pending', 'ready', 'failed')",
+            name="ck_knowledge_documents_extraction_status",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -114,9 +119,42 @@ class KnowledgeDocument(Base):
     content_type: Mapped[str] = mapped_column(String(50), nullable=False)
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     checksum_sha256: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    extraction_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending", server_default="pending"
+    )
+    extraction_error: Mapped[str | None] = mapped_column(String(300), nullable=True)
     uploaded_by_user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True
     )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
+    )
+
+
+class KnowledgeSegment(Base):
+    """Passaggio leggibile con il riferimento alla propria fonte."""
+
+    __tablename__ = "knowledge_segments"
+    __table_args__ = (
+        CheckConstraint("position >= 0", name="ck_knowledge_segments_position"),
+        CheckConstraint(
+            "character_count > 0", name="ck_knowledge_segments_character_count"
+        ),
+        UniqueConstraint(
+            "document_id", "position", name="ux_knowledge_segments_document_position"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    document_id: Mapped[int] = mapped_column(
+        ForeignKey("knowledge_documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    source_section: Mapped[str] = mapped_column(String(255), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    character_count: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
     )

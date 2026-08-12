@@ -87,6 +87,27 @@ def create_database(target_engine: Engine = engine) -> None:
                 )
             )
 
+    knowledge_document_columns = {
+        column["name"]
+        for column in inspect(target_engine).get_columns("knowledge_documents")
+    }
+    if "extraction_status" not in knowledge_document_columns:
+        with target_engine.begin() as connection:
+            connection.execute(
+                text(
+                    "ALTER TABLE knowledge_documents ADD COLUMN extraction_status "
+                    "VARCHAR(20) NOT NULL DEFAULT 'pending'"
+                )
+            )
+    if "extraction_error" not in knowledge_document_columns:
+        with target_engine.begin() as connection:
+            connection.execute(
+                text(
+                    "ALTER TABLE knowledge_documents ADD COLUMN extraction_error "
+                    "VARCHAR(300)"
+                )
+            )
+
 
 def get_session() -> Iterator[Session]:
     """Fornisce una sessione isolata e la chiude dopo ogni richiesta."""
