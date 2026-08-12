@@ -76,6 +76,12 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Segmenti fino a 1.200 caratteri con sovrapposizione, ordine e documento di origine.
 - Stato persistente dell'estrazione con conteggio visibile nella knowledge base.
 - Sostituzione atomica dei segmenti che evita duplicati e risultati parziali.
+- Adapter embedding separato e sostituibile con Gemini disattivato per impostazione
+  predefinita.
+- Configurazione di `gemini-embedding-001` con 768 dimensioni e chiave soltanto locale.
+- Vettori normalizzati e persistenti con modello, dimensione, stato e data dell'indice.
+- Ricerca semantica ordinata per similarità con documento, sezione e testo originali.
+- Laboratorio amministrativo per provare domande tecniche senza generare risposte AI.
 
 ## Milestone attiva
 
@@ -83,22 +89,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-061 - Estrazione e segmentazione**
+**SP-062 - Indicizzazione e ricerca**
 
-I documenti validi vengono elaborati localmente subito dopo l'upload. I titoli Markdown
-e le pagine PDF diventano riferimenti di fonte; il testo viene diviso in segmenti
-ordinati e salvato senza duplicati. La pagina amministrativa distingue documenti pronti,
-da elaborare o senza testo estraibile e mostra il numero reale di segmenti.
+I segmenti estratti vengono trasformati in vettori tramite un adapter sostituibile e
+salvati soltanto dopo controlli di numero, dimensione e validità. Il laboratorio della
+knowledge base confronta una domanda con i segmenti indicizzati e mostra i passaggi più
+simili conservando documento, sezione e testo. Test e sviluppo non chiamano Gemini.
 
 ## Prossima attività
 
-**SP-062 - Indicizzazione e ricerca**
+**SP-063 - Soluzione con fonti**
 
 Risultato atteso:
 
-- generare una rappresentazione ricercabile dei segmenti conservati;
-- recuperare i passaggi più pertinenti rispetto a una domanda tecnica;
-- mantenere nei risultati documento, sezione e testo della fonte.
+- usare i passaggi recuperati per generare un suggerimento tecnico;
+- mostrare documento e sezione accanto alla soluzione proposta;
+- mantenere il suggerimento separato dalla decisione finale del tecnico.
 
 ## Blocchi o decisioni aperte
 
@@ -108,11 +114,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-062.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-063.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-061` con il codice dell'attività successiva.
+Sostituire `SP-063` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -338,4 +344,22 @@ Prima di terminare verificare che:
 - Verificato il flusso web con elaborazione immediata e conteggio reale dei segmenti.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-061.
 - `pytest`: 235 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificata la configurazione embedding disattivata senza chiave e attivabile
+  separatamente con Gemini.
+- Verificati modello `gemini-embedding-001`, 768 dimensioni predefinite, timeout e
+  tentativi controllati.
+- Verificati i compiti distinti `RETRIEVAL_DOCUMENT` e `RETRIEVAL_QUERY` senza chiamate
+  esterne nei test.
+- Verificati rifiuto di vettori mancanti, non numerici, non finiti, vuoti o di dimensione
+  errata.
+- Verificata l'indicizzazione completa senza risultati parziali e lo stato `pending`
+  quando il provider è disattivato.
+- Verificato che una domanda sulla connessione remota recuperi per prima la procedura
+  VPN mantenendo documento, sezione e testo.
+- Verificata la compatibilità ripetibile con database creati nelle sessioni precedenti.
+- Verificato il laboratorio web con risultati ordinati e messaggio controllato quando
+  gli embedding sono disattivati.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-062.
+- `pytest`: 259 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

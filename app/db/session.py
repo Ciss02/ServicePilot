@@ -108,6 +108,41 @@ def create_database(target_engine: Engine = engine) -> None:
                 )
             )
 
+    knowledge_document_migrations = {
+        "index_status": (
+            "ALTER TABLE knowledge_documents ADD COLUMN index_status "
+            "VARCHAR(20) NOT NULL DEFAULT 'pending'"
+        ),
+        "index_error": (
+            "ALTER TABLE knowledge_documents ADD COLUMN index_error VARCHAR(300)"
+        ),
+        "embedding_model": (
+            "ALTER TABLE knowledge_documents ADD COLUMN embedding_model VARCHAR(120)"
+        ),
+        "embedding_dimensions": (
+            "ALTER TABLE knowledge_documents ADD COLUMN embedding_dimensions INTEGER"
+        ),
+        "indexed_at": (
+            "ALTER TABLE knowledge_documents ADD COLUMN indexed_at DATETIME"
+        ),
+    }
+    for column_name, statement in knowledge_document_migrations.items():
+        if column_name not in knowledge_document_columns:
+            with target_engine.begin() as connection:
+                connection.execute(text(statement))
+
+    knowledge_segment_columns = {
+        column["name"]
+        for column in inspect(target_engine).get_columns("knowledge_segments")
+    }
+    if "embedding_json" not in knowledge_segment_columns:
+        with target_engine.begin() as connection:
+            connection.execute(
+                text(
+                    "ALTER TABLE knowledge_segments ADD COLUMN embedding_json TEXT"
+                )
+            )
+
 
 def get_session() -> Iterator[Session]:
     """Fornisce una sessione isolata e la chiude dopo ogni richiesta."""

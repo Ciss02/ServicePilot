@@ -10,7 +10,7 @@ from sqlalchemy import Engine, func, select
 from sqlalchemy.orm import Session
 
 from app.ai import AIUnavailableError
-from app.ai.dependencies import get_ai_model
+from app.ai.dependencies import get_ai_model, get_embedding_model
 from app.db import (
     AuthSession,
     KnowledgeDocument,
@@ -250,6 +250,28 @@ class WebUnavailableModelStub:
         raise AIUnavailableError("timeout simulato")
 
 
+class WebKeywordEmbeddingModel:
+    """Indice locale prevedibile per provare il laboratorio senza Gemini."""
+
+    model_name = "embedding-web-fittizio-v1"
+    dimensions = 3
+
+    @staticmethod
+    def _vector(text: str) -> list[float]:
+        normalized = text.casefold()
+        if "vpn" in normalized or "connessione remota" in normalized:
+            return [1.0, 0.0, 0.0]
+        if "account" in normalized or "password" in normalized:
+            return [0.0, 1.0, 0.0]
+        return [0.0, 0.0, 1.0]
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return [self._vector(text) for text in texts]
+
+    def embed_query(self, text: str) -> list[float]:
+        return self._vector(text)
+
+
 def test_login_page_has_accessible_responsive_structure(web_client) -> None:
     client, _, _ = web_client
 
@@ -346,6 +368,8 @@ def test_admin_can_open_knowledge_upload_page(web_client) -> None:
     assert "Carica un documento" in response.text
     assert "PDF e Markdown" in response.text
     assert "Dimensione massima: 5 MB" in response.text
+    assert "Trova i passaggi pertinenti" in response.text
+    assert 'name="q"' in response.text
     assert 'enctype="multipart/form-data"' in response.text
     assert 'aria-current="page"' in response.text
 
@@ -402,7 +426,7 @@ def test_admin_uploads_markdown_and_sees_it_in_the_library(
 
     assert response.status_code == 303
     assert response.headers["location"] == (
-        "/app/knowledge?uploaded=true&extraction=ready"
+        "/app/knowledge?uploaded=true&extraction=ready&indexing=pending"
     )
     with Session(database_engine) as session:
         document = session.scalar(select(KnowledgeDocument))
@@ -425,6 +449,7 @@ def test_admin_uploads_markdown_and_sees_it_in_the_library(
     assert "procedura-wifi-demo.md" in page.text
     assert "Markdown" in page.text
     assert "1 segmento" in page.text
+    assert "Da indicizzare" in page.text
 
 
 def test_invalid_admin_upload_shows_error_and_changes_nothing(
@@ -476,7 +501,7 @@ def test_admin_sees_when_a_valid_document_has_no_text_to_segment(
 
     assert response.status_code == 303
     assert response.headers["location"] == (
-        "/app/knowledge?uploaded=true&extraction=failed"
+        "/app/knowledge?uploaded=true&extraction=failed&indexing=pending"
     )
     page = client.get(response.headers["location"])
     assert "Documento conservato, testo non estratto" in page.text
@@ -494,6 +519,71 @@ def test_admin_sees_when_a_valid_document_has_no_text_to_segment(
             .select_from(KnowledgeSegment)
             .where(KnowledgeSegment.document_id == document.id)
         ) == 0
+
+
+def test_admin_search_finds_a_known_procedure_with_its_source(web_client) -> None:
+    client, database_engine, password = web_client
+    client.app.dependency_overrides[get_embedding_model] = WebKeywordEmbeddingModel
+    login_web(client, "admin.web@servicepilot.example", password)
+
+    vpn_upload = client.post(
+        "/app/knowledge",
+        files={
+            "document": (
+                "procedura-vpn-web-demo.md",
+                b"# VPN demo\n\nChiudere e riaprire il client VPN fittizio.\n",
+                "text/markdown",
+            )
+        },
+        follow_redirects=False,
+    )
+    account_upload = client.post(
+        "/app/knowledge",
+        files={
+            "document": (
+                "procedura-account-web-demo.md",
+                b"# Account demo\n\nAvviare lo sblocco della password fittizia.\n",
+                "text/markdown",
+            )
+        },
+        follow_redirects=False,
+    )
+
+    assert vpn_upload.headers["location"].endswith("indexing=ready")
+    assert account_upload.headers["location"].endswith("indexing=ready")
+    page = client.get(
+        "/app/knowledge",
+        params={"q": "La connessione remota VPN cade spesso"},
+    )
+
+    assert page.status_code == 200
+    assert "procedura-vpn-web-demo.md" in page.text
+    assert "VPN demo" in page.text
+    assert "Chiudere e riaprire il client VPN fittizio" in page.text
+    assert "Pertinenza 100%" in page.text
+    assert page.text.index("procedura-vpn-web-demo.md") < page.text.index(
+        "procedura-account-web-demo.md"
+    )
+    with Session(database_engine) as session:
+        indexed_documents = session.scalars(
+            select(KnowledgeDocument).where(KnowledgeDocument.index_status == "ready")
+        ).all()
+        assert len(indexed_documents) == 2
+        assert all(document.embedding_model for document in indexed_documents)
+
+
+def test_search_explains_when_embeddings_are_disabled(web_client) -> None:
+    client, _, password = web_client
+    login_web(client, "admin.web@servicepilot.example", password)
+
+    page = client.get(
+        "/app/knowledge",
+        params={"q": "Problema VPN fittizio"},
+    )
+
+    assert page.status_code == 200
+    assert "Ricerca non disponibile" in page.text
+    assert "ricerca semantica non è disponibile" in page.text
 
 
 def test_authenticated_visitor_is_redirected_away_from_login(web_client) -> None:

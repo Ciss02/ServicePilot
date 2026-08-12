@@ -120,7 +120,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-061 - Estrazione e segmentazione**
   Estrarre il testo e conservarne documento, sezione e segmenti.
   Verifica: i segmenti mantengono il riferimento alla fonte.
-- [ ] **SP-062 - Indicizzazione e ricerca**
+- [x] **SP-062 - Indicizzazione e ricerca**
   Generare rappresentazioni ricercabili e recuperare passaggi pertinenti.
   Verifica: una procedura nota viene ritrovata da una domanda collegata.
 - [ ] **SP-063 - Soluzione con fonti**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-062**. La milestone attiva è **Milestone 6**.
+La prossima attività è **SP-063**. La milestone attiva è **Milestone 6**.

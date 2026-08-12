@@ -149,17 +149,55 @@ def test_existing_knowledge_document_receives_extraction_state(database_engine) 
         for column in inspect(database_engine).get_columns("knowledge_documents")
     }
     with database_engine.connect() as connection:
-        filename, extraction_status, extraction_error = connection.execute(
+        row = connection.execute(
             text(
-                "SELECT original_filename, extraction_status, extraction_error "
+                "SELECT original_filename, extraction_status, extraction_error, "
+                "index_status, index_error, embedding_model, "
+                "embedding_dimensions, indexed_at "
                 "FROM knowledge_documents"
             )
         ).one()
 
-    assert {"extraction_status", "extraction_error"} <= columns
-    assert filename == "procedura-locale.md"
-    assert extraction_status == "pending"
-    assert extraction_error is None
+    assert {
+        "extraction_status",
+        "extraction_error",
+        "index_status",
+        "index_error",
+        "embedding_model",
+        "embedding_dimensions",
+        "indexed_at",
+    } <= columns
+    assert row.original_filename == "procedura-locale.md"
+    assert row.extraction_status == "pending"
+    assert row.extraction_error is None
+    assert row.index_status == "pending"
+    assert row.index_error is None
+    assert row.embedding_model is None
+    assert row.embedding_dimensions is None
+    assert row.indexed_at is None
+
+
+def test_existing_knowledge_segment_receives_embedding_column(database_engine) -> None:
+    with database_engine.begin() as connection:
+        connection.execute(
+            text("CREATE TABLE knowledge_segments (id INTEGER PRIMARY KEY)")
+        )
+        connection.execute(text("INSERT INTO knowledge_segments DEFAULT VALUES"))
+
+    create_database(database_engine)
+    create_database(database_engine)
+
+    columns = {
+        column["name"]
+        for column in inspect(database_engine).get_columns("knowledge_segments")
+    }
+    with database_engine.connect() as connection:
+        embedding_json = connection.execute(
+            text("SELECT embedding_json FROM knowledge_segments")
+        ).scalar_one()
+
+    assert "embedding_json" in columns
+    assert embedding_json is None
 
 
 def test_initial_records_can_be_saved(database_engine) -> None:

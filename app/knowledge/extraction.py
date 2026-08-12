@@ -181,6 +181,11 @@ def _save_failed_result(
         )
         document.extraction_status = EXTRACTION_FAILED
         document.extraction_error = message[:300]
+        document.index_status = "failed"
+        document.index_error = "Il documento non contiene segmenti da indicizzare."
+        document.embedding_model = None
+        document.embedding_dimensions = None
+        document.indexed_at = None
         session.commit()
     except SQLAlchemyError as error:
         session.rollback()
@@ -236,6 +241,11 @@ def process_knowledge_document(
         )
         document.extraction_status = EXTRACTION_READY
         document.extraction_error = None
+        document.index_status = "pending"
+        document.index_error = None
+        document.embedding_model = None
+        document.embedding_dimensions = None
+        document.indexed_at = None
         session.commit()
     except SQLAlchemyError as error:
         session.rollback()

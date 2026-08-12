@@ -13,8 +13,10 @@ tra ticket, utenti e sedi.
 - `users`: identità fittizia, nome visibile, ruolo, hash della password e stato attivo;
 - `auth_sessions`: impronta del codice casuale, utente collegato, creazione e scadenza;
 - `sites`: codice, nome e stato attivo di una sede fittizia;
-- `knowledge_documents`: file della knowledge base, metadati e stato di estrazione;
-- `knowledge_segments`: testo estratto, posizione e sezione o pagina di origine;
+- `knowledge_documents`: file della knowledge base, metadati, stato di estrazione e
+  stato dell'indice con modello, dimensione e data;
+- `knowledge_segments`: testo estratto, posizione, sezione o pagina di origine e
+  vettore JSON facoltativo;
 - `tickets`: dati confermati della richiesta, classificazione facoltativa,
   assegnazione, stato e date.
 
@@ -52,6 +54,8 @@ modifiche strutturali future.
 - data di creazione e di ultimo aggiornamento.
 - posizione del segmento unica all'interno del documento e collegamento eliminato
   automaticamente insieme al documento.
+- vettori confrontati soltanto quando modello e dimensione del documento corrispondono
+  alla configurazione attiva.
 
 I test usano file SQLite temporanei e non modificano `servicepilot.db`.
 

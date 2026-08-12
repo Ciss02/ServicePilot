@@ -31,7 +31,7 @@ from app.ai import (
     classify_confirmed_ticket,
     extract_ticket_details,
 )
-from app.ai.dependencies import AIModelDependency
+from app.ai.dependencies import AIModelDependency, EmbeddingModelDependency
 from app.api.dependencies import (
     DatabaseSession,
     SessionCookie,
@@ -51,11 +51,19 @@ from app.knowledge import (
     EXTRACTION_FAILED,
     EXTRACTION_PENDING,
     EXTRACTION_READY,
+    INDEX_FAILED,
+    INDEX_PENDING,
+    INDEX_READY,
     KnowledgeDocumentPersistenceError,
     KnowledgeDocumentProcessingError,
     KnowledgeDocumentValidationError,
+    KnowledgeIndexingError,
+    KnowledgeSearchError,
+    KnowledgeSearchValidationError,
     get_knowledge_storage_directory,
+    index_knowledge_document,
     process_knowledge_document,
+    search_knowledge,
     store_knowledge_document,
 )
 from app.security.authentication import (
@@ -264,6 +272,10 @@ def _knowledge_context(
     *,
     uploaded: bool = False,
     extraction: str | None = None,
+    indexing: str | None = None,
+    query: str = "",
+    search_results: list[dict[str, object]] | None = None,
+    search_error: str | None = None,
     error: str | None = None,
 ) -> dict[str, object]:
     """Prepara l'elenco dei documenti senza rivelarne il percorso interno."""
@@ -293,12 +305,16 @@ def _knowledge_context(
     def extraction_presentation(document: KnowledgeDocument) -> tuple[str, str]:
         segment_count = segment_counts.get(document.id, 0)
         if document.extraction_status == EXTRACTION_READY:
-            label = (
+            segment_label = (
                 f"{segment_count} segmento"
                 if segment_count == 1
                 else f"{segment_count} segmenti"
             )
-            return label, "ready"
+            if document.index_status == INDEX_READY:
+                return f"{segment_label} · Indicizzato", "ready"
+            if document.index_status == INDEX_FAILED:
+                return f"{segment_label} · Indice non disponibile", "failed"
+            return f"{segment_label} · Da indicizzare", "pending"
         if document.extraction_status == EXTRACTION_FAILED:
             return "Testo non estratto", "failed"
         return "Da elaborare", "pending"
@@ -330,6 +346,10 @@ def _knowledge_context(
             "documents": presented_documents,
             "uploaded": uploaded,
             "extraction": extraction,
+            "indexing": indexing,
+            "query": query,
+            "search_results": search_results or [],
+            "search_error": search_error,
             "upload_error": error,
         }
     )
@@ -677,13 +697,39 @@ def knowledge_documents(
     request: Request,
     session: DatabaseSession,
     current_user: WebUser,
+    embedding_model: EmbeddingModelDependency,
     uploaded: Annotated[bool, Query()] = False,
     extraction: Annotated[str | None, Query()] = None,
+    indexing: Annotated[str | None, Query()] = None,
+    q: Annotated[str, Query(max_length=500)] = "",
 ) -> Response:
     """Mostra all'amministratore l'upload e i documenti già conservati."""
 
     if redirect := _admin_only(current_user):
         return redirect
+
+    search_results: list[dict[str, object]] = []
+    search_error: str | None = None
+    normalized_query = " ".join(q.split())
+    if normalized_query:
+        try:
+            matches = search_knowledge(
+                session,
+                embedding_model,
+                normalized_query,
+            )
+        except (KnowledgeSearchValidationError, KnowledgeSearchError) as error:
+            search_error = str(error)
+        else:
+            search_results = [
+                {
+                    "filename": match.filename,
+                    "source_section": match.source_section,
+                    "content": match.content,
+                    "score": f"{max(0, min(1, match.score)) * 100:.0f}%",
+                }
+                for match in matches
+            ]
     return templates.TemplateResponse(
         request=request,
         name="admin_knowledge.html",
@@ -692,6 +738,10 @@ def knowledge_documents(
             current_user,
             uploaded=uploaded,
             extraction=extraction,
+            indexing=indexing,
+            query=normalized_query,
+            search_results=search_results,
+            search_error=search_error,
         ),
         headers={"Cache-Control": "no-store"},
     )
@@ -702,6 +752,7 @@ def upload_knowledge_document(
     request: Request,
     session: DatabaseSession,
     current_user: WebUser,
+    embedding_model: EmbeddingModelDependency,
     document: Annotated[UploadFile | None, File()] = None,
 ) -> Response:
     """Controlla e conserva un PDF o Markdown soltanto per l'amministratore."""
@@ -745,8 +796,22 @@ def upload_knowledge_document(
                 extraction = result.status
             except KnowledgeDocumentProcessingError:
                 extraction = EXTRACTION_PENDING
+            indexing = INDEX_PENDING
+            if extraction == EXTRACTION_READY:
+                try:
+                    index_result = index_knowledge_document(
+                        session,
+                        stored_document,
+                        embedding_model,
+                    )
+                    indexing = index_result.status
+                except KnowledgeIndexingError:
+                    indexing = INDEX_FAILED
             return RedirectResponse(
-                url=f"/app/knowledge?uploaded=true&extraction={extraction}",
+                url=(
+                    "/app/knowledge?uploaded=true"
+                    f"&extraction={extraction}&indexing={indexing}"
+                ),
                 status_code=status.HTTP_303_SEE_OTHER,
             )
 

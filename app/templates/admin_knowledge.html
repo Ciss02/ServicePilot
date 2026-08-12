@@ -29,8 +29,16 @@
         {% if uploaded %}
           {% if extraction == "ready" %}
             <div class="upload-success" role="status">
-              <strong>Documento elaborato correttamente.</strong>
-              <span>Il testo è stato diviso in segmenti pronti per la futura ricerca.</span>
+              {% if indexing == "ready" %}
+                <strong>Documento indicizzato correttamente.</strong>
+                <span>I segmenti sono pronti per la ricerca semantica.</span>
+              {% elif indexing == "failed" %}
+                <strong>Testo estratto, indice non disponibile.</strong>
+                <span>Il documento resta conservato e potrà essere indicizzato di nuovo.</span>
+              {% else %}
+                <strong>Documento elaborato correttamente.</strong>
+                <span>Gli embedding sono disattivati: il testo resta pronto da indicizzare.</span>
+              {% endif %}
             </div>
           {% elif extraction == "failed" %}
             <div class="form-alert" role="alert">
@@ -71,6 +79,50 @@
         </ol>
       </section>
     </div>
+
+    <section class="knowledge-search" aria-labelledby="knowledge-search-title">
+      <div class="knowledge-search-heading">
+        <div>
+          <p class="eyebrow">Laboratorio RAG</p>
+          <h2 id="knowledge-search-title">Trova i passaggi pertinenti</h2>
+          <p>Scrivi un problema tecnico: il sistema confronterà la domanda con i segmenti indicizzati, senza generare ancora una risposta.</p>
+        </div>
+        <span class="search-method">Ricerca semantica</span>
+      </div>
+
+      <form class="knowledge-search-form" method="get" action="/app/knowledge" role="search">
+        <label for="knowledge-query">Domanda tecnica</label>
+        <div>
+          <input id="knowledge-query" name="q" type="search" minlength="3" maxlength="500" value="{{ query }}" placeholder="Es. La VPN si disconnette dopo pochi minuti" required>
+          <button class="primary-button" type="submit">Cerca nelle procedure <span aria-hidden="true">→</span></button>
+        </div>
+      </form>
+
+      {% if search_error %}
+        <div class="form-alert knowledge-search-alert" role="alert">
+          <strong>Ricerca non disponibile</strong>
+          <span>{{ search_error }}</span>
+        </div>
+      {% elif query and search_results %}
+        <div class="knowledge-search-results" aria-live="polite">
+          {% for result in search_results %}
+            <article class="knowledge-search-result">
+              <div class="knowledge-result-source">
+                <span>{{ result.filename }}</span>
+                <strong>{{ result.source_section }}</strong>
+              </div>
+              <p>{{ result.content }}</p>
+              <span class="knowledge-result-score">Pertinenza {{ result.score }}</span>
+            </article>
+          {% endfor %}
+        </div>
+      {% elif query %}
+        <div class="empty-state knowledge-search-empty">
+          <span class="empty-state-mark" aria-hidden="true">0</span>
+          <div><h3>Nessun passaggio ricercabile</h3><p>Carica e indicizza una procedura, poi riprova la domanda.</p></div>
+        </div>
+      {% endif %}
+    </section>
 
     <section class="knowledge-library" aria-labelledby="library-title">
       <div class="section-heading">
