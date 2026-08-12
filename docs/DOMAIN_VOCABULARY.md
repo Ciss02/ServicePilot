@@ -122,3 +122,28 @@ nel dettaglio operativo.
 | `ai_invalid_response` | La risposta AI non ha superato i controlli del backend. |
 
 Lo stato non contiene prompt, risposte grezze o dettagli sensibili del provider.
+
+## Tipi di azione proposta
+
+| Valore interno | Significato |
+| --- | --- |
+| `assign_ticket` | Proporre un gruppo e/o un tecnico per il ticket. |
+| `notify_requester` | Proporre una comunicazione destinata al richiedente. |
+| `escalate_vendor` | Proporre un'escalation verso un fornitore fittizio. |
+
+Il tipo determina la forma esatta del payload. Non sono ammessi comandi generici o
+tipi inventati dal modello.
+
+## Stati dell'azione proposta
+
+| Valore interno | Significato |
+| --- | --- |
+| `pending_approval` | Proposta salvata, nessuna autorizzazione o esecuzione. |
+| `approved` | Un tecnico ha autorizzato la futura esecuzione. |
+| `rejected` | Un tecnico ha rifiutato la proposta. |
+| `executing` | Il servizio simulato sta elaborando l'azione. |
+| `succeeded` | Il servizio simulato ha completato l'azione. |
+| `failed` | Il servizio simulato ha restituito un errore controllato. |
+
+SP-070 crea esclusivamente lo stato `pending_approval`. Le transizioni e i relativi
+permessi verranno implementati con approvazione, servizi simulati e audit.

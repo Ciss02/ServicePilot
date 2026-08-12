@@ -4,10 +4,34 @@ from enum import StrEnum
 
 import pytest
 
-from app.domain import Impact, Priority, Role, TicketCategory, TicketStatus, Urgency
+from app.domain import (
+    ActionStatus,
+    ActionType,
+    Impact,
+    Priority,
+    Role,
+    TicketCategory,
+    TicketStatus,
+    Urgency,
+)
 
 
 DOMAIN_VALUES = [
+    (
+        ActionType,
+        {"assign_ticket", "notify_requester", "escalate_vendor"},
+    ),
+    (
+        ActionStatus,
+        {
+            "pending_approval",
+            "approved",
+            "rejected",
+            "executing",
+            "succeeded",
+            "failed",
+        },
+    ),
     (Role, {"employee", "technician", "admin"}),
     (
         TicketCategory,
