@@ -137,7 +137,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-070 - Modello delle azioni proposte**
   Salvare tipo, motivazione, dati, stato ed effetto previsto.
   Verifica: proposta separata dall'esecuzione.
-- [ ] **SP-071 - Servizi REST simulati**
+- [x] **SP-071 - Servizi REST simulati**
   Simulare assegnazione, comunicazione ed escalation, inclusi errori.
   Verifica: successi e fallimenti riproducibili nei test.
 - [ ] **SP-072 - Approvazione del tecnico**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-071**. La milestone attiva è **Milestone 7**.
+La prossima attività è **SP-072**. La milestone attiva è **Milestone 7**.

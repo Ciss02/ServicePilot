@@ -605,3 +605,29 @@ Uno stato chiuso rende il flusso comprensibile senza esporre informazioni intern
 provider. La conferma separata evita che un semplice cambio di stato del ticket venga
 scambiato per approvazione della proposta AI, mentre il percorso manuale mantiene il
 servizio operativo durante timeout o risposte non valide.
+
+## D-026 - Servizi di azione locali, separati e deterministici
+
+**Data:** 12 agosto 2026
+**Stato:** confermata durante SP-071
+
+**Decisione:**
+
+- creare una seconda applicazione FastAPI, non inclusa nelle rotte del portale;
+- esporre un endpoint specifico per assegnazione, comunicazione ed escalation;
+- riusare i payload controllati delle proposte di SP-070;
+- richiedere un UUID di richiesta e un ticket positivo;
+- scegliere esplicitamente lo scenario `success` o `service_unavailable`;
+- produrre riferimenti di successo stabili a partire dall'UUID;
+- restituire errori demo `503` strutturati, ripetibili e dichiarati ritentabili;
+- non salvare dati, non cambiare ticket e non contattare servizi reali;
+- rinviare collegamento, permessi e approvazione a SP-072 e persistenza dell'esito a
+  SP-073.
+
+**Motivazione:**
+
+La separazione consente di dimostrare vere chiamate REST senza rendere gli endpoint
+operativi accessibili tramite il portale e senza anticipare il controllo umano. Un
+errore selezionato, invece che casuale, rende test e demo prevedibili. Il riuso dei
+contratti impedisce che proposta e servizio accettino forme diverse degli stessi dati,
+mentre l'assenza di persistenza mantiene chiara la responsabilità futura dell'audit.

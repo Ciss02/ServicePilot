@@ -72,6 +72,17 @@ Il server sarà disponibile all'indirizzo `http://127.0.0.1:8000`. L'endpoint
 documentazione interattiva delle API è disponibile su `http://127.0.0.1:8000/docs`.
 La pagina di accesso è disponibile su `http://127.0.0.1:8000/login`.
 
+I servizi REST fittizi delle azioni sono un'applicazione separata e possono essere
+avviati, quando servono per una prova locale, su `127.0.0.1:8011`:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.simulated_services.main:app `
+  --host 127.0.0.1 --port 8011
+```
+
+Non assegnano ticket reali e non inviano comunicazioni. Il loro funzionamento è
+descritto in [`docs/SIMULATED_ACTION_SERVICES.md`](docs/SIMULATED_ACTION_SERVICES.md).
+
 Le operazioni di accesso sono `POST /auth/login`, `GET /auth/session` e
 `POST /auth/logout`. Sono inoltre disponibili `POST /tickets`, `GET /tickets`,
 `GET /tickets/{ticket_id}` e `PATCH /tickets/{ticket_id}`. Prima di provarle è possibile
@@ -139,6 +150,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Indicizzazione e ricerca della knowledge base](docs/KNOWLEDGE_SEARCH.md)
 - [Suggerimenti tecnici con fonti](docs/SOURCED_SOLUTIONS.md)
 - [Modello delle azioni proposte](docs/PROPOSED_ACTIONS.md)
+- [Servizi REST simulati per le azioni](docs/SIMULATED_ACTION_SERVICES.md)
 
 ### Avvertenza
 
@@ -189,6 +201,16 @@ python -m pip install -r requirements-dev.txt
 Open `http://127.0.0.1:8000/health` to check the service or
 `http://127.0.0.1:8000/docs` to view the interactive API documentation.
 Open `http://127.0.0.1:8000/login` to use the browser sign-in page.
+
+The separate fake action services can be started locally on `127.0.0.1:8011`:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.simulated_services.main:app `
+  --host 127.0.0.1 --port 8011
+```
+
+They do not assign real tickets or send messages. See
+[`docs/SIMULATED_ACTION_SERVICES.md`](docs/SIMULATED_ACTION_SERVICES.md).
 
 Authentication operations are `POST /auth/login`, `GET /auth/session`, and
 `POST /auth/logout`. Ticket operations are `POST /tickets`, `GET /tickets`,

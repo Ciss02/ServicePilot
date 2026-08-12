@@ -145,5 +145,16 @@ tipi inventati dal modello.
 | `succeeded` | Il servizio simulato ha completato l'azione. |
 | `failed` | Il servizio simulato ha restituito un errore controllato. |
 
-SP-070 crea esclusivamente lo stato `pending_approval`. Le transizioni e i relativi
-permessi verranno implementati con approvazione, servizi simulati e audit.
+SP-070 crea esclusivamente lo stato `pending_approval`. SP-071 rende disponibili
+successi ed errori dei servizi simulati, ma non cambia ancora lo stato persistente della
+proposta. Transizioni e permessi verranno implementati con approvazione e audit.
+
+## Scenari dei servizi simulati
+
+| Valore interno | Significato |
+| --- | --- |
+| `success` | Il simulatore restituisce un completamento fittizio e ripetibile. |
+| `service_unavailable` | Il simulatore restituisce intenzionalmente un errore `503`. |
+
+Lo scenario è un comando esclusivamente dimostrativo e non viene generato dall'agente.
+Consente ai test e alla demo di mostrare lo stesso errore senza dipendere dal caso.
