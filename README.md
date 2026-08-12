@@ -137,6 +137,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Upload sicuro dei documenti](docs/KNOWLEDGE_UPLOAD.md)
 - [Estrazione e segmentazione della knowledge base](docs/KNOWLEDGE_EXTRACTION.md)
 - [Indicizzazione e ricerca della knowledge base](docs/KNOWLEDGE_SEARCH.md)
+- [Suggerimenti tecnici con fonti](docs/SOURCED_SOLUTIONS.md)
 
 ### Avvertenza
 

@@ -34,6 +34,18 @@ from app.knowledge.indexing import (
     index_knowledge_document,
     search_knowledge,
 )
+from app.knowledge.solutions import (
+    SOLUTION_GENERATED,
+    SOLUTION_INVALID_RESPONSE,
+    SOLUTION_PENDING,
+    SOLUTION_UNAVAILABLE,
+    AIProposedSourcedSolution,
+    TicketSolutionPersistenceError,
+    TicketSolutionSourceView,
+    generate_ticket_solution,
+    list_ticket_solution_sources,
+    suggest_sourced_solution,
+)
 
 __all__ = [
     "ALLOWED_DOCUMENT_EXTENSIONS",
@@ -56,10 +68,20 @@ __all__ = [
     "KnowledgeSearchError",
     "KnowledgeSearchResult",
     "KnowledgeSearchValidationError",
+    "SOLUTION_GENERATED",
+    "SOLUTION_INVALID_RESPONSE",
+    "SOLUTION_PENDING",
+    "SOLUTION_UNAVAILABLE",
+    "AIProposedSourcedSolution",
+    "TicketSolutionPersistenceError",
+    "TicketSolutionSourceView",
     "get_knowledge_storage_directory",
     "build_segment_drafts",
     "process_knowledge_document",
     "index_knowledge_document",
     "search_knowledge",
+    "generate_ticket_solution",
+    "list_ticket_solution_sources",
+    "suggest_sourced_solution",
     "store_knowledge_document",
 ]

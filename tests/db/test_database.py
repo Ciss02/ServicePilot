@@ -27,6 +27,7 @@ def test_database_creation_is_repeatable(database_engine) -> None:
         "knowledge_documents",
         "knowledge_segments",
         "sites",
+        "ticket_solution_sources",
         "tickets",
         "users",
     }
@@ -124,6 +125,42 @@ def test_existing_ticket_table_receives_classification_review_status(
     assert "classification_review_status" in columns
     assert title == "Ticket locale da conservare"
     assert review_status == "pending"
+
+
+def test_existing_ticket_receives_ai_solution_columns(database_engine) -> None:
+    with database_engine.begin() as connection:
+        connection.execute(
+            text("CREATE TABLE tickets (id INTEGER PRIMARY KEY, title TEXT NOT NULL)")
+        )
+        connection.execute(
+            text("INSERT INTO tickets (title) VALUES ('Ticket locale da conservare')")
+        )
+
+    create_database(database_engine)
+    create_database(database_engine)
+
+    columns = {
+        column["name"] for column in inspect(database_engine).get_columns("tickets")
+    }
+    with database_engine.connect() as connection:
+        row = connection.execute(
+            text(
+                "SELECT title, ai_suggested_solution, ai_solution_status, "
+                "ai_solution_error, ai_solution_generated_at FROM tickets"
+            )
+        ).one()
+
+    assert {
+        "ai_suggested_solution",
+        "ai_solution_status",
+        "ai_solution_error",
+        "ai_solution_generated_at",
+    } <= columns
+    assert row.title == "Ticket locale da conservare"
+    assert row.ai_suggested_solution is None
+    assert row.ai_solution_status == "pending"
+    assert row.ai_solution_error is None
+    assert row.ai_solution_generated_at is None
 
 
 def test_existing_knowledge_document_receives_extraction_state(database_engine) -> None:

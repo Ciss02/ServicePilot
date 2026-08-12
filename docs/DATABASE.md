@@ -18,7 +18,9 @@ tra ticket, utenti e sedi.
 - `knowledge_segments`: testo estratto, posizione, sezione o pagina di origine e
   vettore JSON facoltativo;
 - `tickets`: dati confermati della richiesta, classificazione facoltativa,
-  assegnazione, stato e date.
+  assegnazione, stato, soluzione finale e suggerimento AI separato;
+- `ticket_solution_sources`: passaggi realmente citati da un suggerimento AI, con
+  ordine e punteggio della ricerca.
 
 La classificazione può essere vuota quando il ticket nasce perché, nel flusso MVP,
 viene proposta dopo la conferma. La priorità sarà sempre calcolata dal backend prima
@@ -56,6 +58,9 @@ modifiche strutturali future.
   automaticamente insieme al documento.
 - vettori confrontati soltanto quando modello e dimensione del documento corrispondono
   alla configurazione attiva.
+- fonti dei suggerimenti collegate a ticket e segmenti esistenti, senza duplicare rango
+  o passaggio nello stesso risultato;
+- suggerimenti invalidati quando una procedura citata viene rielaborata.
 
 I test usano file SQLite temporanei e non modificano `servicepilot.db`.
 

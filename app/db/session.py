@@ -87,6 +87,29 @@ def create_database(target_engine: Engine = engine) -> None:
                 )
             )
 
+    ticket_solution_migrations = {
+        "ai_suggested_solution": (
+            "ALTER TABLE tickets ADD COLUMN ai_suggested_solution TEXT"
+        ),
+        "ai_solution_status": (
+            "ALTER TABLE tickets ADD COLUMN ai_solution_status "
+            "VARCHAR(30) NOT NULL DEFAULT 'pending'"
+        ),
+        "ai_solution_error": (
+            "ALTER TABLE tickets ADD COLUMN ai_solution_error VARCHAR(300)"
+        ),
+        "ai_solution_generated_at": (
+            "ALTER TABLE tickets ADD COLUMN ai_solution_generated_at DATETIME"
+        ),
+    }
+    ticket_columns = {
+        column["name"] for column in inspect(target_engine).get_columns("tickets")
+    }
+    for column_name, statement in ticket_solution_migrations.items():
+        if column_name not in ticket_columns:
+            with target_engine.begin() as connection:
+                connection.execute(text(statement))
+
     knowledge_document_columns = {
         column["name"]
         for column in inspect(target_engine).get_columns("knowledge_documents")

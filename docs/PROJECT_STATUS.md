@@ -82,6 +82,11 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Vettori normalizzati e persistenti con modello, dimensione, stato e data dell'indice.
 - Ricerca semantica ordinata per similarità con documento, sezione e testo originali.
 - Laboratorio amministrativo per provare domande tecniche senza generare risposte AI.
+- Generazione tecnica RAG avviata soltanto su richiesta di tecnico o amministratore.
+- Suggerimento AI separato dalla soluzione finale e salvato insieme alle fonti citate.
+- Documento, sezione, passaggio e punteggio visibili nel dettaglio del ticket.
+- Citazioni inventate rifiutate e suggerimenti invalidati se una procedura viene
+  rielaborata.
 
 ## Milestone attiva
 
@@ -89,22 +94,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-062 - Indicizzazione e ricerca**
+**SP-063 - Soluzione con fonti**
 
-I segmenti estratti vengono trasformati in vettori tramite un adapter sostituibile e
-salvati soltanto dopo controlli di numero, dimensione e validità. Il laboratorio della
-knowledge base confronta una domanda con i segmenti indicizzati e mostra i passaggi più
-simili conservando documento, sezione e testo. Test e sviluppo non chiamano Gemini.
+Il dettaglio tecnico recupera al massimo tre passaggi indicizzati e genera su richiesta
+un suggerimento strutturato. Il backend accetta soltanto identificativi realmente
+recuperati, salva testo e fonti insieme e mantiene separata la soluzione finale del
+tecnico. Test e sviluppo non chiamano Gemini.
 
 ## Prossima attività
 
-**SP-063 - Soluzione con fonti**
+**SP-064 - Risposta prudente**
 
 Risultato atteso:
 
-- usare i passaggi recuperati per generare un suggerimento tecnico;
-- mostrare documento e sezione accanto alla soluzione proposta;
-- mantenere il suggerimento separato dalla decisione finale del tecnico.
+- definire quando i risultati sono assenti o troppo deboli;
+- non generare una soluzione quando le fonti non sono sufficienti;
+- spiegare chiaramente al tecnico perché serve una verifica o nuova documentazione.
 
 ## Blocchi o decisioni aperte
 
@@ -114,11 +119,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-063.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-064.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-063` con il codice dell'attività successiva.
+Sostituire `SP-064` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -362,4 +367,14 @@ Prima di terminare verificare che:
   gli embedding sono disattivati.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-062.
 - `pytest`: 259 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificata la generazione strutturata da ticket e massimo tre passaggi recuperati.
+- Verificato che il backend accetti soltanto identificativi di fonti realmente fornite.
+- Verificato il salvataggio atomico di suggerimento, ordine delle fonti e punteggi.
+- Verificato che il suggerimento non modifichi stato né soluzione finale del tecnico.
+- Verificati accesso di tecnico e amministratore e rifiuto del ruolo dipendente.
+- Verificata l'invalidazione dei suggerimenti quando una procedura citata viene
+  rielaborata.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-063.
+- `pytest`: 267 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

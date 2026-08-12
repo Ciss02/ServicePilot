@@ -8,6 +8,7 @@ from app.db.models import (
     KnowledgeSegment,
     Site,
     Ticket,
+    TicketSolutionSource,
     User,
 )
 from app.db.session import SessionLocal, build_engine, create_database, engine, get_session
@@ -21,6 +22,7 @@ __all__ = [
     "SeedSummary",
     "Site",
     "Ticket",
+    "TicketSolutionSource",
     "User",
     "build_engine",
     "create_database",

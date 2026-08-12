@@ -60,8 +60,11 @@ from app.knowledge import (
     KnowledgeIndexingError,
     KnowledgeSearchError,
     KnowledgeSearchValidationError,
+    TicketSolutionPersistenceError,
     get_knowledge_storage_directory,
     index_knowledge_document,
+    generate_ticket_solution,
+    list_ticket_solution_sources,
     process_knowledge_document,
     search_knowledge,
     store_knowledge_document,
@@ -407,6 +410,8 @@ def _technical_ticket_context(
     errors: dict[str, str] | None = None,
     updated: bool = False,
     classification_reviewed: bool = False,
+    solution_attempted: bool = False,
+    solution_error: str | None = None,
 ) -> dict[str, object]:
     """Prepara dettaglio, scelte consentite e valori del modulo tecnico."""
 
@@ -440,6 +445,9 @@ def _technical_ticket_context(
             "errors": errors or {},
             "updated": updated,
             "classification_reviewed": classification_reviewed,
+            "solution_attempted": solution_attempted,
+            "solution_error": solution_error,
+            "solution_sources": list_ticket_solution_sources(session, ticket.id),
         }
     )
     return context
@@ -1182,6 +1190,7 @@ def employee_ticket_detail(
     created: Annotated[bool, Query()] = False,
     updated: Annotated[bool, Query()] = False,
     classification_reviewed: Annotated[bool, Query()] = False,
+    solution_attempted: Annotated[bool, Query()] = False,
 ) -> Response:
     """Mostra il dettaglio personale o gli strumenti riservati al tecnico."""
 
@@ -1204,6 +1213,7 @@ def employee_ticket_detail(
                 ticket,
                 updated=updated,
                 classification_reviewed=classification_reviewed,
+                solution_attempted=solution_attempted,
             ),
             headers={"Cache-Control": "no-store"},
         )
@@ -1226,6 +1236,66 @@ def employee_ticket_detail(
         name="employee_ticket_detail.html",
         context=context,
         headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post(
+    "/app/tickets/{ticket_id}/suggest-solution",
+    response_class=HTMLResponse,
+)
+def suggest_technical_ticket_solution(
+    request: Request,
+    ticket_id: WebTicketId,
+    session: DatabaseSession,
+    current_user: WebUser,
+    ai_model: AIModelDependency,
+    embedding_model: EmbeddingModelDependency,
+) -> Response:
+    """Genera su richiesta un suggerimento e conserva le fonti realmente usate."""
+
+    if current_user.role not in {Role.TECHNICIAN, Role.ADMIN}:
+        return RedirectResponse(url="/app", status_code=status.HTTP_303_SEE_OTHER)
+
+    ticket = session.get(Ticket, ticket_id)
+    if ticket is None:
+        return templates.TemplateResponse(
+            request=request,
+            name="technician_ticket_not_found.html",
+            context=_workspace_context(current_user, "Ticket non trovato"),
+            status_code=status.HTTP_404_NOT_FOUND,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    try:
+        generate_ticket_solution(
+            session,
+            ticket,
+            ai_model=ai_model,
+            embedding_model=embedding_model,
+        )
+    except TicketSolutionPersistenceError:
+        session.rollback()
+        ticket = session.get(Ticket, ticket_id)
+        return templates.TemplateResponse(
+            request=request,
+            name="technician_ticket_detail.html",
+            context=_technical_ticket_context(
+                session,
+                current_user,
+                ticket,
+                solution_attempted=True,
+                solution_error=(
+                    "Non siamo riusciti a salvare il suggerimento e le sue fonti. "
+                    "Il ticket non è stato modificato."
+                ),
+            ),
+            status_code=status.HTTP_409_CONFLICT,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    return RedirectResponse(
+        url=f"/app/tickets/{ticket_id}?solution_attempted=true",
+        status_code=status.HTTP_303_SEE_OTHER,
     )
 
 
