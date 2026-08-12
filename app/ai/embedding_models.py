@@ -17,6 +17,7 @@ from app.ai.contracts import (
 )
 from app.ai.embedding_configuration import EmbeddingSettings, load_embedding_settings
 from app.ai.gemini import RETRYABLE_HTTP_STATUS_CODES
+from app.ai.usage_limits import AIUsageLimiter, get_ai_usage_limiter
 
 
 class GeminiEmbeddingModel:
@@ -26,11 +27,13 @@ class GeminiEmbeddingModel:
         self,
         settings: EmbeddingSettings,
         client_factory: Callable[..., Any] = genai.Client,
+        usage_limiter: AIUsageLimiter | None = None,
     ) -> None:
         if settings.provider is not AIProvider.GEMINI:
             raise ValueError("GeminiEmbeddingModel richiede il provider gemini")
         self._settings = settings
         self._client_factory = client_factory
+        self._usage_limiter = usage_limiter
 
     @property
     def model_name(self) -> str:
@@ -67,6 +70,8 @@ class GeminiEmbeddingModel:
             task_type=task_type,
             output_dimensionality=self.dimensions,
         )
+        if self._usage_limiter is not None:
+            self._usage_limiter.consume()
         try:
             with self._client_factory(
                 api_key=self._settings.api_key,
@@ -151,10 +156,15 @@ class DisabledEmbeddingModel:
 
 def build_embedding_model(
     settings: EmbeddingSettings | None = None,
+    *,
+    usage_limiter: AIUsageLimiter | None = None,
 ) -> EmbeddingModel:
     """Restituisce il provider configurato dietro il contratto comune."""
 
     configured = settings or load_embedding_settings()
     if configured.provider is AIProvider.GEMINI:
-        return GeminiEmbeddingModel(configured)
+        return GeminiEmbeddingModel(
+            configured,
+            usage_limiter=usage_limiter or get_ai_usage_limiter(),
+        )
     return DisabledEmbeddingModel(configured)

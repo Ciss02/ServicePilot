@@ -1,7 +1,12 @@
 """Test delle funzioni che proteggono i codici di sessione."""
 
 import pytest
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 
+from app.db import AuthSession, User, build_engine, create_database
+from app.domain.vocabulary import Role
+from app.security.authentication import start_user_session
 from app.security.sessions import (
     SESSION_DURATION_SECONDS,
     generate_session_token,
@@ -35,3 +40,34 @@ def test_session_hash_rejects_invalid_tokens(invalid_token) -> None:
 
     with pytest.raises(expected_error):
         hash_session_token(invalid_token)
+
+
+def test_new_login_removes_expired_sessions_and_caps_active_ones(tmp_path) -> None:
+    engine = build_engine(f"sqlite:///{tmp_path / 'session-limit-test.db'}")
+    create_database(engine)
+    now = 1_800_000_000
+    with Session(engine) as session:
+        user = User(
+            email="sessioni.demo@example.test",
+            display_name="Utente Sessioni Demo",
+            role=Role.EMPLOYEE,
+        )
+        session.add(user)
+        session.flush()
+        session.add_all(
+            [
+                AuthSession(token_hash="a" * 64, user_id=user.id, expires_at=now - 1),
+                AuthSession(token_hash="b" * 64, user_id=user.id, expires_at=now + 100),
+                AuthSession(token_hash="c" * 64, user_id=user.id, expires_at=now + 200),
+            ]
+        )
+        session.commit()
+
+        token = start_user_session(session, user, now=now, max_active_sessions=2)
+        stored_hashes = set(session.scalars(select(AuthSession.token_hash)).all())
+
+        assert session.scalar(select(func.count()).select_from(AuthSession)) == 2
+        assert "a" * 64 not in stored_hashes
+        assert hash_session_token(token) in stored_hashes
+
+    engine.dispose()

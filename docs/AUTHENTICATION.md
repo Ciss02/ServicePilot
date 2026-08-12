@@ -32,6 +32,12 @@ su HTTP; in un ambiente HTTPS occorre impostare:
 $env:SERVICEPILOT_SECURE_COOKIES = "true"
 ```
 
+SP-081 limita inoltre il login a 10 tentativi al minuto per client, elimina le sessioni
+scadute durante un nuovo accesso e conserva al massimo 20 sessioni attive per account.
+La modalità pubblica richiede cookie HTTPS e applica controllo dell'origine, host ammessi
+e intestazioni di sicurezza come descritto in
+[`SECURITY_AND_DEMO_LIMITS.md`](SECURITY_AND_DEMO_LIMITS.md).
+
 ## Endpoint
 
 ### `POST /auth/login`
@@ -75,5 +81,5 @@ utilizzabili.
 
 SP-032 usa questa identità per proteggere le API ticket secondo la matrice descritta in
 [`AUTHORIZATION.md`](AUTHORIZATION.md). SP-040 aggiunge la pagina grafica descritta in
-[`WEB_INTERFACE.md`](WEB_INTERFACE.md). Limiti ai tentativi ripetuti e revisione finale
-della sicurezza della demo appartengono a SP-081.
+[`WEB_INTERFACE.md`](WEB_INTERFACE.md). I contatori di login vivono nel singolo processo:
+un deploy con più istanze richiederà un archivio condiviso.

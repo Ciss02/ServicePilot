@@ -15,6 +15,7 @@ from app.ai.contracts import (
     AIUnavailableError,
     ResponseModelT,
 )
+from app.ai.usage_limits import AIUsageLimiter
 
 RETRYABLE_HTTP_STATUS_CODES = [408, 429, 500, 502, 503, 504]
 
@@ -26,11 +27,13 @@ class GeminiAIModel:
         self,
         settings: AISettings,
         client_factory: Callable[..., Any] = genai.Client,
+        usage_limiter: AIUsageLimiter | None = None,
     ) -> None:
         if settings.provider is not AIProvider.GEMINI:
             raise ValueError("GeminiAIModel richiede il provider gemini")
         self._settings = settings
         self._client_factory = client_factory
+        self._usage_limiter = usage_limiter
 
     def generate_structured(
         self,
@@ -59,6 +62,9 @@ class GeminiAIModel:
             response_schema=response_schema,
             max_output_tokens=self._settings.max_output_tokens,
         )
+
+        if self._usage_limiter is not None:
+            self._usage_limiter.consume()
 
         try:
             with self._client_factory(
