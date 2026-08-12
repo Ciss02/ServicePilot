@@ -49,6 +49,11 @@ amministratore con accesso diretto al database rimane tecnicamente in grado di
 intervenire: la demo locale non pretende di sostituire un archivio esterno
 antimanomissione.
 
+L'unica eliminazione prevista dall'app è il ripristino amministrativo dell'intero
+dataset dimostrativo introdotto in SP-074. Richiede la frase `RIPRISTINA DEMO`, cancella
+insieme ticket e relativa cronologia e crea i 9 eventi iniziali. Non permette di
+modificare o rimuovere singoli eventi e non è una funzione adatta a un ambiente reale.
+
 ## 5. Cosa può andare storto
 
 - un errore del database annulla anche l'operazione collegata quando fanno parte della
@@ -58,6 +63,7 @@ antimanomissione.
   fallito senza inventare un successo;
 - un doppio invio già bloccato da SP-072 non aggiunge una seconda esecuzione;
 - un dettaglio JSON illeggibile non viene mostrato liberamente nella pagina.
+- il reset della demo elimina intenzionalmente l'intera cronologia operativa precedente.
 
 ## 6. Chi può usare la funzionalità
 

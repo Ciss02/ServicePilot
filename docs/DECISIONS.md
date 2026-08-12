@@ -686,3 +686,31 @@ stato finale del ticket. La transazione condivisa evita eventi falsi o operazion
 di traccia. Minimizzare i dettagli riduce duplicazione e rischio di esposizione, mentre
 la separazione tra timeline tecnica e registro amministrativo mantiene i permessi
 coerenti con la specifica.
+
+## D-029 - Reset distruttivo limitato ai dati operativi della demo
+
+**Data:** 13 agosto 2026
+**Stato:** confermata durante SP-074
+
+**Decisione:**
+
+- riservare rielaborazione, eliminazione e reset al solo ruolo `admin` nel backend;
+- rielaborare un documento sostituendo segmenti e indice, senza duplicarli;
+- invalidare i suggerimenti AI che citano segmenti eliminati o sostituiti;
+- richiedere una conferma selezionata prima di eliminare una fonte;
+- richiedere la frase esatta `RIPRISTINA DEMO` prima del reset completo;
+- eliminare ticket, azioni, audit, documenti e dati derivati creati durante le prove;
+- ricreare i dati demo iniziali in una sola transazione;
+- conservare account, sedi e sessioni autenticate;
+- cancellare i file documentali soltanto dopo il commit del database e segnalare gli
+  eventuali file orfani;
+- non presentare il reset come backup o funzionalità adatta a dati reali.
+
+**Motivazione:**
+
+Una demo pubblica deve poter tornare a uno stato prevedibile dopo ogni prova. Limitare
+il reset ai dati operativi mantiene disponibile l'accesso amministrativo e riduce il
+rischio di interrompere la sessione durante il ripristino. La frase esplicita rende
+chiaro l'effetto distruttivo, mentre la transazione impedisce un dataset parziale. La
+pulizia del file dopo il commit privilegia la coerenza del database: un eventuale file
+orfano non viene più usato ed è segnalato senza simulare un falso rollback.

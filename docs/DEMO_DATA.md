@@ -43,6 +43,12 @@ Il caricamento non elimina righe estranee al dataset. Tutte le modifiche demo ve
 salvate insieme; in caso di errore la transazione viene annullata per non lasciare dati
 parziali.
 
+L'area amministrativa offre anche un ripristino completo pensato per la demo pubblica.
+A differenza del comando di caricamento, questa operazione elimina tutti i ticket, le
+azioni, gli eventi e i documenti creati durante le prove, poi ricrea il dataset iniziale.
+Richiede la frase `RIPRISTINA DEMO` e conserva account, sedi e sessioni. I dettagli e i
+limiti sono descritti in [`ADMIN_TOOLS.md`](ADMIN_TOOLS.md).
+
 Le password non fanno parte del dataset versionato. Se una variabile manca o è troppo
 corta, il caricamento viene rifiutato prima di aprire la transazione. Ripetere il comando
 mantiene gli hash validi; cambiare una credenziale esterna aggiorna soltanto il relativo
