@@ -4,7 +4,6 @@ from typing import Protocol, TypeVar, runtime_checkable
 
 from pydantic import BaseModel
 
-
 ResponseModelT = TypeVar("ResponseModelT", bound=BaseModel)
 
 

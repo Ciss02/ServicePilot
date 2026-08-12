@@ -16,7 +16,6 @@ from app.ai.contracts import (
     ResponseModelT,
 )
 
-
 RETRYABLE_HTTP_STATUS_CODES = [408, 429, 500, 502, 503, 504]
 
 
@@ -76,9 +75,7 @@ class GeminiAIModel:
                 "Il modello AI non ha risposto entro il tempo previsto"
             ) from error
         except errors.APIError as error:
-            raise AIProviderError(
-                "Il provider AI non ha completato la richiesta"
-            ) from error
+            raise AIProviderError("Il provider AI non ha completato la richiesta") from error
 
         return self._validate_response(response, response_schema)
 
@@ -99,6 +96,4 @@ class GeminiAIModel:
                 raise ValueError("risposta vuota")
             return response_schema.model_validate_json(response_text)
         except (TypeError, ValueError, ValidationError) as error:
-            raise AIInvalidResponseError(
-                "Il provider AI ha restituito dati non validi"
-            ) from error
+            raise AIInvalidResponseError("Il provider AI ha restituito dati non validi") from error

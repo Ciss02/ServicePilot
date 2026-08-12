@@ -7,7 +7,6 @@ from typing import Literal
 from app.db.models import Ticket
 from app.domain.vocabulary import Priority, TicketCategory, TicketStatus
 
-
 EmployeeTicketFilter = Literal["all", "active", "waiting", "completed"]
 
 
@@ -96,21 +95,13 @@ def present_employee_ticket(
         status_label=STATUS_LABELS[ticket.status],
         priority_code=priority_code,
         priority_label=(
-            PRIORITY_LABELS[ticket.priority]
-            if ticket.priority
-            else "Priorità da calcolare"
+            PRIORITY_LABELS[ticket.priority] if ticket.priority else "Priorità da calcolare"
         ),
-        category_label=(
-            CATEGORY_LABELS[ticket.category]
-            if ticket.category
-            else "Da classificare"
-        ),
+        category_label=(CATEGORY_LABELS[ticket.category] if ticket.category else "Da classificare"),
         site_name=site_name,
         service=ticket.service,
         affected_users_label=(
-            "1 persona"
-            if ticket.affected_users == 1
-            else f"{ticket.affected_users} persone"
+            "1 persona" if ticket.affected_users == 1 else f"{ticket.affected_users} persone"
         ),
         assigned_group=ticket.assigned_group or "Non ancora assegnato",
         technician_name=technician_name,
@@ -144,11 +135,7 @@ def filter_employee_tickets(
     if selected_filter == "active":
         return [ticket for ticket in tickets if ticket.status not in completed_statuses]
     if selected_filter == "waiting":
-        return [
-            ticket
-            for ticket in tickets
-            if ticket.status is TicketStatus.WAITING_FOR_REQUESTER
-        ]
+        return [ticket for ticket in tickets if ticket.status is TicketStatus.WAITING_FOR_REQUESTER]
     if selected_filter == "completed":
         return [ticket for ticket in tickets if ticket.status in completed_statuses]
     return tickets

@@ -25,9 +25,7 @@ def test_demo_passwords_are_loaded_for_all_roles() -> None:
     passwords = load_demo_passwords(environment)
 
     assert set(passwords) == {Role.EMPLOYEE, Role.TECHNICIAN, Role.ADMIN}
-    assert passwords[Role.EMPLOYEE] == environment[
-        DEMO_PASSWORD_ENV_BY_ROLE[Role.EMPLOYEE]
-    ]
+    assert passwords[Role.EMPLOYEE] == environment[DEMO_PASSWORD_ENV_BY_ROLE[Role.EMPLOYEE]]
 
 
 def test_missing_demo_password_is_rejected_without_exposing_values() -> None:

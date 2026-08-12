@@ -10,8 +10,8 @@ from sqlalchemy import Engine, func, select
 from sqlalchemy.orm import Session
 
 from app.ai.dependencies import get_ai_model
-from app.db import Site, Ticket, User, build_engine, create_database, get_session
 from app.api.dependencies import require_roles
+from app.db import Site, Ticket, User, build_engine, create_database, get_session
 from app.domain.vocabulary import ClassificationReviewStatus, Priority, Role
 from app.main import create_app
 from app.security.passwords import hash_password
@@ -209,10 +209,7 @@ def test_technician_corrects_and_confirms_ai_classification(api_client) -> None:
     with Session(database_engine) as session:
         saved = session.get(Ticket, ticket_id)
         assert saved is not None
-        assert (
-            saved.classification_review_status
-            is ClassificationReviewStatus.HUMAN_REVIEWED
-        )
+        assert saved.classification_review_status is ClassificationReviewStatus.HUMAN_REVIEWED
 
 
 def test_technician_cannot_confirm_an_incomplete_classification(api_client) -> None:
@@ -364,13 +361,9 @@ def test_update_ticket_resolves_and_closes_with_a_solution(api_client) -> None:
     client, _, password = api_client
     ticket_id = client.post("/tickets", json=valid_ticket_payload()).json()["id"]
     login_as_technician(client, password)
-    assert client.patch(
-        f"/tickets/{ticket_id}", json={"status": "in_progress"}
-    ).status_code == 200
+    assert client.patch(f"/tickets/{ticket_id}", json={"status": "in_progress"}).status_code == 200
 
-    missing_resolution = client.patch(
-        f"/tickets/{ticket_id}", json={"status": "resolved"}
-    )
+    missing_resolution = client.patch(f"/tickets/{ticket_id}", json={"status": "resolved"})
     resolved = client.patch(
         f"/tickets/{ticket_id}",
         json={
@@ -418,9 +411,7 @@ def test_update_ticket_rejects_ineligible_assignee(api_client, user_id: int) -> 
     ticket_id = client.post("/tickets", json=valid_ticket_payload()).json()["id"]
     login_as_technician(client, password)
 
-    response = client.patch(
-        f"/tickets/{ticket_id}", json={"assigned_technician_id": user_id}
-    )
+    response = client.patch(f"/tickets/{ticket_id}", json={"assigned_technician_id": user_id})
 
     assert response.status_code == 422
     assert response.json() == {
@@ -445,9 +436,7 @@ def test_update_ticket_rejects_forbidden_transition_without_partial_save(
     saved = client.get(f"/tickets/{created['id']}").json()
 
     assert response.status_code == 409
-    assert response.json() == {
-        "detail": "Transizione da new a waiting_for_vendor non consentita"
-    }
+    assert response.json() == {"detail": "Transizione da new a waiting_for_vendor non consentita"}
     assert saved["title"] == created["title"]
     assert saved["status"] == "new"
 
@@ -466,14 +455,10 @@ def test_update_ticket_treats_closed_status_as_final(api_client) -> None:
     )
     client.patch(f"/tickets/{ticket_id}", json={"status": "closed"})
 
-    response = client.patch(
-        f"/tickets/{ticket_id}", json={"status": "in_progress"}
-    )
+    response = client.patch(f"/tickets/{ticket_id}", json={"status": "in_progress"})
 
     assert response.status_code == 409
-    assert response.json() == {
-        "detail": "Transizione da closed a in_progress non consentita"
-    }
+    assert response.json() == {"detail": "Transizione da closed a in_progress non consentita"}
 
 
 def test_update_ticket_returns_404_when_missing(api_client) -> None:
@@ -561,9 +546,7 @@ def test_employee_lists_only_own_tickets_and_cannot_read_another_one(
     assert ticket_list.status_code == 200
     assert [ticket["id"] for ticket in ticket_list.json()] == [other_ticket["id"]]
     assert hidden_detail.status_code == 404
-    assert hidden_detail.json() == {
-        "detail": f"Ticket {own_ticket['id']} non trovato"
-    }
+    assert hidden_detail.json() == {"detail": f"Ticket {own_ticket['id']} non trovato"}
 
 
 def test_employee_cannot_use_technical_update(api_client) -> None:
@@ -576,9 +559,7 @@ def test_employee_cannot_use_technical_update(api_client) -> None:
     )
 
     assert response.status_code == 403
-    assert response.json() == {
-        "detail": "Operazione non consentita per il ruolo corrente"
-    }
+    assert response.json() == {"detail": "Operazione non consentita per il ruolo corrente"}
 
 
 @pytest.mark.parametrize(

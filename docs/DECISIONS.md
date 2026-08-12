@@ -714,3 +714,31 @@ rischio di interrompere la sessione durante il ripristino. La frase esplicita re
 chiaro l'effetto distruttivo, mentre la transazione impedisce un dataset parziale. La
 pulizia del file dopo il commit privilegia la coerenza del database: un eventuale file
 orfano non viene più usato ed è segnalato senza simulare un falso rollback.
+
+## D-030 - Un solo controllo di qualità riproducibile in locale e su GitHub
+
+**Data:** 13 agosto 2026
+**Stato:** confermata durante SP-080
+
+**Decisione:**
+
+- usare Ruff 0.16.2 come dipendenza esclusivamente di sviluppo;
+- applicare un formato unico a tutti i file Python;
+- controllare errori Python essenziali e ordine degli import con regole esplicite;
+- usare Python 3.13 sia nello sviluppo documentato sia in GitHub Actions;
+- installare `requirements-dev.txt` da zero prima dei controlli remoti;
+- eseguire `pip check`, lint, verifica della formattazione e `pytest -W error`;
+- avviare il workflow sulle pull request verso `main`, sugli aggiornamenti di `main` e
+  manualmente;
+- concedere al workflow soltanto il permesso di lettura del repository;
+- non fornire password demo o chiavi Gemini ai test automatici;
+- rinviare regole statiche più invasive a revisioni dedicate, evitando di mescolarle
+  alla sola introduzione della formattazione.
+
+**Motivazione:**
+
+Gli stessi comandi su computer locale e GitHub riducono i risultati diversi tra ambienti.
+L'installazione pulita dimostra che il progetto dichiara davvero tutto ciò che serve.
+Ruff riunisce controllo degli errori, import e formattazione in uno strumento veloce,
+mentre la versione bloccata rende il risultato stabile nel tempo. Permessi minimi e
+assenza di segreti mantengono il controllo adatto anche a pull request pubbliche.

@@ -93,9 +93,7 @@ def test_audit_events_cannot_be_updated_or_deleted(audit_context) -> None:
     engine, context = audit_context
     with Session(engine) as session:
         ticket = _create_ticket(session, context)
-        event = session.scalar(
-            select(AuditEvent).where(AuditEvent.ticket_id == ticket.id)
-        )
+        event = session.scalar(select(AuditEvent).where(AuditEvent.ticket_id == ticket.id))
         original_summary = event.summary
         event.summary = "Tentativo di riscrittura"
         with pytest.raises(ValueError, match="append-only"):
@@ -124,6 +122,4 @@ def test_rejected_ticket_update_does_not_create_an_audit_event(audit_context) ->
             )
 
         events = list_ticket_audit_events(session, ticket.id)
-        assert [event.event_type for event in events] == [
-            AuditEventType.TICKET_CREATED
-        ]
+        assert [event.event_type for event in events] == [AuditEventType.TICKET_CREATED]

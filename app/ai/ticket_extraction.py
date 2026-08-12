@@ -11,7 +11,6 @@ from app.ai.contracts import AIInvalidResponseError, AIModel
 from app.domain.ticket_contracts import AffectedUsers, Identifier, ShortText, Title
 from app.domain.ticket_intake import TicketProblemInput
 
-
 SiteCode = Annotated[str, Field(min_length=1, max_length=50)]
 
 
@@ -95,9 +94,7 @@ def extract_ticket_details(
     prompt = json.dumps(
         {
             "description": problem.description,
-            "available_sites": [
-                {"code": site.code, "name": site.name} for site in available_sites
-            ],
+            "available_sites": [{"code": site.code, "name": site.name} for site in available_sites],
         },
         ensure_ascii=False,
     )
@@ -116,9 +113,7 @@ def extract_ticket_details(
         sites_by_code = {site.code.casefold(): site for site in available_sites}
         selected_site = sites_by_code.get(extracted.site_code.casefold())
         if selected_site is None:
-            raise AIInvalidResponseError(
-                "Il modello AI ha indicato una sede non disponibile"
-            )
+            raise AIInvalidResponseError("Il modello AI ha indicato una sede non disponibile")
         site_id = selected_site.id
 
     values = {
@@ -128,9 +123,7 @@ def extract_ticket_details(
         "affected_users": extracted.affected_users,
     }
     missing_fields = tuple(
-        TicketIntakeField(field_name)
-        for field_name, value in values.items()
-        if value is None
+        TicketIntakeField(field_name) for field_name, value in values.items() if value is None
     )
     return TicketExtractionResult(
         **values,

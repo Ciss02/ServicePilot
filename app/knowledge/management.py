@@ -28,9 +28,7 @@ class DocumentDeletionResult:
 
 def _safe_stored_path(document: KnowledgeDocument, storage_directory: Path) -> Path:
     if Path(document.storage_filename).name != document.storage_filename:
-        raise KnowledgeDocumentDeletionError(
-            "Il percorso interno del documento non è valido."
-        )
+        raise KnowledgeDocumentDeletionError("Il percorso interno del documento non è valido.")
     root = storage_directory.resolve()
     path = (root / document.storage_filename).resolve()
     try:

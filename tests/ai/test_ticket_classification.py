@@ -8,12 +8,12 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.ai.contracts import AIInvalidResponseError, AIUnavailableError
 from app.ai.ticket_classification import (
     AIProposedTicketClassification,
     classify_confirmed_ticket,
     suggest_ticket_classification,
 )
-from app.ai.contracts import AIInvalidResponseError, AIUnavailableError
 from app.db import AuditEvent, Site, Ticket, User, build_engine, create_database
 from app.domain.vocabulary import (
     AssignmentGroup,
@@ -109,9 +109,7 @@ def test_suggestion_uses_controlled_options_and_backend_priority() -> None:
     }
     assert "p1" not in prompt
     assert "Supporto rete" in prompt["allowed_assignment_groups"]
-    assert "non proporre né restituire la priorità" in call[
-        "system_instruction"
-    ].casefold()
+    assert "non proporre né restituire la priorità" in call["system_instruction"].casefold()
 
 
 @pytest.mark.parametrize(
@@ -167,10 +165,7 @@ def test_classification_is_saved_once_with_deterministic_priority(tmp_path) -> N
         assert classified.urgency.value == "medium"
         assert classified.priority is Priority.P2
         assert classified.assigned_group == "Supporto rete"
-        assert (
-            classified.classification_review_status
-            is ClassificationReviewStatus.AI_SUGGESTED
-        )
+        assert classified.classification_review_status is ClassificationReviewStatus.AI_SUGGESTED
         assert len(model.calls) == 1
         audit_events = list(session.scalars(select(AuditEvent)).all())
         assert [event.event_type for event in audit_events] == [

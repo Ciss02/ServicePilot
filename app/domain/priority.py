@@ -2,7 +2,6 @@
 
 from app.domain.vocabulary import Impact, Priority, Urgency
 
-
 _PRIORITY_MATRIX: dict[tuple[Impact, Urgency], Priority] = {
     (Impact.LOW, Urgency.LOW): Priority.P4,
     (Impact.LOW, Urgency.MEDIUM): Priority.P4,

@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.domain.vocabulary import Role
 
-
 Email = Annotated[str, Field(min_length=3, max_length=254)]
 Password = Annotated[str, Field(min_length=1, max_length=1_024, repr=False)]
 Identifier = Annotated[int, Field(strict=True, gt=0)]

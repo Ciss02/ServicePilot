@@ -16,9 +16,7 @@ from app.security.sessions import (
 def authenticate_user(session: Session, credentials: LoginRequest) -> User | None:
     """Restituisce un account attivo quando email e password sono corrette."""
 
-    user = session.scalar(
-        select(User).where(func.lower(User.email) == credentials.email)
-    )
+    user = session.scalar(select(User).where(func.lower(User.email) == credentials.email))
     if (
         user is None
         or not user.is_active

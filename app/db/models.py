@@ -127,9 +127,7 @@ class KnowledgeDocument(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
-    storage_filename: Mapped[str] = mapped_column(
-        String(80), nullable=False, unique=True
-    )
+    storage_filename: Mapped[str] = mapped_column(String(80), nullable=False, unique=True)
     content_type: Mapped[str] = mapped_column(String(50), nullable=False)
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     checksum_sha256: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
@@ -143,9 +141,7 @@ class KnowledgeDocument(Base):
     index_error: Mapped[str | None] = mapped_column(String(300), nullable=True)
     embedding_model: Mapped[str | None] = mapped_column(String(120), nullable=True)
     embedding_dimensions: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    indexed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    indexed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     uploaded_by_user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True
     )
@@ -160,12 +156,8 @@ class KnowledgeSegment(Base):
     __tablename__ = "knowledge_segments"
     __table_args__ = (
         CheckConstraint("position >= 0", name="ck_knowledge_segments_position"),
-        CheckConstraint(
-            "character_count > 0", name="ck_knowledge_segments_character_count"
-        ),
-        UniqueConstraint(
-            "document_id", "position", name="ux_knowledge_segments_document_position"
-        ),
+        CheckConstraint("character_count > 0", name="ck_knowledge_segments_character_count"),
+        UniqueConstraint("document_id", "position", name="ux_knowledge_segments_document_position"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -194,8 +186,7 @@ class Ticket(Base):
             name="ck_tickets_affected_users",
         ),
         CheckConstraint(
-            "ai_solution_status IN "
-            "('pending', 'generated', 'unavailable', 'invalid_response')",
+            "ai_solution_status IN ('pending', 'generated', 'unavailable', 'invalid_response')",
             name="ck_tickets_ai_solution_status",
         ),
         Index("ux_tickets_creation_key", "creation_key", unique=True),
@@ -217,12 +208,8 @@ class Ticket(Base):
         _enum_column(TicketCategory, "ticket_category"), nullable=True
     )
     subcategory: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    impact: Mapped[Impact | None] = mapped_column(
-        _enum_column(Impact, "impact"), nullable=True
-    )
-    urgency: Mapped[Urgency | None] = mapped_column(
-        _enum_column(Urgency, "urgency"), nullable=True
-    )
+    impact: Mapped[Impact | None] = mapped_column(_enum_column(Impact, "impact"), nullable=True)
+    urgency: Mapped[Urgency | None] = mapped_column(_enum_column(Urgency, "urgency"), nullable=True)
     priority: Mapped[Priority | None] = mapped_column(
         _enum_column(Priority, "priority"), nullable=True
     )
@@ -273,9 +260,7 @@ class TicketSolutionSource(Base):
             "similarity_score BETWEEN -1.0 AND 1.0",
             name="ck_ticket_solution_sources_score",
         ),
-        UniqueConstraint(
-            "ticket_id", "rank", name="ux_ticket_solution_sources_ticket_rank"
-        ),
+        UniqueConstraint("ticket_id", "rank", name="ux_ticket_solution_sources_ticket_rank"),
         UniqueConstraint(
             "ticket_id",
             "segment_id",
@@ -338,16 +323,10 @@ class ProposedAction(Base):
     reviewed_by_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    decided_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    execution_reference: Mapped[str | None] = mapped_column(
-        String(80), nullable=True
-    )
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    execution_reference: Mapped[str | None] = mapped_column(String(80), nullable=True)
     execution_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    execution_error_code: Mapped[str | None] = mapped_column(
-        String(100), nullable=True
-    )
+    execution_error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
     )
@@ -398,9 +377,7 @@ class AuditEvent(Base):
         nullable=True,
         index=True,
     )
-    event_key: Mapped[str | None] = mapped_column(
-        String(160), nullable=True, unique=True
-    )
+    event_key: Mapped[str | None] = mapped_column(String(160), nullable=True, unique=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
     )
@@ -412,4 +389,3 @@ def _prevent_audit_event_mutation(*_: object) -> None:
     """Impedisce modifiche o cancellazioni accidentali tramite l'ORM."""
 
     raise ValueError("Gli eventi di audit sono append-only")
-

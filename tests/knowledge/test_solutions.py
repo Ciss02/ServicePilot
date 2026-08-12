@@ -222,9 +222,7 @@ def test_invalid_citation_is_saved_as_controlled_failure(solution_context) -> No
         assert ticket.ai_solution_status == SOLUTION_INVALID_RESPONSE
         assert ticket.ai_suggested_solution is None
         assert session.scalar(select(TicketSolutionSource)) is None
-        assert session.scalar(select(AuditEvent)).event_type is (
-            AuditEventType.AI_SOLUTION_INVALID
-        )
+        assert session.scalar(select(AuditEvent)).event_type is (AuditEventType.AI_SOLUTION_INVALID)
 
 
 def test_unavailable_ai_keeps_ticket_usable_without_sources(solution_context) -> None:

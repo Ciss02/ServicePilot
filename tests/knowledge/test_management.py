@@ -66,9 +66,7 @@ def test_delete_document_invalidates_cited_solution_and_removes_file(tmp_path) -
         )
         process_knowledge_document(session, document, storage_directory)
         segment = session.scalar(
-            select(KnowledgeSegment).where(
-                KnowledgeSegment.document_id == document.id
-            )
+            select(KnowledgeSegment).where(KnowledgeSegment.document_id == document.id)
         )
         session.add(
             TicketSolutionSource(

@@ -3,7 +3,6 @@
 from pwdlib import PasswordHash
 from pwdlib.exceptions import PwdlibError
 
-
 _password_hash = PasswordHash.recommended()
 
 

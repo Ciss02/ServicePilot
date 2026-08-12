@@ -19,7 +19,6 @@ from app.ai.contracts import (
 from app.db.models import KnowledgeDocument, KnowledgeSegment
 from app.knowledge.extraction import EXTRACTION_READY
 
-
 INDEX_PENDING = "pending"
 INDEX_READY = "ready"
 INDEX_FAILED = "failed"
@@ -81,9 +80,7 @@ def _clear_segment_embeddings(
     document_id: int,
 ) -> None:
     segments = session.scalars(
-        select(KnowledgeSegment).where(
-            KnowledgeSegment.document_id == document_id
-        )
+        select(KnowledgeSegment).where(KnowledgeSegment.document_id == document_id)
     ).all()
     for segment in segments:
         segment.embedding_json = None
@@ -138,9 +135,7 @@ def index_knowledge_document(
         return IndexingResult(status=INDEX_FAILED, indexed_segments=0)
 
     try:
-        raw_vectors = embedding_model.embed_documents(
-            [segment.content for segment in segments]
-        )
+        raw_vectors = embedding_model.embed_documents([segment.content for segment in segments])
     except EmbeddingUnavailableError:
         _save_index_state(
             session,
@@ -168,10 +163,7 @@ def index_knowledge_document(
         return IndexingResult(status=INDEX_FAILED, indexed_segments=0)
 
     try:
-        vectors = [
-            _normalize_vector(vector, embedding_model.dimensions)
-            for vector in raw_vectors
-        ]
+        vectors = [_normalize_vector(vector, embedding_model.dimensions) for vector in raw_vectors]
     except ValueError as error:
         _save_index_state(
             session,
@@ -209,18 +201,11 @@ def search_knowledge(
     """Recupera i segmenti più simili mantenendo documento e sezione."""
 
     normalized_query = " ".join(query.split())
-    if not (
-        MIN_SEARCH_QUERY_CHARACTERS
-        <= len(normalized_query)
-        <= MAX_SEARCH_QUERY_CHARACTERS
-    ):
-        raise KnowledgeSearchValidationError(
-            "Scrivi una domanda compresa tra 3 e 500 caratteri."
-        )
+    if not (MIN_SEARCH_QUERY_CHARACTERS <= len(normalized_query) <= MAX_SEARCH_QUERY_CHARACTERS):
+        raise KnowledgeSearchValidationError("Scrivi una domanda compresa tra 3 e 500 caratteri.")
     if not 1 <= limit <= MAX_SEARCH_LIMIT:
         raise ValueError(
-            "Il limite dei risultati deve essere compreso tra "
-            f"1 e {MAX_SEARCH_LIMIT}."
+            f"Il limite dei risultati deve essere compreso tra 1 e {MAX_SEARCH_LIMIT}."
         )
 
     try:

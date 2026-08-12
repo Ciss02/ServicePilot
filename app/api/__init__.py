@@ -1,2 +1,1 @@
 """Endpoint REST di ServicePilot."""
-

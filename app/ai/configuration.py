@@ -5,7 +5,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-
 AI_PROVIDER_ENV = "SERVICEPILOT_AI_PROVIDER"
 AI_MODEL_ENV = "SERVICEPILOT_AI_MODEL"
 AI_TIMEOUT_ENV = "SERVICEPILOT_AI_TIMEOUT_SECONDS"
@@ -45,13 +44,9 @@ class AISettings:
         if not self.model.strip():
             raise AIConfigurationError(f"{AI_MODEL_ENV} non può essere vuoto")
         if not 1 <= self.timeout_seconds <= 60:
-            raise AIConfigurationError(
-                f"{AI_TIMEOUT_ENV} deve essere compreso tra 1 e 60"
-            )
+            raise AIConfigurationError(f"{AI_TIMEOUT_ENV} deve essere compreso tra 1 e 60")
         if not 1 <= self.max_attempts <= 3:
-            raise AIConfigurationError(
-                f"{AI_MAX_ATTEMPTS_ENV} deve essere compreso tra 1 e 3"
-            )
+            raise AIConfigurationError(f"{AI_MAX_ATTEMPTS_ENV} deve essere compreso tra 1 e 3")
         if not 64 <= self.max_output_tokens <= 4096:
             raise AIConfigurationError(
                 f"{AI_MAX_OUTPUT_TOKENS_ENV} deve essere compreso tra 64 e 4096"
@@ -71,9 +66,7 @@ def _read_integer(
     try:
         return int(raw_value)
     except ValueError as error:
-        raise AIConfigurationError(
-            f"{variable_name} deve contenere un numero intero"
-        ) from error
+        raise AIConfigurationError(f"{variable_name} deve contenere un numero intero") from error
 
 
 def load_ai_settings(
@@ -87,9 +80,7 @@ def load_ai_settings(
         provider = AIProvider(provider_value.strip().casefold())
     except ValueError as error:
         allowed = ", ".join(provider.value for provider in AIProvider)
-        raise AIConfigurationError(
-            f"{AI_PROVIDER_ENV} deve essere uno tra: {allowed}"
-        ) from error
+        raise AIConfigurationError(f"{AI_PROVIDER_ENV} deve essere uno tra: {allowed}") from error
 
     api_key = source.get(GEMINI_API_KEY_ENV, "").strip() or None
     return AISettings(

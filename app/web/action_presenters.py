@@ -15,7 +15,6 @@ from app.domain.action_contracts import (
 )
 from app.domain.vocabulary import ActionStatus, ActionType
 
-
 ACTION_TYPE_LABELS = {
     ActionType.ASSIGN_TICKET: "Assegnazione del ticket",
     ActionType.NOTIFY_REQUESTER: "Comunicazione al richiedente",
@@ -107,11 +106,7 @@ def present_action_proposals(
         )
         if identifier is not None
     }
-    users = (
-        session.scalars(select(User).where(User.id.in_(user_ids))).all()
-        if user_ids
-        else []
-    )
+    users = session.scalars(select(User).where(User.id.in_(user_ids))).all() if user_ids else []
     users_by_id = {user.id: user for user in users}
 
     return [

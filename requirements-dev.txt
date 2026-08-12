@@ -4,3 +4,4 @@
 # Strumenti usati soltanto durante lo sviluppo
 httpx2==2.7.0
 pytest==9.1.1
+ruff==0.16.2

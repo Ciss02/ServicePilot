@@ -7,7 +7,6 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.domain.vocabulary import ActionStatus, ActionType, AssignmentGroup
 
-
 Identifier = Annotated[int, Field(strict=True, gt=0)]
 Rationale = Annotated[str, Field(min_length=20, max_length=1_000)]
 ExpectedEffect = Annotated[str, Field(min_length=10, max_length=1_000)]
@@ -49,11 +48,7 @@ class VendorEscalationPayload(_ActionContract):
     summary: EscalationSummary
 
 
-ActionPayload = (
-    AssignmentActionPayload
-    | RequesterCommunicationPayload
-    | VendorEscalationPayload
-)
+ActionPayload = AssignmentActionPayload | RequesterCommunicationPayload | VendorEscalationPayload
 
 
 class ActionProposalCreate(_ActionContract):

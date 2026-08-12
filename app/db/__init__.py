@@ -35,4 +35,3 @@ __all__ = [
     "load_demo_data",
     "seed_demo_data",
 ]
-

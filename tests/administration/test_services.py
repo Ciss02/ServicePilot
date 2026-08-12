@@ -30,9 +30,7 @@ def reset_context(tmp_path):
     with Session(engine) as session:
         seed_demo_data(session, passwords)
         session.commit()
-        admin = session.scalar(
-            select(User.id).where(User.email == "admin@servicepilot.example")
-        )
+        admin = session.scalar(select(User.id).where(User.email == "admin@servicepilot.example"))
         stored_file = storage_directory / "reset-demo.md"
         stored_file.write_text("# Demo\n\nContenuto fittizio.", encoding="utf-8")
         session.add(

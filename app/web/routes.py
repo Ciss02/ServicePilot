@@ -10,12 +10,14 @@ from fastapi import (
     File,
     Form,
     HTTPException,
-    Path as PathParameter,
     Query,
     Request,
     Response,
     UploadFile,
     status,
+)
+from fastapi import (
+    Path as PathParameter,
 )
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -23,20 +25,6 @@ from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.audit import (
-    list_audit_events,
-    list_ticket_audit_events,
-    present_audit_events,
-)
-from app.ai import (
-    AIModelError,
-    AvailableSite,
-    TicketClassificationPersistenceError,
-    TicketIntakeField,
-    classify_confirmed_ticket,
-    extract_ticket_details,
-)
-from app.ai.dependencies import AIModelDependency, EmbeddingModelDependency
 from app.actions import (
     ActionAlreadyDecidedError,
     ActionDecisionPersistenceError,
@@ -50,10 +38,24 @@ from app.administration import (
     DemoResetError,
     reset_demo_dataset,
 )
+from app.ai import (
+    AIModelError,
+    AvailableSite,
+    TicketClassificationPersistenceError,
+    TicketIntakeField,
+    classify_confirmed_ticket,
+    extract_ticket_details,
+)
+from app.ai.dependencies import AIModelDependency, EmbeddingModelDependency
 from app.api.dependencies import (
     DatabaseSession,
     SessionCookie,
     get_current_user,
+)
+from app.audit import (
+    list_audit_events,
+    list_ticket_audit_events,
+    present_audit_events,
 )
 from app.db.models import AuditEvent, KnowledgeDocument, KnowledgeSegment, Site, Ticket, User
 from app.domain.auth_contracts import LoginRequest
@@ -72,23 +74,23 @@ from app.knowledge import (
     INDEX_FAILED,
     INDEX_PENDING,
     INDEX_READY,
+    KnowledgeDocumentDeletionError,
+    KnowledgeDocumentNotFoundError,
     KnowledgeDocumentPersistenceError,
     KnowledgeDocumentProcessingError,
     KnowledgeDocumentValidationError,
-    KnowledgeDocumentDeletionError,
-    KnowledgeDocumentNotFoundError,
     KnowledgeIndexingError,
     KnowledgeSearchError,
     KnowledgeSearchValidationError,
     TicketSolutionPersistenceError,
+    delete_knowledge_document,
+    generate_ticket_solution,
     get_knowledge_storage_directory,
     index_knowledge_document,
-    generate_ticket_solution,
     list_ticket_solution_sources,
     process_knowledge_document,
     search_knowledge,
     store_knowledge_document,
-    delete_knowledge_document,
 )
 from app.security.authentication import (
     authenticate_user,
@@ -113,6 +115,7 @@ from app.tickets.management import (
     update_managed_ticket,
 )
 from app.tickets.queries import get_visible_ticket, list_visible_tickets
+from app.web.action_presenters import present_action_proposals
 from app.web.technician_presenters import (
     CATEGORY_OPTIONS,
     IMPACT_OPTIONS,
@@ -127,7 +130,6 @@ from app.web.technician_presenters import (
     present_technician_tickets,
     summarize_technician_queue,
 )
-from app.web.action_presenters import present_action_proposals
 from app.web.ticket_presenters import (
     EmployeeTicketFilter,
     EmployeeTicketView,
@@ -135,7 +137,6 @@ from app.web.ticket_presenters import (
     present_employee_ticket,
     summarize_employee_tickets,
 )
-
 
 TEMPLATES_DIRECTORY = Path(__file__).resolve().parents[1] / "templates"
 templates = Jinja2Templates(directory=TEMPLATES_DIRECTORY)
@@ -241,9 +242,7 @@ def _intake_context(
             "values": values or {},
             "errors": errors or {},
             "requested_fields": (
-                requested_fields
-                if requested_fields is not None
-                else ALL_INTAKE_FIELDS
+                requested_fields if requested_fields is not None else ALL_INTAKE_FIELDS
             ),
             "ai_assisted": ai_assisted,
             "missing_details": [
@@ -270,9 +269,7 @@ def _active_sites(session: Session) -> list[Site]:
     """Mostra soltanto sedi attive, ordinate per nome."""
 
     return list(
-        session.scalars(
-            select(Site).where(Site.is_active.is_(True)).order_by(Site.name)
-        ).all()
+        session.scalars(select(Site).where(Site.is_active.is_(True)).order_by(Site.name)).all()
     )
 
 
@@ -328,8 +325,9 @@ def _knowledge_context(
     uploader_names = {uploader.id: uploader.display_name for uploader in uploaders}
     segment_counts = dict(
         session.execute(
-            select(KnowledgeSegment.document_id, func.count(KnowledgeSegment.id))
-            .group_by(KnowledgeSegment.document_id)
+            select(KnowledgeSegment.document_id, func.count(KnowledgeSegment.id)).group_by(
+                KnowledgeSegment.document_id
+            )
         ).all()
     )
 
@@ -337,9 +335,7 @@ def _knowledge_context(
         segment_count = segment_counts.get(document.id, 0)
         if document.extraction_status == EXTRACTION_READY:
             segment_label = (
-                f"{segment_count} segmento"
-                if segment_count == 1
-                else f"{segment_count} segmenti"
+                f"{segment_count} segmento" if segment_count == 1 else f"{segment_count} segmenti"
             )
             if document.index_status == INDEX_READY:
                 return f"{segment_label} · Indicizzato", "ready"
@@ -357,11 +353,7 @@ def _knowledge_context(
             {
                 "id": document.id,
                 "filename": document.original_filename,
-                "format": (
-                    "PDF"
-                    if document.content_type == "application/pdf"
-                    else "Markdown"
-                ),
+                "format": ("PDF" if document.content_type == "application/pdf" else "Markdown"),
                 "size": f"{document.size_bytes / 1024:.1f} KB",
                 "uploaded_by": uploader_names.get(
                     document.uploaded_by_user_id, "Amministratore demo"
@@ -408,9 +400,7 @@ def _audit_context(
         ticket_id=ticket_id,
     )
     count_rows = session.execute(
-        select(AuditEvent.actor_type, func.count(AuditEvent.id)).group_by(
-            AuditEvent.actor_type
-        )
+        select(AuditEvent.actor_type, func.count(AuditEvent.id)).group_by(AuditEvent.actor_type)
     ).all()
     counts = {actor.value: count for actor, count in count_rows}
     context = _workspace_context(current_user, "Audit log")
@@ -441,9 +431,7 @@ def _present_tickets(
         if ticket.assigned_technician_id is not None
     }
     sites = (
-        list(session.scalars(select(Site).where(Site.id.in_(site_ids))).all())
-        if site_ids
-        else []
+        list(session.scalars(select(Site).where(Site.id.in_(site_ids))).all()) if site_ids else []
     )
     technicians = (
         list(session.scalars(select(User).where(User.id.in_(technician_ids))).all())
@@ -505,9 +493,7 @@ def _technical_ticket_context(
         action_load_error = None
     except ActionProposalDataError:
         action_proposals = []
-        action_load_error = (
-            "Le azioni salvate non possono essere mostrate in modo affidabile."
-        )
+        action_load_error = "Le azioni salvate non possono essere mostrate in modo affidabile."
 
     context.update(
         {
@@ -603,13 +589,9 @@ def _technical_update_payload(
 
     if review_classification:
         if not all(required_classification):
-            errors["classification"] = (
-                "Completa categoria, impatto e urgenza prima di confermare."
-            )
+            errors["classification"] = "Completa categoria, impatto e urgenza prima di confermare."
         if not assigned_group.strip():
-            errors["assigned_group"] = (
-                "Indica il gruppo prima di confermare la classificazione."
-            )
+            errors["assigned_group"] = "Indica il gruppo prima di confermare la classificazione."
         if not errors:
             raw_payload["classification_reviewed"] = True
 
@@ -674,9 +656,7 @@ def submit_login(
     """Controlla il form e apre una sessione usando le stesse regole delle API."""
 
     try:
-        credentials = LoginRequest.model_validate(
-            {"email": email, "password": password}
-        )
+        credentials = LoginRequest.model_validate({"email": email, "password": password})
     except ValidationError:
         credentials = None
 
@@ -936,10 +916,7 @@ def upload_knowledge_document(
                 except KnowledgeIndexingError:
                     indexing = INDEX_FAILED
             return RedirectResponse(
-                url=(
-                    "/app/knowledge?uploaded=true"
-                    f"&extraction={extraction}&indexing={indexing}"
-                ),
+                url=(f"/app/knowledge?uploaded=true&extraction={extraction}&indexing={indexing}"),
                 status_code=status.HTTP_303_SEE_OTHER,
             )
 
@@ -1056,9 +1033,7 @@ def reset_demo_data(
             context=_knowledge_context(
                 session,
                 current_user,
-                reset_error=(
-                    f"Scrivi esattamente {DEMO_RESET_CONFIRMATION} per confermare."
-                ),
+                reset_error=(f"Scrivi esattamente {DEMO_RESET_CONFIRMATION} per confermare."),
             ),
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             headers={"Cache-Control": "no-store"},
@@ -1123,8 +1098,7 @@ def collect_ticket_problem(
         extraction = extract_ticket_details(
             problem.description,
             available_sites=[
-                AvailableSite(id=site.id, code=site.code, name=site.name)
-                for site in active_sites
+                AvailableSite(id=site.id, code=site.code, name=site.name) for site in active_sites
             ],
             ai_model=ai_model,
         )
@@ -1141,9 +1115,7 @@ def collect_ticket_problem(
         }
         requested_fields = [field.value for field in extraction.missing_fields]
         if not requested_fields:
-            selected_site = next(
-                site for site in active_sites if site.id == extraction.site_id
-            )
+            selected_site = next(site for site in active_sites if site.id == extraction.site_id)
             return templates.TemplateResponse(
                 request=request,
                 name="employee_ticket_intake.html",
@@ -1223,9 +1195,7 @@ def collect_ticket_details(
         details = TicketMissingDetailsInput.model_validate(
             {
                 "title": title,
-                "site_id": (
-                    int(clean_site_id) if clean_site_id.isdecimal() else clean_site_id
-                ),
+                "site_id": (int(clean_site_id) if clean_site_id.isdecimal() else clean_site_id),
                 "service": service,
                 "affected_users": (
                     int(clean_affected_users)
@@ -1345,9 +1315,7 @@ def confirm_ticket_draft(
         "site_id": int(clean_site_id) if clean_site_id.isdecimal() else clean_site_id,
         "service": service,
         "affected_users": (
-            int(clean_affected_users)
-            if clean_affected_users.isdecimal()
-            else clean_affected_users
+            int(clean_affected_users) if clean_affected_users.isdecimal() else clean_affected_users
         ),
         "confirmed": confirmed == "true",
     }
@@ -1419,9 +1387,7 @@ def confirm_ticket_draft(
                     "creation_key": validated_key,
                 },
                 errors={
-                    "confirmation": (
-                        "Non siamo riusciti a creare il ticket. Riprova tra poco."
-                    )
+                    "confirmation": ("Non siamo riusciti a creare il ticket. Riprova tra poco.")
                 },
             ),
             status_code=status.HTTP_409_CONFLICT,
@@ -1718,16 +1684,12 @@ def update_technical_ticket(
     except ResolutionRequiredError:
         errors["resolution"] = "Scrivi la soluzione prima di risolvere o chiudere."
     except ClassificationReviewRequiredError:
-        errors["classification"] = (
-            "Completa la classificazione prima di confermare la revisione."
-        )
+        errors["classification"] = "Completa la classificazione prima di confermare la revisione."
     except TicketUpdatePersistenceError:
         errors["update"] = "Non siamo riusciti a salvare. Riprova tra poco."
     else:
         result_query = (
-            "classification_reviewed=true"
-            if review_classification == "true"
-            else "updated=true"
+            "classification_reviewed=true" if review_classification == "true" else "updated=true"
         )
         return RedirectResponse(
             url=f"/app/tickets/{ticket_id}?{result_query}",

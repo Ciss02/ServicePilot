@@ -6,7 +6,6 @@ from fastapi import Response
 
 from app.security.sessions import SESSION_COOKIE_NAME, SESSION_DURATION_SECONDS
 
-
 SECURE_COOKIES_ENV = "SERVICEPILOT_SECURE_COOKIES"
 
 

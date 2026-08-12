@@ -64,9 +64,7 @@ def embedding_settings() -> EmbeddingSettings:
 
 
 def embedding_response(*vectors: list[float]) -> SimpleNamespace:
-    return SimpleNamespace(
-        embeddings=[SimpleNamespace(values=vector) for vector in vectors]
-    )
+    return SimpleNamespace(embeddings=[SimpleNamespace(values=vector) for vector in vectors])
 
 
 def padded_vector(*values: float) -> list[float]:

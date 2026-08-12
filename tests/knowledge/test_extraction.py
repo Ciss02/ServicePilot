@@ -52,21 +52,11 @@ def make_text_pdf(*page_texts: str) -> bytes:
     for page_text in page_texts:
         page = PageObject.create_blank_page(width=612, height=792)
         page[NameObject("/Resources")] = DictionaryObject(
-            {
-                NameObject("/Font"): DictionaryObject(
-                    {NameObject("/F1"): font_reference}
-                )
-            }
+            {NameObject("/Font"): DictionaryObject({NameObject("/F1"): font_reference})}
         )
         stream = DecodedStreamObject()
-        escaped_text = (
-            page_text.replace("\\", "\\\\")
-            .replace("(", "\\(")
-            .replace(")", "\\)")
-        )
-        stream.set_data(
-            f"BT /F1 12 Tf 72 720 Td ({escaped_text}) Tj ET".encode("ascii")
-        )
+        escaped_text = page_text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+        stream.set_data(f"BT /F1 12 Tf 72 720 Td ({escaped_text}) Tj ET".encode("ascii"))
         page[NameObject("/Contents")] = writer._add_object(stream)
         writer.add_page(page)
 
@@ -109,9 +99,7 @@ def test_markdown_segments_keep_document_and_heading_path(extraction_context) ->
 
     result = process_knowledge_document(session, document, storage_directory)
     segments = list(
-        session.scalars(
-            select(KnowledgeSegment).order_by(KnowledgeSegment.position)
-        ).all()
+        session.scalars(select(KnowledgeSegment).order_by(KnowledgeSegment.position)).all()
     )
 
     assert result.status == EXTRACTION_READY
@@ -139,9 +127,7 @@ def test_long_section_is_split_without_losing_its_source(extraction_context) -> 
 
     result = process_knowledge_document(session, document, storage_directory)
     segments = list(
-        session.scalars(
-            select(KnowledgeSegment).order_by(KnowledgeSegment.position)
-        ).all()
+        session.scalars(select(KnowledgeSegment).order_by(KnowledgeSegment.position)).all()
     )
 
     assert result.segment_count > 1
@@ -168,9 +154,7 @@ def test_pdf_segments_use_page_number_as_source(extraction_context) -> None:
 
     result = process_knowledge_document(session, document, storage_directory)
     segments = list(
-        session.scalars(
-            select(KnowledgeSegment).order_by(KnowledgeSegment.position)
-        ).all()
+        session.scalars(select(KnowledgeSegment).order_by(KnowledgeSegment.position)).all()
     )
 
     assert result.status == EXTRACTION_READY
