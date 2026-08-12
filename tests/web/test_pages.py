@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import Engine, func, select
 from sqlalchemy.orm import Session
 
+from app.ai import AIUnavailableError
 from app.ai.dependencies import get_ai_model
 from app.db import (
     AuthSession,
@@ -20,6 +21,7 @@ from app.db import (
     get_session,
 )
 from app.domain.vocabulary import (
+    ClassificationReviewStatus,
     Impact,
     Priority,
     Role,
@@ -232,6 +234,13 @@ class WebClassificationModelStub:
                 "assigned_group": "Supporto rete",
             }
         )
+
+
+class WebUnavailableModelStub:
+    """Simula un timeout controllato durante la classificazione."""
+
+    def generate_structured(self, **_kwargs):
+        raise AIUnavailableError("timeout simulato")
 
 
 def test_login_page_has_accessible_responsive_structure(web_client) -> None:
@@ -609,6 +618,120 @@ def test_technician_can_open_full_ticket_detail(web_client) -> None:
     assert 'value="in_progress"' in response.text
     assert 'value="resolved"' not in response.text
     assert "built-in method update" not in response.text
+
+
+@pytest.mark.parametrize(
+    ("review_status", "expected_message"),
+    [
+        (ClassificationReviewStatus.AI_SUGGESTED, "Proposta AI · Da verificare"),
+        (ClassificationReviewStatus.AI_UNAVAILABLE, "AI non disponibile"),
+        (
+            ClassificationReviewStatus.AI_INVALID_RESPONSE,
+            "Risposta AI non utilizzabile",
+        ),
+    ],
+)
+def test_technical_detail_explains_ai_classification_state(
+    web_client,
+    review_status: ClassificationReviewStatus,
+    expected_message: str,
+) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        ticket = session.scalar(
+            select(Ticket).where(
+                Ticket.title == "Ticket riservato a un altro dipendente"
+            )
+        )
+        ticket.classification_review_status = review_status
+        session.commit()
+        ticket_id = ticket.id
+
+    response = client.get(f"/app/tickets/{ticket_id}")
+
+    assert response.status_code == 200
+    assert expected_message in response.text
+    assert 'name="review_classification" value="true"' in response.text
+
+
+def test_technician_explicitly_reviews_and_corrects_classification(
+    web_client,
+) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        ticket_id = session.scalar(
+            select(Ticket.id).where(
+                Ticket.title == "VPN demo in attesa di informazioni"
+            )
+        )
+
+    response = client.post(
+        f"/app/tickets/{ticket_id}/update",
+        data={
+            "status": "waiting_for_requester",
+            "assigned_group": "Supporto rete",
+            "category": "network_and_connectivity",
+            "subcategory": "Accesso remoto",
+            "impact": "high",
+            "urgency": "medium",
+            "technician_note": "Indicare un orario demo per la verifica.",
+            "resolution": "",
+            "review_classification": "true",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"].endswith("?classification_reviewed=true")
+    with Session(database_engine) as session:
+        ticket = session.get(Ticket, ticket_id)
+        assert ticket is not None
+        assert ticket.subcategory == "Accesso remoto"
+        assert ticket.priority is Priority.P2
+        assert ticket.assigned_group == "Supporto rete"
+        assert (
+            ticket.classification_review_status
+            is ClassificationReviewStatus.HUMAN_REVIEWED
+        )
+
+    detail = client.get(response.headers["location"])
+    assert "Classificazione verificata" in detail.text
+    assert "Verificata dal tecnico" in detail.text
+
+
+def test_web_review_requires_complete_classification_and_group(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        ticket_id = session.scalar(
+            select(Ticket.id).where(
+                Ticket.title == "Ticket riservato a un altro dipendente"
+            )
+        )
+
+    response = client.post(
+        f"/app/tickets/{ticket_id}/update",
+        data={
+            "status": "new",
+            "category": "network_and_connectivity",
+            "impact": "medium",
+            "urgency": "medium",
+            "assigned_group": "",
+            "review_classification": "true",
+        },
+    )
+
+    assert response.status_code == 422
+    assert "Indica il gruppo prima di confermare" in response.text
+    with Session(database_engine) as session:
+        ticket = session.get(Ticket, ticket_id)
+        assert ticket is not None
+        assert (
+            ticket.classification_review_status
+            is ClassificationReviewStatus.PENDING
+        )
 
 
 def test_technician_completes_a_ticket_lifecycle_from_the_web(web_client) -> None:
@@ -1083,6 +1206,59 @@ def test_confirmation_saves_ai_classification_for_technical_review(
         assert ticket.urgency is Urgency.HIGH
         assert ticket.priority is Priority.P2
         assert ticket.assigned_group == "Supporto rete"
+        assert (
+            ticket.classification_review_status
+            is ClassificationReviewStatus.AI_SUGGESTED
+        )
+
+
+def test_ai_timeout_keeps_web_ticket_usable_for_manual_review(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    client.app.dependency_overrides[get_ai_model] = WebUnavailableModelStub
+    with Session(database_engine) as session:
+        site_id = session.scalar(select(Site.id).where(Site.code == "WEB-DEMO"))
+
+    summary = client.post(
+        "/app/new-ticket/details",
+        data={
+            "description": "La VPN demo non risponde durante il test del timeout.",
+            "title": "VPN demo con timeout AI",
+            "site_id": str(site_id),
+            "service": "Accesso remoto",
+            "affected_users": "2",
+        },
+    )
+    confirmation_data = ticket_confirmation_data(summary.text, site_id)
+    confirmation_data["confirmed"] = "true"
+    response = client.post(
+        "/app/new-ticket/confirm",
+        data=confirmation_data,
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    with Session(database_engine) as session:
+        ticket = session.scalar(
+            select(Ticket).where(
+                Ticket.creation_key == confirmation_data["creation_key"]
+            )
+        )
+        assert ticket is not None
+        assert ticket.category is None
+        assert (
+            ticket.classification_review_status
+            is ClassificationReviewStatus.AI_UNAVAILABLE
+        )
+        ticket_id = ticket.id
+
+    client.post("/logout", follow_redirects=False)
+    login_web(client, "tecnico.web@servicepilot.example", password)
+    detail = client.get(f"/app/tickets/{ticket_id}")
+
+    assert detail.status_code == 200
+    assert "AI non disponibile" in detail.text
+    assert "Completa manualmente" in detail.text
 
 
 def test_missing_explicit_confirmation_creates_nothing(web_client) -> None:

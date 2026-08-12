@@ -47,6 +47,7 @@ class TechnicianTicketView:
     priority_code: str
     priority_label: str
     assigned_group: str
+    classification_review_status: str
     assigned_technician_id: int | None
     technician_name: str
     status_code: str
@@ -142,6 +143,7 @@ def present_technician_tickets(
                     else "Priorità da calcolare"
                 ),
                 assigned_group=ticket.assigned_group or "",
+                classification_review_status=ticket.classification_review_status.value,
                 assigned_technician_id=ticket.assigned_technician_id,
                 technician_name=(
                     technician.display_name if technician else "Non assegnato"

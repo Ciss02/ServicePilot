@@ -6,12 +6,13 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.ai.contracts import AIInvalidResponseError, AIModel
+from app.ai.contracts import AIInvalidResponseError, AIModel, AIModelError
 from app.db.models import Site, Ticket
 from app.domain.priority import calculate_priority
 from app.domain.ticket_contracts import ShortText
 from app.domain.vocabulary import (
     AssignmentGroup,
+    ClassificationReviewStatus,
     Impact,
     Priority,
     TicketCategory,
@@ -123,6 +124,9 @@ def classify_confirmed_ticket(
 ) -> Ticket:
     """Classifica una sola volta un ticket nuovo e salva la proposta completa."""
 
+    if ticket.classification_review_status is not ClassificationReviewStatus.PENDING:
+        return ticket
+
     if all(
         value is not None
         for value in (
@@ -140,13 +144,30 @@ def classify_confirmed_ticket(
         raise TicketClassificationPersistenceError(
             "La sede del ticket non è disponibile"
         )
-    suggestion = suggest_ticket_classification(ticket, site=site, ai_model=ai_model)
+    try:
+        suggestion = suggest_ticket_classification(ticket, site=site, ai_model=ai_model)
+    except AIInvalidResponseError:
+        ticket.classification_review_status = (
+            ClassificationReviewStatus.AI_INVALID_RESPONSE
+        )
+        return _save_classification_result(session, ticket)
+    except AIModelError:
+        ticket.classification_review_status = ClassificationReviewStatus.AI_UNAVAILABLE
+        return _save_classification_result(session, ticket)
+
     ticket.category = suggestion.category
     ticket.subcategory = suggestion.subcategory
     ticket.impact = suggestion.impact
     ticket.urgency = suggestion.urgency
     ticket.priority = suggestion.priority
     ticket.assigned_group = suggestion.assigned_group.value
+    ticket.classification_review_status = ClassificationReviewStatus.AI_SUGGESTED
+
+    return _save_classification_result(session, ticket)
+
+
+def _save_classification_result(session: Session, ticket: Ticket) -> Ticket:
+    """Salva sia una proposta valida sia un esito sicuro del tentativo AI."""
 
     try:
         session.commit()

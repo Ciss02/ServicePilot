@@ -97,6 +97,33 @@ def test_existing_ticket_table_receives_unique_creation_key(database_engine) -> 
     assert preserved_title == "Ticket locale esistente"
 
 
+def test_existing_ticket_table_receives_classification_review_status(
+    database_engine,
+) -> None:
+    with database_engine.begin() as connection:
+        connection.execute(
+            text("CREATE TABLE tickets (id INTEGER PRIMARY KEY, title TEXT NOT NULL)")
+        )
+        connection.execute(
+            text("INSERT INTO tickets (title) VALUES ('Ticket locale da conservare')")
+        )
+
+    create_database(database_engine)
+    create_database(database_engine)
+
+    columns = {
+        column["name"] for column in inspect(database_engine).get_columns("tickets")
+    }
+    with database_engine.connect() as connection:
+        title, review_status = connection.execute(
+            text("SELECT title, classification_review_status FROM tickets")
+        ).one()
+
+    assert "classification_review_status" in columns
+    assert title == "Ticket locale da conservare"
+    assert review_status == "pending"
+
+
 def test_initial_records_can_be_saved(database_engine) -> None:
     create_database(database_engine)
 

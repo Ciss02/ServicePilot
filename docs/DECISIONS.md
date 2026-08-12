@@ -578,3 +578,30 @@ L'AI riduce il lavoro iniziale del tecnico, ma non deve introdurre codici o grup
 arbitrari né decidere la priorità. Separare prima la creazione e poi la classificazione
 garantisce che un problema esterno non faccia perdere una richiesta già confermata. Il
 riuso dei campi esistenti mantiene la modifica piccola e compatibile con il database.
+
+## D-025 - Revisione esplicita e stati di errore sicuri
+
+**Data:** 12 agosto 2026
+**Stato:** confermata durante SP-053
+
+**Decisione:**
+
+- salvare uno stato controllato della classificazione: in attesa, proposta AI,
+  verificata, AI non disponibile o risposta non valida;
+- non salvare prompt, risposta grezza o dettagli tecnici del provider;
+- distinguere visivamente una proposta AI da una classificazione verificata;
+- richiedere un pulsante separato per la conferma del tecnico;
+- richiedere categoria, impatto, urgenza e gruppo completi nella pagina web;
+- accettare nelle API soltanto `classification_reviewed=true` come conferma esplicita;
+- ricalcolare sempre la priorità dopo una correzione;
+- conservare il ticket e permettere la classificazione manuale in caso di errore AI;
+- non ripetere automaticamente lo stesso tentativo fallito durante un doppio invio;
+- aggiornare in modo ripetibile anche i database SQLite locali esistenti.
+
+**Motivazione:**
+
+Il tecnico deve sapere se sta osservando un suggerimento o una decisione già verificata.
+Uno stato chiuso rende il flusso comprensibile senza esporre informazioni interne del
+provider. La conferma separata evita che un semplice cambio di stato del ticket venga
+scambiato per approvazione della proposta AI, mentre il percorso manuale mantiene il
+servizio operativo durante timeout o risposte non valide.

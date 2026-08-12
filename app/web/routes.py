@@ -57,6 +57,7 @@ from app.tickets.creation import (
     create_confirmed_ticket,
 )
 from app.tickets.management import (
+    ClassificationReviewRequiredError,
     InvalidStatusTransitionError,
     ManagedTechnicianNotFoundError,
     ManagedTechnicianUnavailableError,
@@ -286,6 +287,7 @@ def _technical_ticket_context(
     values: dict[str, str] | None = None,
     errors: dict[str, str] | None = None,
     updated: bool = False,
+    classification_reviewed: bool = False,
 ) -> dict[str, object]:
     """Prepara dettaglio, scelte consentite e valori del modulo tecnico."""
 
@@ -318,6 +320,7 @@ def _technical_ticket_context(
             "values": values or default_values,
             "errors": errors or {},
             "updated": updated,
+            "classification_reviewed": classification_reviewed,
         }
     )
     return context
@@ -334,6 +337,7 @@ def _technical_update_payload(
     urgency: str,
     technician_note: str,
     resolution: str,
+    review_classification: bool = False,
 ) -> tuple[TicketUpdate | None, dict[str, str], dict[str, str]]:
     """Converte il modulo in un contratto sicuro e messaggi comprensibili."""
 
@@ -382,6 +386,18 @@ def _technical_update_payload(
             )
         except ValidationError:
             errors["classification"] = "Controlla i dati della classificazione."
+
+    if review_classification:
+        if not all(required_classification):
+            errors["classification"] = (
+                "Completa categoria, impatto e urgenza prima di confermare."
+            )
+        if not assigned_group.strip():
+            errors["assigned_group"] = (
+                "Indica il gruppo prima di confermare la classificazione."
+            )
+        if not errors:
+            raw_payload["classification_reviewed"] = True
 
     if errors:
         return None, values, errors
@@ -914,6 +930,7 @@ def employee_ticket_detail(
     current_user: WebUser,
     created: Annotated[bool, Query()] = False,
     updated: Annotated[bool, Query()] = False,
+    classification_reviewed: Annotated[bool, Query()] = False,
 ) -> Response:
     """Mostra il dettaglio personale o gli strumenti riservati al tecnico."""
 
@@ -935,6 +952,7 @@ def employee_ticket_detail(
                 current_user,
                 ticket,
                 updated=updated,
+                classification_reviewed=classification_reviewed,
             ),
             headers={"Cache-Control": "no-store"},
         )
@@ -975,6 +993,7 @@ def update_technical_ticket(
     urgency: Annotated[str, Form()] = "",
     technician_note: Annotated[str, Form()] = "",
     resolution: Annotated[str, Form()] = "",
+    review_classification: Annotated[str, Form()] = "",
 ) -> Response:
     """Controlla e salva assegnazione, classificazione e avanzamento manuali."""
 
@@ -1001,6 +1020,7 @@ def update_technical_ticket(
         urgency=urgency,
         technician_note=technician_note,
         resolution=resolution,
+        review_classification=review_classification == "true",
     )
     if payload is None:
         return templates.TemplateResponse(
@@ -1033,11 +1053,20 @@ def update_technical_ticket(
         errors["status"] = "Questo passaggio di stato non è consentito."
     except ResolutionRequiredError:
         errors["resolution"] = "Scrivi la soluzione prima di risolvere o chiudere."
+    except ClassificationReviewRequiredError:
+        errors["classification"] = (
+            "Completa la classificazione prima di confermare la revisione."
+        )
     except TicketUpdatePersistenceError:
         errors["update"] = "Non siamo riusciti a salvare. Riprova tra poco."
     else:
+        result_query = (
+            "classification_reviewed=true"
+            if review_classification == "true"
+            else "updated=true"
+        )
         return RedirectResponse(
-            url=f"/app/tickets/{ticket_id}?updated=true",
+            url=f"/app/tickets/{ticket_id}?{result_query}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
 

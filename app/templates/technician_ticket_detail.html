@@ -14,6 +14,13 @@
       </div>
     {% endif %}
 
+    {% if classification_reviewed %}
+      <div class="ticket-created-alert" role="status">
+        <span aria-hidden="true">✓</span>
+        <p><strong>Classificazione verificata</strong>La revisione del tecnico e la priorità ricalcolata sono state salvate.</p>
+      </div>
+    {% endif %}
+
     <header class="ticket-detail-heading technical-detail-heading">
       <div>
         <div class="ticket-row-meta">
@@ -81,6 +88,24 @@
 
           <fieldset>
             <legend>Classificazione</legend>
+            <div class="classification-review classification-review-{{ ticket.classification_review_status }}" role="status">
+              {% if ticket.classification_review_status == "ai_suggested" %}
+                <span class="classification-review-badge">Proposta AI · Da verificare</span>
+                <p>Controlla i valori proposti, correggili se necessario e conferma la classificazione.</p>
+              {% elif ticket.classification_review_status == "human_reviewed" %}
+                <span class="classification-review-badge">Verificata dal tecnico</span>
+                <p>I valori sono stati controllati da una persona. Puoi modificarli e confermarli nuovamente.</p>
+              {% elif ticket.classification_review_status == "ai_invalid_response" %}
+                <span class="classification-review-badge">Risposta AI non utilizzabile</span>
+                <p>Nessun valore non valido è stato applicato. Completa manualmente i campi e conferma.</p>
+              {% elif ticket.classification_review_status == "ai_unavailable" %}
+                <span class="classification-review-badge">AI non disponibile</span>
+                <p>Il ticket è stato creato normalmente. Completa manualmente i campi e conferma.</p>
+              {% else %}
+                <span class="classification-review-badge">Da verificare</span>
+                <p>Controlla o completa la classificazione prima di confermarla.</p>
+              {% endif %}
+            </div>
             {% if errors.classification %}<div class="form-alert" role="alert">{{ errors.classification }}</div>{% endif %}
             <div class="field-group">
               <label for="category">Categoria</label>
@@ -110,6 +135,10 @@
               </div>
             </div>
             <small class="calculation-note">La priorità verrà ricalcolata automaticamente.</small>
+            <button class="classification-review-button" type="submit" name="review_classification" value="true">
+              {% if ticket.classification_review_status == "human_reviewed" %}Aggiorna verifica{% else %}Conferma classificazione{% endif %}
+              <span aria-hidden="true">✓</span>
+            </button>
           </fieldset>
 
           <fieldset>

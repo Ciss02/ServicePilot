@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.db.models import Site, Ticket, User
 from app.domain.ticket_contracts import TicketUpdate
 from app.domain.ticket_workflow import can_transition_status
-from app.domain.vocabulary import Role, TicketStatus
+from app.domain.vocabulary import ClassificationReviewStatus, Role, TicketStatus
 
 
 class TicketManagementError(Exception):
@@ -46,6 +46,10 @@ class TicketUpdatePersistenceError(TicketManagementError):
     """Il database non ha potuto salvare l'aggiornamento."""
 
 
+class ClassificationReviewRequiredError(TicketManagementError):
+    """La conferma umana richiede una classificazione completa."""
+
+
 def update_managed_ticket(
     session: Session,
     ticket_id: int,
@@ -80,7 +84,10 @@ def update_managed_ticket(
         ):
             raise ResolutionRequiredError
 
-    update_values = payload.model_dump(exclude_unset=True, exclude={"classification"})
+    update_values = payload.model_dump(
+        exclude_unset=True,
+        exclude={"classification", "classification_reviewed"},
+    )
     for field_name, value in update_values.items():
         setattr(ticket, field_name, value)
 
@@ -90,6 +97,16 @@ def update_managed_ticket(
         ticket.impact = payload.classification.impact
         ticket.urgency = payload.classification.urgency
         ticket.priority = payload.classification.priority
+
+    if payload.classification_reviewed:
+        if not all(
+            value is not None
+            for value in (ticket.category, ticket.impact, ticket.urgency, ticket.priority)
+        ):
+            raise ClassificationReviewRequiredError
+        ticket.classification_review_status = (
+            ClassificationReviewStatus.HUMAN_REVIEWED
+        )
 
     try:
         session.commit()
