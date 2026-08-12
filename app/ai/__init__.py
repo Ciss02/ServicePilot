@@ -14,6 +14,13 @@ from app.ai.contracts import (
     AIUnavailableError,
 )
 from app.ai.factory import build_ai_model
+from app.ai.ticket_classification import (
+    AIProposedTicketClassification,
+    TicketClassificationPersistenceError,
+    TicketClassificationSuggestion,
+    classify_confirmed_ticket,
+    suggest_ticket_classification,
+)
 from app.ai.ticket_extraction import (
     AIExtractedTicketDetails,
     AvailableSite,
@@ -31,11 +38,16 @@ __all__ = [
     "AIProviderError",
     "AISettings",
     "AIUnavailableError",
+    "AIProposedTicketClassification",
     "AIExtractedTicketDetails",
     "AvailableSite",
     "TicketExtractionResult",
     "TicketIntakeField",
+    "TicketClassificationPersistenceError",
+    "TicketClassificationSuggestion",
     "build_ai_model",
+    "classify_confirmed_ticket",
     "extract_ticket_details",
     "load_ai_settings",
+    "suggest_ticket_classification",
 ]

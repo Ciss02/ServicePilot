@@ -26,6 +26,18 @@ class TicketCategory(StrEnum):
     OTHER_REQUESTS = "other_requests"
 
 
+class AssignmentGroup(StrEnum):
+    """Gruppi fittizi ai quali l'AI può indirizzare un ticket."""
+
+    SERVICE_DESK = "Service desk"
+    WORKPLACE_SUPPORT = "Supporto workplace"
+    NETWORK_SUPPORT = "Supporto rete"
+    RETAIL_SUPPORT = "Supporto sistemi retail"
+    PRODUCTION_SUPPORT = "Supporto sistemi produttivi"
+    WAREHOUSE_SUPPORT = "Supporto magazzino"
+    IT_SECURITY = "Sicurezza IT"
+
+
 class TicketStatus(StrEnum):
     """Stati possibili di un ticket già creato."""
 

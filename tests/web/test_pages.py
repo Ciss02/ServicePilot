@@ -212,6 +212,28 @@ class WebExtractionModelStub:
         return response_schema.model_validate(self.response)
 
 
+class WebClassificationModelStub:
+    """Proposta controllata per verificare la conferma web completa."""
+
+    def generate_structured(
+        self,
+        *,
+        prompt: str,
+        response_schema,
+        system_instruction: str | None = None,
+    ):
+        del prompt, system_instruction
+        return response_schema.model_validate(
+            {
+                "category": "network_and_connectivity",
+                "subcategory": "VPN",
+                "impact": "medium",
+                "urgency": "high",
+                "assigned_group": "Supporto rete",
+            }
+        )
+
+
 def test_login_page_has_accessible_responsive_structure(web_client) -> None:
     client, _, _ = web_client
 
@@ -1018,6 +1040,49 @@ def test_confirmation_creates_exactly_one_ticket(web_client) -> None:
     detail = client.get(first_response.headers["location"])
     assert detail.status_code == 200
     assert "Ticket creato correttamente" in detail.text
+
+
+def test_confirmation_saves_ai_classification_for_technical_review(
+    web_client,
+) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    client.app.dependency_overrides[get_ai_model] = WebClassificationModelStub
+    with Session(database_engine) as session:
+        site_id = session.scalar(select(Site.id).where(Site.code == "WEB-DEMO"))
+
+    summary = client.post(
+        "/app/new-ticket/details",
+        data={
+            "description": "La connessione VPN demo blocca due persone.",
+            "title": "VPN demo non disponibile",
+            "site_id": str(site_id),
+            "service": "Accesso remoto",
+            "affected_users": "2",
+        },
+    )
+    confirmation_data = ticket_confirmation_data(summary.text, site_id)
+    confirmation_data["confirmed"] = "true"
+    response = client.post(
+        "/app/new-ticket/confirm",
+        data=confirmation_data,
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    with Session(database_engine) as session:
+        ticket = session.scalar(
+            select(Ticket).where(
+                Ticket.creation_key == confirmation_data["creation_key"]
+            )
+        )
+        assert ticket is not None
+        assert ticket.category is TicketCategory.NETWORK_AND_CONNECTIVITY
+        assert ticket.subcategory == "VPN"
+        assert ticket.impact is Impact.MEDIUM
+        assert ticket.urgency is Urgency.HIGH
+        assert ticket.priority is Priority.P2
+        assert ticket.assigned_group == "Supporto rete"
 
 
 def test_missing_explicit_confirmation_creates_nothing(web_client) -> None:

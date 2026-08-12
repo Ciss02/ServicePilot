@@ -24,7 +24,9 @@ from sqlalchemy.orm import Session
 from app.ai import (
     AIModelError,
     AvailableSite,
+    TicketClassificationPersistenceError,
     TicketIntakeField,
+    classify_confirmed_ticket,
     extract_ticket_details,
 )
 from app.ai.dependencies import AIModelDependency
@@ -788,6 +790,7 @@ def confirm_ticket_draft(
     request: Request,
     session: DatabaseSession,
     current_user: WebUser,
+    ai_model: AIModelDependency,
     description: Annotated[str, Form()] = "",
     title: Annotated[str, Form()] = "",
     site_id: Annotated[str, Form()] = "",
@@ -891,6 +894,11 @@ def confirm_ticket_draft(
             status_code=status.HTTP_409_CONFLICT,
             headers={"Cache-Control": "no-store"},
         )
+
+    try:
+        ticket = classify_confirmed_ticket(session, ticket, ai_model=ai_model)
+    except (AIModelError, TicketClassificationPersistenceError):
+        pass
 
     return RedirectResponse(
         url=f"/app/tickets/{ticket.id}?created=true",

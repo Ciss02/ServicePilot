@@ -95,3 +95,18 @@ Esempi collegati alla specifica:
 
 Prima del calcolo, impatto e urgenza devono essere convertiti nei valori controllati del
 vocabolario. La funzione rifiuta testi liberi e non consulta né AI né database.
+
+## Gruppi di assegnazione AI
+
+SP-052 limita anche il gruppo suggerito a un elenco fittizio controllato:
+
+- `Service desk`;
+- `Supporto workplace`;
+- `Supporto rete`;
+- `Supporto sistemi retail`;
+- `Supporto sistemi produttivi`;
+- `Supporto magazzino`;
+- `Sicurezza IT`.
+
+Il modello non può inventare un gruppo esterno. Il tecnico potrà correggere la proposta
+nel dettaglio operativo.

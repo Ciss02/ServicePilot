@@ -552,3 +552,29 @@ regole deterministiche del backend. Limitare la scelta delle sedi evita che una 
 plausibile ma inventata diventi un identificativo valido. Calcolare localmente i campi
 mancanti impedisce contraddizioni tra dati e domande successive. Il percorso manuale
 mantiene l'applicazione utilizzabile anche senza configurare Gemini.
+
+## D-024 - Classificazione AI controllata e priorità deterministica
+
+**Data:** 12 agosto 2026
+**Stato:** confermata durante SP-052
+
+**Decisione:**
+
+- classificare soltanto ticket già creati dopo la conferma del dipendente;
+- inviare titolo, descrizione, servizio, persone coinvolte e sede confermati;
+- limitare categoria, impatto e urgenza al vocabolario del dominio;
+- limitare il gruppo a sette opzioni fittizie definite nel backend;
+- accettare una sottocategoria breve oppure `null`;
+- vietare campi aggiuntivi nella risposta, inclusa la priorità;
+- calcolare sempre la priorità tramite la matrice deterministica esistente;
+- salvare la proposta nei campi già presenti del ticket;
+- non richiamare il modello quando la classificazione è già completa;
+- conservare il ticket non classificato se il provider non è disponibile;
+- rinviare messaggi di errore e revisione esplicita del tecnico a SP-053.
+
+**Motivazione:**
+
+L'AI riduce il lavoro iniziale del tecnico, ma non deve introdurre codici o gruppi
+arbitrari né decidere la priorità. Separare prima la creazione e poi la classificazione
+garantisce che un problema esterno non faccia perdere una richiesta già confermata. Il
+riuso dei campi esistenti mantiene la modifica piccola e compatibile con il database.

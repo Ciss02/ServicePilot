@@ -1,6 +1,6 @@
 # ServicePilot AI - Stato del progetto
 
-Aggiornato: 11 agosto 2026
+Aggiornato: 12 agosto 2026
 
 Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
@@ -59,6 +59,10 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Campi mancanti calcolati dal backend e richiesti singolarmente nel percorso web.
 - Passaggio diretto al riepilogo quando l'estrazione è completa, senza creare il ticket.
 - Raccolta manuale ancora disponibile quando il provider AI è disattivato.
+- Classificazione AI controllata di categoria, sottocategoria, impatto, urgenza e gruppo.
+- Gruppi di supporto fittizi limitati a un vocabolario esplicito.
+- Priorità della proposta calcolata esclusivamente dalla matrice del backend.
+- Classificazione salvata dopo la conferma, senza duplicare chiamate su ticket completi.
 
 ## Milestone attiva
 
@@ -66,22 +70,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-051 - Estrazione strutturata**
+**SP-052 - Classificazione suggerita**
 
-ServicePilot analizza la descrizione libera tramite l'adapter AI e accetta soltanto un
-risultato conforme allo schema previsto. Il backend riconosce esclusivamente sedi attive,
-calcola i campi mancanti e presenta all'utente solo le domande ancora necessarie. Nessun
-ticket viene creato prima del riepilogo e della conferma esplicita.
+ServicePilot classifica il ticket soltanto dopo la conferma. Categoria, impatto, urgenza
+e gruppo devono appartenere ai valori ammessi; la sottocategoria resta breve e
+controllata. Il modello non può inviare la priorità, che viene calcolata dal backend e
+salvata insieme alla proposta.
 
 ## Prossima attività
 
-**SP-052 - Classificazione suggerita**
+**SP-053 - Revisione umana e gestione errori**
 
 Risultato atteso:
 
-- proporre categoria, sottocategoria, impatto, urgenza e gruppo di assegnazione;
-- controllare l'output AI con il vocabolario del dominio;
-- continuare a calcolare la priorità soltanto nel backend.
+- distinguere chiaramente la proposta AI dai dati verificati dal tecnico;
+- permettere correzioni e conferma della classificazione;
+- rendere visibili timeout o risposte non valide senza bloccare il flusso.
 
 ## Blocchi o decisioni aperte
 
@@ -91,11 +95,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-052.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-053.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-051` con il codice dell'attività successiva.
+Sostituire `SP-053` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -275,4 +279,14 @@ Prima di terminare verificare che:
 - Verificata l'assenza di creazioni ticket prima della conferma esplicita.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-051.
 - `pytest`: 192 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificata la proposta controllata di categoria, sottocategoria, impatto, urgenza e
+  gruppo di assegnazione.
+- Verificato il rifiuto di valori sconosciuti e di una priorità inviata dal modello.
+- Verificato il calcolo deterministico della priorità a partire da impatto e urgenza.
+- Verificato il salvataggio della classificazione dopo la conferma web e tramite API.
+- Verificato che un ticket già classificato non produca una seconda chiamata AI.
+- Verificato che un provider disattivato lasci il ticket creato e utilizzabile.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-052.
+- `pytest`: 201 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
