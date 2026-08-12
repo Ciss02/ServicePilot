@@ -72,5 +72,6 @@ non possono salvare documenti neppure inviando direttamente la richiesta HTTP.
 - i test web verificano accesso amministrativo, diniego agli altri ruoli, messaggio di
   successo e messaggio di errore.
 
-SP-061 userà i documenti conservati per estrarre il testo e dividerlo in segmenti con
-riferimenti alla fonte.
+SP-061 usa ora i documenti conservati per estrarre il testo e dividerlo in segmenti
+con riferimenti alla fonte. Il comportamento è descritto in
+[`KNOWLEDGE_EXTRACTION.md`](KNOWLEDGE_EXTRACTION.md).

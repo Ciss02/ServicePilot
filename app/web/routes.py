@@ -20,7 +20,7 @@ from fastapi import (
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.ai import (
@@ -37,7 +37,7 @@ from app.api.dependencies import (
     SessionCookie,
     get_current_user,
 )
-from app.db.models import KnowledgeDocument, Site, Ticket, User
+from app.db.models import KnowledgeDocument, KnowledgeSegment, Site, Ticket, User
 from app.domain.auth_contracts import LoginRequest
 from app.domain.ticket_contracts import TicketClassification, TicketCreate, TicketUpdate
 from app.domain.ticket_intake import (
@@ -48,9 +48,14 @@ from app.domain.ticket_intake import (
 from app.domain.ticket_workflow import ALLOWED_STATUS_TRANSITIONS
 from app.domain.vocabulary import Role
 from app.knowledge import (
+    EXTRACTION_FAILED,
+    EXTRACTION_PENDING,
+    EXTRACTION_READY,
     KnowledgeDocumentPersistenceError,
+    KnowledgeDocumentProcessingError,
     KnowledgeDocumentValidationError,
     get_knowledge_storage_directory,
+    process_knowledge_document,
     store_knowledge_document,
 )
 from app.security.authentication import (
@@ -258,6 +263,7 @@ def _knowledge_context(
     current_user: User,
     *,
     uploaded: bool = False,
+    extraction: str | None = None,
     error: str | None = None,
 ) -> dict[str, object]:
     """Prepara l'elenco dei documenti senza rivelarne il percorso interno."""
@@ -277,24 +283,53 @@ def _knowledge_context(
         else []
     )
     uploader_names = {uploader.id: uploader.display_name for uploader in uploaders}
-    presented_documents = [
-        {
-            "id": document.id,
-            "filename": document.original_filename,
-            "format": "PDF" if document.content_type == "application/pdf" else "Markdown",
-            "size": f"{document.size_bytes / 1024:.1f} KB",
-            "uploaded_by": uploader_names.get(
-                document.uploaded_by_user_id, "Amministratore demo"
-            ),
-            "created_at": document.created_at.strftime("%d/%m/%Y · %H:%M"),
-        }
-        for document in documents
-    ]
+    segment_counts = dict(
+        session.execute(
+            select(KnowledgeSegment.document_id, func.count(KnowledgeSegment.id))
+            .group_by(KnowledgeSegment.document_id)
+        ).all()
+    )
+
+    def extraction_presentation(document: KnowledgeDocument) -> tuple[str, str]:
+        segment_count = segment_counts.get(document.id, 0)
+        if document.extraction_status == EXTRACTION_READY:
+            label = (
+                f"{segment_count} segmento"
+                if segment_count == 1
+                else f"{segment_count} segmenti"
+            )
+            return label, "ready"
+        if document.extraction_status == EXTRACTION_FAILED:
+            return "Testo non estratto", "failed"
+        return "Da elaborare", "pending"
+
+    presented_documents = []
+    for document in documents:
+        state, state_class = extraction_presentation(document)
+        presented_documents.append(
+            {
+                "id": document.id,
+                "filename": document.original_filename,
+                "format": (
+                    "PDF"
+                    if document.content_type == "application/pdf"
+                    else "Markdown"
+                ),
+                "size": f"{document.size_bytes / 1024:.1f} KB",
+                "uploaded_by": uploader_names.get(
+                    document.uploaded_by_user_id, "Amministratore demo"
+                ),
+                "created_at": document.created_at.strftime("%d/%m/%Y · %H:%M"),
+                "state": state,
+                "state_class": state_class,
+            }
+        )
     context = _workspace_context(current_user, "Knowledge base")
     context.update(
         {
             "documents": presented_documents,
             "uploaded": uploaded,
+            "extraction": extraction,
             "upload_error": error,
         }
     )
@@ -643,6 +678,7 @@ def knowledge_documents(
     session: DatabaseSession,
     current_user: WebUser,
     uploaded: Annotated[bool, Query()] = False,
+    extraction: Annotated[str | None, Query()] = None,
 ) -> Response:
     """Mostra all'amministratore l'upload e i documenti già conservati."""
 
@@ -655,6 +691,7 @@ def knowledge_documents(
             session,
             current_user,
             uploaded=uploaded,
+            extraction=extraction,
         ),
         headers={"Cache-Control": "no-store"},
     )
@@ -678,7 +715,7 @@ def upload_knowledge_document(
         error = "Seleziona un documento da caricare."
     else:
         try:
-            store_knowledge_document(
+            stored_document = store_knowledge_document(
                 session,
                 document,
                 uploaded_by=current_user,
@@ -699,8 +736,17 @@ def upload_knowledge_document(
                 headers={"Cache-Control": "no-store"},
             )
         else:
+            try:
+                result = process_knowledge_document(
+                    session,
+                    stored_document,
+                    get_knowledge_storage_directory(),
+                )
+                extraction = result.status
+            except KnowledgeDocumentProcessingError:
+                extraction = EXTRACTION_PENDING
             return RedirectResponse(
-                url="/app/knowledge?uploaded=true",
+                url=f"/app/knowledge?uploaded=true&extraction={extraction}",
                 status_code=status.HTTP_303_SEE_OTHER,
             )
 

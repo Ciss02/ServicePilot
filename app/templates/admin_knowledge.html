@@ -9,13 +9,13 @@
       <div>
         <p class="eyebrow">Area amministrativa</p>
         <h1 id="knowledge-title">Procedure affidabili,<br>pronte per l’AI.</h1>
-        <p>Carica le procedure fittizie che useremo come fonti. In questo passaggio le conserviamo in sicurezza; testo e ricerca arriveranno nelle prossime attività.</p>
+        <p>Carica le procedure fittizie che useremo come fonti. Il testo viene estratto e diviso in segmenti con il riferimento alla sezione o alla pagina originale.</p>
       </div>
       <aside class="knowledge-safety-note" aria-label="Controlli applicati">
         <span aria-hidden="true">✓</span>
         <div>
-          <strong>Controlli prima del salvataggio</strong>
-          <p>Formato, contenuto reale e limite di 5 MB vengono verificati dal server.</p>
+          <strong>Fonte sempre rintracciabile</strong>
+          <p>Ogni segmento conserva il documento e la sezione o pagina da cui proviene.</p>
         </div>
       </aside>
     </header>
@@ -27,10 +27,22 @@
         <p class="knowledge-card-intro">Sono ammessi PDF e Markdown con contenuti esclusivamente dimostrativi.</p>
 
         {% if uploaded %}
-          <div class="upload-success" role="status">
-            <strong>Documento conservato correttamente.</strong>
-            <span>È pronto per la futura estrazione del testo.</span>
-          </div>
+          {% if extraction == "ready" %}
+            <div class="upload-success" role="status">
+              <strong>Documento elaborato correttamente.</strong>
+              <span>Il testo è stato diviso in segmenti pronti per la futura ricerca.</span>
+            </div>
+          {% elif extraction == "failed" %}
+            <div class="form-alert" role="alert">
+              <strong>Documento conservato, testo non estratto</strong>
+              <span>Il file potrebbe essere una scansione o non contenere testo selezionabile.</span>
+            </div>
+          {% else %}
+            <div class="form-alert" role="alert">
+              <strong>Documento conservato, elaborazione da riprovare</strong>
+              <span>Il file è al sicuro, ma i segmenti non sono ancora disponibili.</span>
+            </div>
+          {% endif %}
         {% endif %}
         {% if upload_error %}
           <div class="form-alert" role="alert">
@@ -51,11 +63,11 @@
 
       <section class="knowledge-rules" aria-labelledby="rules-title">
         <p class="card-label">Come funziona</p>
-        <h2 id="rules-title">Tre barriere semplici</h2>
+        <h2 id="rules-title">Dal file alla fonte</h2>
         <ol>
-          <li><span>01</span><div><strong>Tipo consentito</strong><p>L’estensione e il tipo dichiarato devono essere coerenti.</p></div></li>
-          <li><span>02</span><div><strong>Contenuto riconoscibile</strong><p>Un PDF deve essere davvero un PDF; Markdown deve essere testo leggibile.</p></div></li>
-          <li><span>03</span><div><strong>Salvataggio completo</strong><p>Se qualcosa fallisce, non resta alcun documento parziale.</p></div></li>
+          <li><span>01</span><div><strong>Controllo</strong><p>Formato, contenuto reale e limite di 5 MB vengono verificati dal server.</p></div></li>
+          <li><span>02</span><div><strong>Estrazione locale</strong><p>Leggiamo il testo senza inviarlo a servizi esterni.</p></div></li>
+          <li><span>03</span><div><strong>Segmenti con fonte</strong><p>I titoli Markdown e le pagine PDF restano collegati a ogni passaggio.</p></div></li>
         </ol>
       </section>
     </div>
@@ -79,7 +91,7 @@
                 <p>Caricato da {{ document.uploaded_by }} · {{ document.created_at }}</p>
               </div>
               <strong>{{ document.size }}</strong>
-              <span class="document-state">Conservato</span>
+              <span class="document-state document-state-{{ document.state_class }}">{{ document.state }}</span>
             </article>
           {% endfor %}
         </div>

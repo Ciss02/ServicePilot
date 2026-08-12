@@ -117,7 +117,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-060 - Upload sicuro dei documenti**
   Accettare PDF e Markdown con controlli di tipo e dimensione.
   Verifica: file non ammessi vengono rifiutati.
-- [ ] **SP-061 - Estrazione e segmentazione**
+- [x] **SP-061 - Estrazione e segmentazione**
   Estrarre il testo e conservarne documento, sezione e segmenti.
   Verifica: i segmenti mantengono il riferimento alla fonte.
 - [ ] **SP-062 - Indicizzazione e ricerca**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-061**. La milestone attiva è **Milestone 6**.
+La prossima attività è **SP-062**. La milestone attiva è **Milestone 6**.
