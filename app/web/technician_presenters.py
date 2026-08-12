@@ -54,6 +54,10 @@ class TechnicianTicketView:
     status_label: str
     technician_note: str
     resolution: str
+    ai_suggested_solution: str
+    ai_solution_status: str
+    ai_solution_error: str
+    ai_solution_generated_at: str
     created_at: str
     updated_at: str
 
@@ -152,6 +156,14 @@ def present_technician_tickets(
                 status_label=STATUS_LABELS[ticket.status],
                 technician_note=ticket.technician_note or "",
                 resolution=ticket.resolution or "",
+                ai_suggested_solution=ticket.ai_suggested_solution or "",
+                ai_solution_status=ticket.ai_solution_status,
+                ai_solution_error=ticket.ai_solution_error or "",
+                ai_solution_generated_at=(
+                    _format_datetime(ticket.ai_solution_generated_at)
+                    if ticket.ai_solution_generated_at
+                    else ""
+                ),
                 created_at=_format_datetime(ticket.created_at),
                 updated_at=_format_datetime(ticket.updated_at),
             )

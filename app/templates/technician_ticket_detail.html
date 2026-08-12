@@ -56,6 +56,61 @@
             <div><dt>Impatto / urgenza</dt><dd>{{ ticket.impact_label }} / {{ ticket.urgency_label }}</dd></div>
           </dl>
         </section>
+
+        <section class="detail-card ai-solution-card" id="ai-solution" aria-labelledby="ai-solution-title">
+          <div class="ai-solution-heading">
+            <div>
+              <p class="card-label">Knowledge base + Gemini</p>
+              <h2 id="ai-solution-title">Suggerimento tecnico con fonti</h2>
+            </div>
+            <span class="ai-assistant-badge">Assistente · non automatico</span>
+          </div>
+
+          {% if solution_error %}
+            <div class="form-alert" role="alert">{{ solution_error }}</div>
+          {% elif ticket.ai_solution_status == "generated" %}
+            {% if solution_attempted %}
+              <div class="ai-solution-success" role="status">Suggerimento e fonti aggiornati.</div>
+            {% endif %}
+            <div class="ai-solution-copy">
+              <p>{{ ticket.ai_suggested_solution }}</p>
+            </div>
+            <div class="ai-source-links" aria-label="Fonti citate nel suggerimento">
+              {% for source in solution_sources %}
+                <a href="#solution-source-{{ source.segment_id }}">Fonte {{ source.rank }}</a>
+              {% endfor %}
+            </div>
+            <div class="ai-source-list">
+              {% for source in solution_sources %}
+                <article class="ai-source-passage" id="solution-source-{{ source.segment_id }}">
+                  <div>
+                    <span>Fonte {{ source.rank }}</span>
+                    <strong>{{ source.filename }}</strong>
+                    <small>{{ source.source_section }}</small>
+                  </div>
+                  <span class="ai-source-score">Pertinenza {{ source.score_percent }}%</span>
+                  <p>{{ source.content }}</p>
+                </article>
+              {% endfor %}
+            </div>
+            <p class="ai-solution-meta">Generato il {{ ticket.ai_solution_generated_at }}. Verifica sempre i passaggi prima di applicare la proposta.</p>
+          {% elif ticket.ai_solution_status in ["unavailable", "invalid_response"] %}
+            <div class="ai-solution-warning" role="status">
+              <strong>Suggerimento non disponibile</strong>
+              <p>{{ ticket.ai_solution_error }}</p>
+            </div>
+          {% else %}
+            <p class="ai-solution-intro">Il sistema cercherà i passaggi più vicini al problema e chiederà a Gemini una proposta fondata soltanto su quelle fonti.</p>
+          {% endif %}
+
+          <form method="post" action="/app/tickets/{{ ticket.id }}/suggest-solution">
+            <button class="primary-button ai-solution-button" type="submit">
+              {% if ticket.ai_solution_status == "generated" %}Rigenera suggerimento{% else %}Genera suggerimento{% endif %}
+              <span aria-hidden="true">→</span>
+            </button>
+          </form>
+          <p class="ai-human-note"><strong>Decisione umana:</strong> questo testo non aggiorna lo stato e non sostituisce la soluzione finale del tecnico.</p>
+        </section>
       </div>
 
       <aside class="management-panel" aria-labelledby="management-title">

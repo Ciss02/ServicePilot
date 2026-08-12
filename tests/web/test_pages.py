@@ -1,5 +1,6 @@
 """Test HTTP del layout, del login web e dell'area protetta."""
 
+import json
 import re
 import secrets
 from collections.abc import Iterator
@@ -17,6 +18,7 @@ from app.db import (
     KnowledgeSegment,
     Site,
     Ticket,
+    TicketSolutionSource,
     User,
     build_engine,
     create_database,
@@ -270,6 +272,29 @@ class WebKeywordEmbeddingModel:
 
     def embed_query(self, text: str) -> list[float]:
         return self._vector(text)
+
+
+class WebSourcedSolutionModelStub:
+    """Genera un suggerimento usando il primo passaggio recuperato."""
+
+    def generate_structured(
+        self,
+        *,
+        prompt: str,
+        response_schema,
+        system_instruction: str | None = None,
+    ):
+        assert "La decisione finale resta al tecnico" in (system_instruction or "")
+        first_source = json.loads(prompt)["retrieved_sources"][0]
+        return response_schema.model_validate(
+            {
+                "solution": (
+                    "Disconnettere la VPN demo, attendere trenta secondi e "
+                    "ripetere il collegamento verificandone la stabilità."
+                ),
+                "cited_source_ids": [first_source["source_id"]],
+            }
+        )
 
 
 def test_login_page_has_accessible_responsive_structure(web_client) -> None:
@@ -875,6 +900,93 @@ def test_technician_can_open_full_ticket_detail(web_client) -> None:
     assert 'value="in_progress"' in response.text
     assert 'value="resolved"' not in response.text
     assert "built-in method update" not in response.text
+
+
+def test_technician_generates_sourced_solution_without_resolving_ticket(
+    web_client,
+) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+    client.app.dependency_overrides[get_ai_model] = WebSourcedSolutionModelStub
+    client.app.dependency_overrides[get_embedding_model] = WebKeywordEmbeddingModel
+    with Session(database_engine) as session:
+        ticket = session.scalar(
+            select(Ticket).where(Ticket.title == "VPN demo in attesa di informazioni")
+        )
+        admin_id = session.scalar(
+            select(User.id).where(User.email == "admin.web@servicepilot.example")
+        )
+        document = KnowledgeDocument(
+            original_filename="accesso-vpn-demo.md",
+            storage_filename="accesso-vpn-demo-web.md",
+            content_type="text/markdown",
+            size_bytes=180,
+            checksum_sha256="b" * 64,
+            extraction_status="ready",
+            index_status="ready",
+            embedding_model=WebKeywordEmbeddingModel.model_name,
+            embedding_dimensions=WebKeywordEmbeddingModel.dimensions,
+            uploaded_by_user_id=admin_id,
+        )
+        session.add(document)
+        session.flush()
+        segment = KnowledgeSegment(
+            document_id=document.id,
+            position=0,
+            source_section="Accesso VPN demo > Nuovo tentativo",
+            content=(
+                "Disconnettere la VPN demo, attendere trenta secondi e riprovare "
+                "controllando che il collegamento resti stabile."
+            ),
+            character_count=117,
+            embedding_json=json.dumps([1.0, 0.0, 0.0]),
+        )
+        session.add(segment)
+        session.commit()
+        ticket_id = ticket.id
+
+    response = client.post(
+        f"/app/tickets/{ticket_id}/suggest-solution",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == (
+        f"/app/tickets/{ticket_id}?solution_attempted=true"
+    )
+    detail = client.get(response.headers["location"])
+    assert detail.status_code == 200
+    assert "Suggerimento tecnico con fonti" in detail.text
+    assert "Suggerimento e fonti aggiornati" in detail.text
+    assert "Disconnettere la VPN demo" in detail.text
+    assert "accesso-vpn-demo.md" in detail.text
+    assert "Accesso VPN demo &gt; Nuovo tentativo" in detail.text
+    assert "Fonte 1" in detail.text
+    assert "Decisione umana" in detail.text
+    with Session(database_engine) as session:
+        stored_ticket = session.get(Ticket, ticket_id)
+        assert stored_ticket.resolution is None
+        assert stored_ticket.ai_solution_status == "generated"
+        assert session.scalar(select(TicketSolutionSource)) is not None
+
+
+def test_employee_cannot_generate_ai_solution(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        ticket_id = session.scalar(select(Ticket.id).order_by(Ticket.id))
+
+    response = client.post(
+        f"/app/tickets/{ticket_id}/suggest-solution",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/app"
+    with Session(database_engine) as session:
+        ticket = session.get(Ticket, ticket_id)
+        assert ticket.ai_solution_status == "pending"
+        assert ticket.ai_suggested_solution is None
 
 
 @pytest.mark.parametrize(

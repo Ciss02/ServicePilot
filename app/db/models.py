@@ -8,6 +8,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     Enum,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -187,6 +188,11 @@ class Ticket(Base):
             "affected_users BETWEEN 1 AND 10000",
             name="ck_tickets_affected_users",
         ),
+        CheckConstraint(
+            "ai_solution_status IN "
+            "('pending', 'generated', 'unavailable', 'invalid_response')",
+            name="ck_tickets_ai_solution_status",
+        ),
         Index("ux_tickets_creation_key", "creation_key", unique=True),
     )
 
@@ -233,6 +239,14 @@ class Ticket(Base):
     )
     technician_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     resolution: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ai_suggested_solution: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ai_solution_status: Mapped[str] = mapped_column(
+        String(30), nullable=False, default="pending", server_default="pending"
+    )
+    ai_solution_error: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    ai_solution_generated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
     )
@@ -241,5 +255,41 @@ class Ticket(Base):
         nullable=False,
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
+    )
+
+
+class TicketSolutionSource(Base):
+    """Passaggio recuperato e realmente citato in un suggerimento AI."""
+
+    __tablename__ = "ticket_solution_sources"
+    __table_args__ = (
+        CheckConstraint("rank >= 1", name="ck_ticket_solution_sources_rank"),
+        CheckConstraint(
+            "similarity_score BETWEEN -1.0 AND 1.0",
+            name="ck_ticket_solution_sources_score",
+        ),
+        UniqueConstraint(
+            "ticket_id", "rank", name="ux_ticket_solution_sources_ticket_rank"
+        ),
+        UniqueConstraint(
+            "ticket_id",
+            "segment_id",
+            name="ux_ticket_solution_sources_ticket_segment",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ticket_id: Mapped[int] = mapped_column(
+        ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    segment_id: Mapped[int] = mapped_column(
+        ForeignKey("knowledge_segments.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    rank: Mapped[int] = mapped_column(Integer, nullable=False)
+    similarity_score: Mapped[float] = mapped_column(Float, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
     )
 

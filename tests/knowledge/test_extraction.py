@@ -11,6 +11,9 @@ from sqlalchemy.orm import Session
 
 from app.db import (
     KnowledgeSegment,
+    Site,
+    Ticket,
+    TicketSolutionSource,
     User,
     build_engine,
     create_database,
@@ -221,3 +224,59 @@ def test_processing_same_document_replaces_segments_instead_of_duplicating_them(
     assert first.segment_count == second.segment_count == 1
     assert len(segments) == 1
     assert segments[0].document_id == document.id
+
+
+def test_reprocessing_document_invalidates_solutions_that_cited_old_segments(
+    extraction_context,
+) -> None:
+    session, admin, storage_directory = extraction_context
+    requester = User(
+        email="richiedente.rag@example.test",
+        display_name="Richiedente RAG Demo",
+        role=Role.EMPLOYEE,
+    )
+    site = Site(code="RAG-DEMO", name="Sede RAG Demo")
+    session.add_all([requester, site])
+    session.flush()
+    ticket = Ticket(
+        title="VPN demo instabile",
+        description="La connessione VPN demo cade dopo pochi minuti.",
+        requester_id=requester.id,
+        site_id=site.id,
+        service="Accesso remoto",
+        affected_users=1,
+    )
+    document = store_knowledge_document(
+        session,
+        make_upload(
+            "vpn-rag-demo.md",
+            b"# VPN demo\n\nDisconnettere e riprovare il collegamento fittizio.\n",
+            "text/markdown",
+        ),
+        uploaded_by=admin,
+        storage_directory=storage_directory,
+    )
+    session.add(ticket)
+    session.commit()
+    process_knowledge_document(session, document, storage_directory)
+    segment = session.scalar(
+        select(KnowledgeSegment).where(KnowledgeSegment.document_id == document.id)
+    )
+    ticket.ai_suggested_solution = "Suggerimento tecnico fittizio basato sulla procedura VPN."
+    ticket.ai_solution_status = "generated"
+    session.add(
+        TicketSolutionSource(
+            ticket_id=ticket.id,
+            segment_id=segment.id,
+            rank=1,
+            similarity_score=1.0,
+        )
+    )
+    session.commit()
+
+    process_knowledge_document(session, document, storage_directory)
+
+    session.refresh(ticket)
+    assert ticket.ai_solution_status == "pending"
+    assert ticket.ai_suggested_solution is None
+    assert session.scalars(select(TicketSolutionSource)).all() == []

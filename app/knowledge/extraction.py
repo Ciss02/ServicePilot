@@ -7,11 +7,16 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from pypdf import PdfReader
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.db.models import KnowledgeDocument, KnowledgeSegment
+from app.db.models import (
+    KnowledgeDocument,
+    KnowledgeSegment,
+    Ticket,
+    TicketSolutionSource,
+)
 
 
 MAX_SEGMENT_CHARACTERS = 1200
@@ -168,17 +173,52 @@ def build_segment_drafts(document: KnowledgeDocument, path: Path) -> list[Segmen
     return drafts
 
 
+def _invalidate_solutions_for_document(
+    session: Session,
+    document_id: int,
+) -> None:
+    """Rimuove suggerimenti che citano segmenti in corso di sostituzione."""
+
+    ticket_ids = list(
+        session.scalars(
+            select(TicketSolutionSource.ticket_id)
+            .join(
+                KnowledgeSegment,
+                KnowledgeSegment.id == TicketSolutionSource.segment_id,
+            )
+            .where(KnowledgeSegment.document_id == document_id)
+            .distinct()
+        ).all()
+    )
+    if not ticket_ids:
+        return
+    session.execute(
+        delete(TicketSolutionSource).where(
+            TicketSolutionSource.ticket_id.in_(ticket_ids)
+        )
+    )
+    tickets = session.scalars(select(Ticket).where(Ticket.id.in_(ticket_ids))).all()
+    for ticket in tickets:
+        ticket.ai_suggested_solution = None
+        ticket.ai_solution_status = "pending"
+        ticket.ai_solution_error = None
+        ticket.ai_solution_generated_at = None
+
+
 def _save_failed_result(
     session: Session,
     document: KnowledgeDocument,
     message: str,
 ) -> ExtractionResult:
     try:
+        _invalidate_solutions_for_document(session, document.id)
         session.execute(
             delete(KnowledgeSegment).where(
                 KnowledgeSegment.document_id == document.id
-            )
+            ),
+            execution_options={"synchronize_session": "fetch"},
         )
+        session.flush()
         document.extraction_status = EXTRACTION_FAILED
         document.extraction_error = message[:300]
         document.index_status = "failed"
@@ -222,11 +262,14 @@ def process_knowledge_document(
         )
 
     try:
+        _invalidate_solutions_for_document(session, document.id)
         session.execute(
             delete(KnowledgeSegment).where(
                 KnowledgeSegment.document_id == document.id
-            )
+            ),
+            execution_options={"synchronize_session": "fetch"},
         )
+        session.flush()
         session.add_all(
             [
                 KnowledgeSegment(

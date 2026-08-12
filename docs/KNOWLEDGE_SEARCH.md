@@ -1,8 +1,8 @@
 # Indicizzazione e ricerca della knowledge base
 
 SP-062 trasforma i segmenti di SP-061 in vettori confrontabili e recupera i passaggi
-più pertinenti rispetto a una domanda tecnica. Non genera ancora una soluzione: questa
-responsabilità appartiene a SP-063.
+più pertinenti rispetto a una domanda tecnica. SP-063 riutilizza questi risultati per
+generare un suggerimento tecnico con fonti verificabili.
 
 ## Quale problema risolve
 
@@ -84,7 +84,7 @@ proporre una risposta.
 ## Chi può usare la funzionalità
 
 Il laboratorio visibile è riservato all'amministratore, come l'upload. Il servizio di
-ricerca è separato dalla pagina e verrà riutilizzato nel dettaglio tecnico da SP-063.
+ricerca è separato dalla pagina ed è riutilizzato nel dettaglio tecnico da SP-063.
 Dipendenti e tecnici non possono modificare l'indice tramite questa attività.
 
 ## Quale test dimostra che funziona
