@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.audit import record_action_proposed
 from app.db.models import ProposedAction, Ticket
 from app.domain.action_contracts import ActionProposalCreate, ActionProposalRead
 from app.domain.vocabulary import ActionStatus
@@ -67,6 +68,8 @@ def create_action_proposal(
     )
     session.add(action)
     try:
+        session.flush()
+        record_action_proposed(session, action)
         session.commit()
         session.refresh(action)
     except SQLAlchemyError as error:

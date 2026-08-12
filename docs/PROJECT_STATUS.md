@@ -1,6 +1,6 @@
 # ServicePilot AI - Stato del progetto
 
-Aggiornato: 12 agosto 2026
+Aggiornato: 13 agosto 2026
 
 Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
@@ -106,6 +106,12 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Decisione salvata prima dell'esecuzione e chiamata REST singola soltanto dopo
   l'approvazione, con doppio invio bloccato.
 - Decisore, data, riferimento, messaggio o errore del simulatore conservati e visibili.
+- Registro append-only con eventi umani, AI e automatici collegati ai ticket.
+- Salvataggio dell'evento nella stessa transazione dell'operazione principale.
+- Dettagli minimizzati senza password, chiavi, prompt, note o soluzioni complete.
+- Timeline cronologica disponibile nel dettaglio tecnico di ogni ticket.
+- Vista complessiva degli ultimi 100 eventi, con filtri, riservata all'amministratore.
+- Nove eventi iniziali fittizi caricati in modo ripetibile senza duplicati.
 
 ## Milestone attiva
 
@@ -113,22 +119,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-072 - Approvazione del tecnico**
+**SP-073 - Audit log**
 
-Tecnico e amministratore possono valutare ogni proposta nel dettaglio del ticket. Il
-rifiuto non chiama servizi; l'approvazione viene salvata prima di una singola chiamata
-REST e conserva successo o errore. Ruoli non autorizzati, riferimenti errati e doppi
-invii non producono esecuzioni.
+Il percorso dei ticket è ricostruibile tramite eventi distinti per persone, assistente
+AI e sistema. Gli eventi sono salvati insieme alle operazioni, non possono essere
+riscritti dall'applicazione e mostrano soltanto dettagli controllati. Tecnico e admin
+vedono la timeline del ticket; soltanto l'admin consulta il registro completo.
 
 ## Prossima attività
 
-**SP-073 - Audit log**
+**SP-074 - Strumenti amministrativi**
 
 Risultato atteso:
 
-- registrare operazioni umane, AI, approvazioni ed esiti come eventi consultabili;
-- conservare autore, tipo, ticket, data e dettagli controllati di ogni evento;
-- permettere di ricostruire il percorso completo di un ticket.
+- permettere all'amministratore di gestire e rielaborare i documenti;
+- aggiungere un ripristino controllato del dataset dimostrativo;
+- mantenere tutte queste operazioni non disponibili agli altri ruoli.
 
 ## Blocchi o decisioni aperte
 
@@ -138,11 +144,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-073.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-074.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-073` con il codice dell'attività successiva.
+Sostituire `SP-074` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -443,4 +449,16 @@ Prima di terminare verificare che:
   console; pagina lasciata aperta nel browser integrato sul ticket `SP-0001`.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-072.
 - `pytest`: 324 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificata la creazione atomica degli eventi insieme a ticket, modifiche,
+  classificazioni, suggerimenti e azioni.
+- Verificato che operazioni rifiutate o non autorizzate non aggiungano eventi falsi.
+- Verificata la sequenza proposta, approvazione, avvio ed esito, incluso il riferimento
+  restituito dal simulatore locale.
+- Verificati dettagli minimizzati e blocco di modifica o cancellazione tramite ORM.
+- Verificati i 9 eventi demo iniziali e il caricamento ripetuto senza duplicati.
+- Verificate timeline tecnica, pagina amministrativa, filtri e permessi nel browser.
+- Verificato il layout a 390 × 844 senza scorrimento orizzontale della pagina.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-073.
+- `pytest`: 330 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

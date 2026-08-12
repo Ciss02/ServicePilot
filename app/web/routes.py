@@ -23,6 +23,11 @@ from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.audit import (
+    list_audit_events,
+    list_ticket_audit_events,
+    present_audit_events,
+)
 from app.ai import (
     AIModelError,
     AvailableSite,
@@ -45,7 +50,7 @@ from app.api.dependencies import (
     SessionCookie,
     get_current_user,
 )
-from app.db.models import KnowledgeDocument, KnowledgeSegment, Site, Ticket, User
+from app.db.models import AuditEvent, KnowledgeDocument, KnowledgeSegment, Site, Ticket, User
 from app.domain.auth_contracts import LoginRequest
 from app.domain.ticket_contracts import TicketClassification, TicketCreate, TicketUpdate
 from app.domain.ticket_intake import (
@@ -54,7 +59,7 @@ from app.domain.ticket_intake import (
     TicketProblemInput,
 )
 from app.domain.ticket_workflow import ALLOWED_STATUS_TRANSITIONS
-from app.domain.vocabulary import ActionDecision, Role
+from app.domain.vocabulary import ActionDecision, AuditActorType, Role
 from app.knowledge import (
     EXTRACTION_FAILED,
     EXTRACTION_PENDING,
@@ -368,6 +373,41 @@ def _knowledge_context(
     return context
 
 
+def _audit_context(
+    session: Session,
+    current_user: User,
+    *,
+    actor_type: AuditActorType | None = None,
+    ticket_id: int | None = None,
+) -> dict[str, object]:
+    """Prepara la vista amministrativa senza esporre il JSON interno."""
+
+    events = list_audit_events(
+        session,
+        actor_type=actor_type,
+        ticket_id=ticket_id,
+    )
+    count_rows = session.execute(
+        select(AuditEvent.actor_type, func.count(AuditEvent.id)).group_by(
+            AuditEvent.actor_type
+        )
+    ).all()
+    counts = {actor.value: count for actor, count in count_rows}
+    context = _workspace_context(current_user, "Audit log")
+    context.update(
+        {
+            "audit_events": present_audit_events(session, events),
+            "selected_actor": actor_type.value if actor_type else "all",
+            "ticket_filter": str(ticket_id or ""),
+            "total_events": sum(counts.values()),
+            "human_events": counts.get(AuditActorType.HUMAN.value, 0),
+            "ai_events": counts.get(AuditActorType.AI.value, 0),
+            "system_events": counts.get(AuditActorType.SYSTEM.value, 0),
+        }
+    )
+    return context
+
+
 def _present_tickets(
     session: Session,
     tickets: list[Ticket],
@@ -471,6 +511,10 @@ def _technical_ticket_context(
             "action_proposals": action_proposals,
             "action_result": action_result,
             "action_error": action_error or action_load_error,
+            "audit_events": present_audit_events(
+                session,
+                list_ticket_audit_events(session, ticket.id),
+            ),
         }
     )
     return context
@@ -773,6 +817,31 @@ def knowledge_documents(
             query=normalized_query,
             search_results=search_results,
             search_error=search_error,
+        ),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.get("/app/audit", response_class=HTMLResponse)
+def audit_log(
+    request: Request,
+    session: DatabaseSession,
+    current_user: WebUser,
+    actor: Annotated[AuditActorType | None, Query()] = None,
+    ticket_id: Annotated[int | None, Query(gt=0)] = None,
+) -> Response:
+    """Mostra all'amministratore gli eventi più recenti e filtrabili."""
+
+    if redirect := _admin_only(current_user):
+        return redirect
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_audit.html",
+        context=_audit_context(
+            session,
+            current_user,
+            actor_type=actor,
+            ticket_id=ticket_id,
         ),
         headers={"Cache-Control": "no-store"},
     )
@@ -1462,7 +1531,12 @@ def update_technical_ticket(
         )
 
     try:
-        update_managed_ticket(session, ticket_id, payload)
+        update_managed_ticket(
+            session,
+            ticket_id,
+            payload,
+            updated_by=current_user,
+        )
     except ManagedTicketNotFoundError:
         return templates.TemplateResponse(
             request=request,

@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 from pydantic import ValidationError
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai.ticket_classification import (
@@ -13,9 +14,10 @@ from app.ai.ticket_classification import (
     suggest_ticket_classification,
 )
 from app.ai.contracts import AIInvalidResponseError, AIUnavailableError
-from app.db import Site, Ticket, User, build_engine, create_database
+from app.db import AuditEvent, Site, Ticket, User, build_engine, create_database
 from app.domain.vocabulary import (
     AssignmentGroup,
+    AuditEventType,
     ClassificationReviewStatus,
     Priority,
     Role,
@@ -170,6 +172,10 @@ def test_classification_is_saved_once_with_deterministic_priority(tmp_path) -> N
             is ClassificationReviewStatus.AI_SUGGESTED
         )
         assert len(model.calls) == 1
+        audit_events = list(session.scalars(select(AuditEvent)).all())
+        assert [event.event_type for event in audit_events] == [
+            AuditEventType.AI_CLASSIFICATION_SUGGESTED
+        ]
     engine.dispose()
 
 
@@ -222,4 +228,10 @@ def test_ai_failure_is_recorded_without_losing_or_retrying_the_ticket(
         assert classified.category is None
         assert classified.priority is None
         assert model.calls == 1
+        audit_event = session.scalar(select(AuditEvent))
+        assert audit_event.event_type is (
+            AuditEventType.AI_CLASSIFICATION_UNAVAILABLE
+            if expected_status is ClassificationReviewStatus.AI_UNAVAILABLE
+            else AuditEventType.AI_CLASSIFICATION_INVALID
+        )
     engine.dispose()

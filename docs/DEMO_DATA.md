@@ -11,6 +11,7 @@ Il dataset comprende:
 - 5 profili: tre dipendenti, un tecnico IT e un amministratore;
 - 6 ticket che rappresentano produzione, rete, VPN, software, stampa e sicurezza;
 - 3 azioni proposte sul ticket produttivo, una per ciascun tipo simulato.
+- 9 eventi iniziali: creazione dei 6 ticket e proposta delle 3 azioni.
 
 I profili ricevono credenziali configurate esternamente e nel database conservano
 soltanto hash Argon2. Le istruzioni sono in [`DEMO_ACCOUNTS.md`](DEMO_ACCOUNTS.md).
@@ -35,7 +36,8 @@ Il comando crea anche le tabelle mancanti. Può essere ripetuto: sedi e utenti v
 riconosciuti rispettivamente tramite codice ed email, mentre i ticket demo vengono
 riconosciuti dal loro titolo esplicito. Le azioni demo vengono riconosciute tramite
 ticket, tipo e motivazione. I record già presenti vengono riallineati ai valori
-approvati e non vengono creati duplicati.
+approvati e non vengono creati duplicati. Gli eventi iniziali hanno chiavi demo stabili:
+un nuovo caricamento non riscrive né duplica la cronologia già presente.
 
 Il caricamento non elimina righe estranee al dataset. Tutte le modifiche demo vengono
 salvate insieme; in caso di errore la transazione viene annullata per non lasciare dati
@@ -54,5 +56,5 @@ progetto e la priorità viene calcolata dalla matrice deterministica del backend
 
 I test verificano caricamento ripetuto, conteggi, ripristino dei valori approvati,
 conservazione di record estranei, coerenza delle priorità e ritorno delle tre azioni
-demo allo stato `pending_approval`.
+demo allo stato `pending_approval`, oltre alle 9 righe iniziali di audit senza duplicati.
 

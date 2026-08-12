@@ -1,11 +1,17 @@
 """Decisione umana ed esecuzione controllata delle azioni proposte."""
 
 from datetime import UTC, datetime
+from collections.abc import Callable
 
 from sqlalchemy import update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.audit import (
+    record_action_decision,
+    record_action_execution_result,
+    record_action_execution_started,
+)
 from app.actions.proposals import read_action_proposal
 from app.actions.service_client import (
     ActionExecutionResult,
@@ -36,9 +42,16 @@ class ActionDecisionPersistenceError(ActionDecisionError):
     """La decisione o il suo risultato non possono essere salvati."""
 
 
-def _commit_update(session: Session, statement) -> bool:
+def _commit_update(
+    session: Session,
+    statement,
+    *,
+    record_event: Callable[[], object] | None = None,
+) -> bool:
     try:
         result = session.execute(statement)
+        if result.rowcount == 1 and record_event is not None:
+            record_event()
         session.commit()
         return result.rowcount == 1
     except SQLAlchemyError as error:
@@ -101,6 +114,12 @@ def decide_action_proposal(
             execution_message=None,
             execution_error_code=None,
         ),
+        record_event=lambda: record_action_decision(
+            session,
+            action,
+            reviewer=reviewer,
+            decision=decision,
+        ),
     )
     if not claimed:
         raise ActionAlreadyDecidedError
@@ -117,6 +136,7 @@ def decide_action_proposal(
             ProposedAction.status == ActionStatus.APPROVED,
         )
         .values(status=ActionStatus.EXECUTING),
+        record_event=lambda: record_action_execution_started(session, action),
     )
     if not started:
         raise ActionAlreadyDecidedError
@@ -142,6 +162,7 @@ def decide_action_proposal(
             execution_message=execution.message,
             execution_error_code=execution.error_code,
         ),
+        record_event=lambda: record_action_execution_result(session, action),
     )
     if not saved:
         raise ActionDecisionPersistenceError

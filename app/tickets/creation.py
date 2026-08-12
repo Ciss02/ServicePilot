@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.audit import record_ticket_created
 from app.db.models import Site, Ticket, User
 from app.domain.ticket_contracts import TicketCreate
 
@@ -49,6 +50,8 @@ def create_confirmed_ticket(
     )
     session.add(ticket)
     try:
+        session.flush()
+        record_ticket_created(session, ticket, requester)
         session.commit()
         session.refresh(ticket)
     except IntegrityError as error:

@@ -112,12 +112,17 @@ def update_ticket(
     ticket_id: TicketId,
     payload: TicketUpdate,
     session: DatabaseSession,
-    _technical_user: TechnicalUser,
+    technical_user: TechnicalUser,
 ) -> Ticket:
     """Modifica soltanto i campi tecnici validati e salva tutto insieme."""
 
     try:
-        return update_managed_ticket(session, ticket_id, payload)
+        return update_managed_ticket(
+            session,
+            ticket_id,
+            payload,
+            updated_by=technical_user,
+        )
     except ManagedTicketNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

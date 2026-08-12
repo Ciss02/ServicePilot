@@ -1,8 +1,10 @@
 """Verifica approvazione umana, rifiuto e singola esecuzione delle proposte."""
 
+import json
 from collections.abc import Callable
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.actions import (
@@ -14,7 +16,15 @@ from app.actions import (
     create_action_proposal,
     decide_action_proposal,
 )
-from app.db import ProposedAction, Site, Ticket, User, build_engine, create_database
+from app.db import (
+    AuditEvent,
+    ProposedAction,
+    Site,
+    Ticket,
+    User,
+    build_engine,
+    create_database,
+)
 from app.domain import (
     ActionDecision,
     ActionProposalCreate,
@@ -23,6 +33,7 @@ from app.domain import (
     RequesterCommunicationPayload,
 )
 from app.domain.vocabulary import Role, TicketStatus
+from app.domain.vocabulary import AuditEventType
 
 
 class ActionServiceStub:
@@ -141,6 +152,17 @@ def test_rejection_is_saved_without_calling_the_service(decision_context) -> Non
         assert result.decided_at is not None
         assert result.execution_reference is None
         assert client.calls == []
+        event_types = list(
+            session.scalars(
+                select(AuditEvent.event_type).where(
+                    AuditEvent.ticket_id == decision_context["ticket_id"]
+                )
+            ).all()
+        )
+        assert event_types == [
+            AuditEventType.ACTION_PROPOSED,
+            AuditEventType.ACTION_REJECTED,
+        ]
 
 
 def test_approval_is_persisted_before_exactly_one_service_call(
@@ -173,6 +195,20 @@ def test_approval_is_persisted_before_exactly_one_service_call(
         ticket = session.get(Ticket, decision_context["ticket_id"])
         assert ticket.status is TicketStatus.NEW
         assert ticket.technician_note is None
+        events = list(
+            session.scalars(
+                select(AuditEvent)
+                .where(AuditEvent.ticket_id == decision_context["ticket_id"])
+                .order_by(AuditEvent.id)
+            ).all()
+        )
+        assert [event.event_type for event in events] == [
+            AuditEventType.ACTION_PROPOSED,
+            AuditEventType.ACTION_APPROVED,
+            AuditEventType.ACTION_EXECUTION_STARTED,
+            AuditEventType.ACTION_EXECUTION_SUCCEEDED,
+        ]
+        assert json.loads(events[-1].details_json)["reference"] == "COM-DEMO-071"
 
 
 def test_controlled_service_failure_is_visible_and_persisted(decision_context) -> None:

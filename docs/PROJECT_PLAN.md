@@ -143,7 +143,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-072 - Approvazione del tecnico**
   Mostrare i dettagli e permettere approvazione o rifiuto espliciti.
   Verifica: nessuna azione parte prima dell'approvazione.
-- [ ] **SP-073 - Audit log**
+- [x] **SP-073 - Audit log**
   Registrare operazioni umane, AI, approvazioni ed esiti.
   Verifica: il percorso di un ticket è ricostruibile.
 - [ ] **SP-074 - Strumenti amministrativi**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-073**. La milestone attiva è **Milestone 7**.
+La prossima attività è **SP-074**. La milestone attiva è **Milestone 7**.

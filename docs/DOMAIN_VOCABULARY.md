@@ -147,7 +147,20 @@ tipi inventati dal modello.
 
 SP-070 crea esclusivamente lo stato `pending_approval`. SP-071 rende disponibili
 successi ed errori dei servizi simulati. SP-072 applica le transizioni soltanto dopo una
-decisione esplicita di tecnico o amministratore; SP-073 aggiungerà l'audit generale.
+decisione esplicita di tecnico o amministratore; SP-073 registra ogni passaggio nel
+registro generale.
+
+## Origine degli eventi di audit
+
+| Codice | Significato |
+|---|---|
+| `human` | Operazione confermata da dipendente, tecnico o amministratore. |
+| `ai` | Proposta o esito prodotto dall'assistente AI. |
+| `system` | Esecuzione o risultato automatico del backend o di un servizio simulato. |
+
+I tipi di evento sono centralizzati in `AuditEventType` e coprono creazione,
+aggiornamenti, classificazione, soluzione con fonti, proposte, decisioni ed esiti. I
+codici sono salvati nel database; le etichette italiane restano nella presentazione.
 
 ## Decisioni sull'azione
 

@@ -10,6 +10,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.audit import record_ai_solution_result
 from app.ai.contracts import AIInvalidResponseError, AIModel, AIModelError, EmbeddingModel
 from app.db.models import (
     KnowledgeDocument,
@@ -173,6 +174,7 @@ def _save_solution_failure(
         ticket.ai_solution_status = status
         ticket.ai_solution_error = message[:300]
         ticket.ai_solution_generated_at = None
+        record_ai_solution_result(session, ticket)
         session.commit()
         session.refresh(ticket)
     except SQLAlchemyError as error:
@@ -269,6 +271,11 @@ def generate_ticket_solution(
                     start=1,
                 )
             ]
+        )
+        record_ai_solution_result(
+            session,
+            ticket,
+            source_count=len(proposed.cited_source_ids),
         )
         session.commit()
         session.refresh(ticket)

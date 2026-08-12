@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.audit import record_ai_classification_result
 from app.ai.contracts import AIInvalidResponseError, AIModel, AIModelError
 from app.db.models import Site, Ticket
 from app.domain.priority import calculate_priority
@@ -170,6 +171,7 @@ def _save_classification_result(session: Session, ticket: Ticket) -> Ticket:
     """Salva sia una proposta valida sia un esito sicuro del tentativo AI."""
 
     try:
+        record_ai_classification_result(session, ticket)
         session.commit()
         session.refresh(ticket)
     except SQLAlchemyError as error:

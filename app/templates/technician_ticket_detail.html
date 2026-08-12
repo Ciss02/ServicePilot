@@ -189,6 +189,44 @@
             </div>
           {% endif %}
         </section>
+
+        <section class="detail-card audit-timeline-card" id="ticket-history" aria-labelledby="ticket-history-title">
+          <div class="audit-section-heading">
+            <div>
+              <p class="card-label">Tracciabilità</p>
+              <h2 id="ticket-history-title">Cronologia del ticket</h2>
+            </div>
+            <span class="audit-count">{{ audit_events | length }} eventi</span>
+          </div>
+          <p class="audit-section-intro">Ogni passaggio mostra chi lo ha prodotto e quando. Gli eventi già registrati non possono essere modificati dall'applicazione.</p>
+
+          {% if audit_events %}
+            <ol class="audit-timeline">
+              {% for event in audit_events %}
+                <li class="audit-timeline-event audit-event-{{ event.actor_class }}">
+                  <span class="audit-timeline-marker" aria-hidden="true"></span>
+                  <article>
+                    <header>
+                      <div>
+                        <span class="audit-event-type">{{ event.event_label }}</span>
+                        <h3>{{ event.summary }}</h3>
+                      </div>
+                      <time datetime="">{{ event.created_date }}<small>{{ event.created_time }}</small></time>
+                    </header>
+                    <p class="audit-actor"><span class="audit-actor-dot" aria-hidden="true"></span>{{ event.actor_name }} <small>{{ event.actor_label }}</small></p>
+                    {% if event.detail_items %}
+                      <dl class="audit-event-details">
+                        {% for item in event.detail_items %}<div><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div>{% endfor %}
+                      </dl>
+                    {% endif %}
+                  </article>
+                </li>
+              {% endfor %}
+            </ol>
+          {% else %}
+            <div class="audit-empty"><strong>Nessun evento registrato</strong><p>Le prossime operazioni rilevanti compariranno qui in ordine cronologico.</p></div>
+          {% endif %}
+        </section>
       </div>
 
       <aside class="management-panel" aria-labelledby="management-title">

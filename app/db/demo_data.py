@@ -3,11 +3,12 @@
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import timedelta
 
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 
-from app.db.models import ProposedAction, Site, Ticket, User
+from app.db.models import AuditEvent, ProposedAction, Site, Ticket, User
 from app.db.session import create_database, engine
 from app.domain.priority import calculate_priority
 from app.domain.vocabulary import (
@@ -326,7 +327,8 @@ def _upsert_tickets(
     session: Session,
     sites_by_code: dict[str, Site],
     users_by_email: dict[str, User],
-) -> None:
+) -> dict[str, Ticket]:
+    tickets_by_title: dict[str, Ticket] = {}
     for seed in DEMO_TICKETS:
         ticket = session.scalar(select(Ticket).where(Ticket.title == seed.title))
         requester = users_by_email[seed.requester_email]
@@ -358,15 +360,23 @@ def _upsert_tickets(
         }
 
         if ticket is None:
-            session.add(Ticket(title=seed.title, **values))
+            ticket = Ticket(title=seed.title, **values)
+            session.add(ticket)
         else:
             for field_name, value in values.items():
                 setattr(ticket, field_name, value)
+        tickets_by_title[seed.title] = ticket
+    session.flush()
+    return tickets_by_title
 
 
-def _upsert_actions(session: Session) -> None:
+def _upsert_actions(
+    session: Session,
+    tickets_by_title: dict[str, Ticket],
+) -> list[ProposedAction]:
+    actions: list[ProposedAction] = []
     for seed in DEMO_ACTIONS:
-        ticket = session.scalar(select(Ticket).where(Ticket.title == seed.ticket_title))
+        ticket = tickets_by_title[seed.ticket_title]
         action = session.scalar(
             select(ProposedAction).where(
                 ProposedAction.ticket_id == ticket.id,
@@ -392,10 +402,57 @@ def _upsert_actions(session: Session) -> None:
             "execution_error_code": None,
         }
         if action is None:
-            session.add(ProposedAction(**values))
+            action = ProposedAction(**values)
+            session.add(action)
         else:
             for field_name, value in values.items():
                 setattr(action, field_name, value)
+        actions.append(action)
+    session.flush()
+    return actions
+
+
+def _seed_audit_events(
+    session: Session,
+    tickets_by_title: dict[str, Ticket],
+    actions: list[ProposedAction],
+    users_by_email: dict[str, User],
+) -> None:
+    """Aggiunge un punto di partenza demo senza duplicare eventi esistenti."""
+
+    from app.audit.events import record_action_proposed, record_ticket_created
+
+    existing_keys = set(
+        session.scalars(
+            select(AuditEvent.event_key).where(AuditEvent.event_key.is_not(None))
+        ).all()
+    )
+    requester_by_title = {
+        seed.title: users_by_email[seed.requester_email] for seed in DEMO_TICKETS
+    }
+    for title, ticket in tickets_by_title.items():
+        event_key = f"demo:ticket:{ticket.id}:created"
+        if event_key not in existing_keys:
+            record_ticket_created(
+                session,
+                ticket,
+                requester_by_title[title],
+                event_key=event_key,
+                created_at=ticket.created_at,
+            )
+    tickets_by_id = {ticket.id: ticket for ticket in tickets_by_title.values()}
+    for position, action in enumerate(actions, start=1):
+        event_key = f"demo:action:{action.id}:proposed"
+        if event_key not in existing_keys:
+            record_action_proposed(
+                session,
+                action,
+                event_key=event_key,
+                created_at=(
+                    tickets_by_id[action.ticket_id].created_at
+                    + timedelta(seconds=position)
+                ),
+            )
 
 
 def seed_demo_data(
@@ -406,9 +463,9 @@ def seed_demo_data(
 
     sites_by_code = _upsert_sites(session)
     users_by_email = _upsert_users(session, demo_passwords)
-    _upsert_tickets(session, sites_by_code, users_by_email)
-    session.flush()
-    _upsert_actions(session)
+    tickets_by_title = _upsert_tickets(session, sites_by_code, users_by_email)
+    actions = _upsert_actions(session, tickets_by_title)
+    _seed_audit_events(session, tickets_by_title, actions, users_by_email)
     session.flush()
 
     return SeedSummary(

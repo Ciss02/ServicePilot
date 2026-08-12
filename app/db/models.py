@@ -18,12 +18,15 @@ from sqlalchemy import (
     func,
     true,
 )
+from sqlalchemy import event as sqlalchemy_event
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
 from app.domain.vocabulary import (
     ActionStatus,
     ActionType,
+    AuditActorType,
+    AuditEventType,
     ClassificationReviewStatus,
     Impact,
     Priority,
@@ -354,4 +357,59 @@ class ProposedAction(Base):
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
     )
+
+
+class AuditEvent(Base):
+    """Evento append-only che documenta un passaggio rilevante del ticket."""
+
+    __tablename__ = "audit_events"
+    __table_args__ = (
+        CheckConstraint(
+            "length(trim(summary)) BETWEEN 5 AND 300",
+            name="ck_audit_events_summary_length",
+        ),
+        CheckConstraint(
+            "length(details_json) BETWEEN 2 AND 4000",
+            name="ck_audit_events_details_length",
+        ),
+        Index("ix_audit_events_ticket_created", "ticket_id", "created_at", "id"),
+        Index("ix_audit_events_type_created", "event_type", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ticket_id: Mapped[int] = mapped_column(
+        ForeignKey("tickets.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    actor_type: Mapped[AuditActorType] = mapped_column(
+        _enum_column(AuditActorType, "audit_actor_type"), nullable=False
+    )
+    actor_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    event_type: Mapped[AuditEventType] = mapped_column(
+        _enum_column(AuditEventType, "audit_event_type"), nullable=False
+    )
+    summary: Mapped[str] = mapped_column(String(300), nullable=False)
+    details_json: Mapped[str] = mapped_column(
+        Text, nullable=False, default="{}", server_default="{}"
+    )
+    action_id: Mapped[int | None] = mapped_column(
+        ForeignKey("proposed_actions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    event_key: Mapped[str | None] = mapped_column(
+        String(160), nullable=True, unique=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
+    )
+
+
+@sqlalchemy_event.listens_for(AuditEvent, "before_update")
+@sqlalchemy_event.listens_for(AuditEvent, "before_delete")
+def _prevent_audit_event_mutation(*_: object) -> None:
+    """Impedisce modifiche o cancellazioni accidentali tramite l'ORM."""
+
+    raise ValueError("Gli eventi di audit sono append-only")
 
