@@ -111,6 +111,84 @@
           </form>
           <p class="ai-human-note"><strong>Decisione umana:</strong> questo testo non aggiorna lo stato e non sostituisce la soluzione finale del tecnico.</p>
         </section>
+
+        <section class="detail-card proposed-actions-card" id="proposed-actions" aria-labelledby="proposed-actions-title">
+          <div class="proposed-actions-heading">
+            <div>
+              <p class="card-label">Agente + controllo umano</p>
+              <h2 id="proposed-actions-title">Azioni proposte</h2>
+            </div>
+            <span class="human-approval-badge">Approvazione obbligatoria</span>
+          </div>
+          <p class="proposed-actions-intro">Controlla motivazione, dati ed effetto previsto. Nessun servizio viene chiamato finché non scegli esplicitamente “Approva ed esegui”.</p>
+
+          {% if action_error %}
+            <div class="form-alert" role="alert">{{ action_error }}</div>
+          {% elif action_result == "succeeded" %}
+            <div class="action-feedback action-feedback-success" role="status">Azione approvata e completata dal servizio simulato.</div>
+          {% elif action_result == "failed" %}
+            <div class="action-feedback action-feedback-failed" role="status">L'approvazione è stata salvata, ma il servizio simulato ha restituito un errore.</div>
+          {% elif action_result == "rejected" %}
+            <div class="action-feedback action-feedback-rejected" role="status">Proposta rifiutata. Nessun servizio è stato chiamato.</div>
+          {% elif action_result == "already_decided" %}
+            <div class="action-feedback action-feedback-warning" role="status">Questa proposta era già stata decisa: non è stata eseguita di nuovo.</div>
+          {% endif %}
+
+          {% if action_proposals %}
+            <div class="proposed-actions-list">
+              {% for action in action_proposals %}
+                <article class="proposed-action proposed-action-{{ action.status_class }}">
+                  <header class="proposed-action-header">
+                    <div>
+                      <span>Azione {{ loop.index }}</span>
+                      <h3>{{ action.type_label }}</h3>
+                    </div>
+                    <span class="action-status action-status-{{ action.status_class }}">{{ action.status_label }}</span>
+                  </header>
+
+                  <div class="action-explanation-grid">
+                    <div>
+                      <span>Perché viene proposta</span>
+                      <p>{{ action.rationale }}</p>
+                    </div>
+                    <div>
+                      <span>Effetto previsto</span>
+                      <p>{{ action.expected_effect }}</p>
+                    </div>
+                  </div>
+
+                  <dl class="action-payload">
+                    {% for item in action.payload_items %}
+                      <div><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div>
+                    {% endfor %}
+                  </dl>
+
+                  {% if action.can_decide %}
+                    <div class="action-approval-note">
+                      <strong>La scelta è definitiva.</strong>
+                      <span>L'approvazione avvia subito il servizio REST simulato; il rifiuto non lo contatta.</span>
+                    </div>
+                    <form class="action-decision-form" method="post" action="/app/tickets/{{ ticket.id }}/actions/{{ action.id }}/decision">
+                      <button class="action-reject-button" type="submit" name="decision" value="reject">Rifiuta proposta</button>
+                      <button class="primary-button action-approve-button" type="submit" name="decision" value="approve">Approva ed esegui <span aria-hidden="true">→</span></button>
+                    </form>
+                  {% else %}
+                    <div class="action-decision-summary">
+                      {% if action.reviewer_name %}<p><strong>Decisione:</strong> {{ action.reviewer_name }} · {{ action.decided_at }}</p>{% endif %}
+                      {% if action.execution_message %}<p>{{ action.execution_message }}</p>{% endif %}
+                      {% if action.execution_reference %}<p><strong>Riferimento simulato:</strong> <code>{{ action.execution_reference }}</code></p>{% endif %}
+                    </div>
+                  {% endif %}
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="proposed-actions-empty">
+              <strong>Nessuna azione da valutare</strong>
+              <p>Quando l'agente salverà una proposta, comparirà qui senza essere eseguita automaticamente.</p>
+            </div>
+          {% endif %}
+        </section>
       </div>
 
       <aside class="management-panel" aria-labelledby="management-title">

@@ -9,7 +9,8 @@ Il dataset comprende:
 
 - 6 sedi: una sede centrale, uno stabilimento, un magazzino e tre punti vendita;
 - 5 profili: tre dipendenti, un tecnico IT e un amministratore;
-- 6 ticket che rappresentano produzione, rete, VPN, software, stampa e sicurezza.
+- 6 ticket che rappresentano produzione, rete, VPN, software, stampa e sicurezza;
+- 3 azioni proposte sul ticket produttivo, una per ciascun tipo simulato.
 
 I profili ricevono credenziali configurate esternamente e nel database conservano
 soltanto hash Argon2. Le istruzioni sono in [`DEMO_ACCOUNTS.md`](DEMO_ACCOUNTS.md).
@@ -32,8 +33,9 @@ Dopo aver preparato l'ambiente locale e impostato le tre variabili descritte in
 
 Il comando crea anche le tabelle mancanti. Può essere ripetuto: sedi e utenti vengono
 riconosciuti rispettivamente tramite codice ed email, mentre i ticket demo vengono
-riconosciuti dal loro titolo esplicito. I record già presenti vengono riallineati ai
-valori approvati e non vengono creati duplicati.
+riconosciuti dal loro titolo esplicito. Le azioni demo vengono riconosciute tramite
+ticket, tipo e motivazione. I record già presenti vengono riallineati ai valori
+approvati e non vengono creati duplicati.
 
 Il caricamento non elimina righe estranee al dataset. Tutte le modifiche demo vengono
 salvate insieme; in caso di errore la transazione viene annullata per non lasciare dati
@@ -51,5 +53,6 @@ tecnico è un profilo demo valido. Impatto e urgenza provengono dal vocabolario 
 progetto e la priorità viene calcolata dalla matrice deterministica del backend.
 
 I test verificano caricamento ripetuto, conteggi, ripristino dei valori approvati,
-conservazione di record estranei e coerenza delle priorità.
+conservazione di record estranei, coerenza delle priorità e ritorno delle tre azioni
+demo allo stato `pending_approval`.
 

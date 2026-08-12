@@ -151,6 +151,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Suggerimenti tecnici con fonti](docs/SOURCED_SOLUTIONS.md)
 - [Modello delle azioni proposte](docs/PROPOSED_ACTIONS.md)
 - [Servizi REST simulati per le azioni](docs/SIMULATED_ACTION_SERVICES.md)
+- [Approvazione umana delle azioni](docs/ACTION_APPROVAL.md)
 
 ### Avvertenza
 

@@ -295,9 +295,61 @@ def test_proposed_action_table_keeps_proposal_separate_from_ticket(
         "payload_json",
         "expected_effect",
         "status",
+        "reviewed_by_user_id",
+        "decided_at",
+        "execution_reference",
+        "execution_message",
+        "execution_error_code",
         "created_at",
         "updated_at",
     }
+
+
+def test_existing_proposed_actions_receive_decision_and_result_columns(
+    database_engine,
+) -> None:
+    with database_engine.begin() as connection:
+        connection.execute(
+            text(
+                "CREATE TABLE proposed_actions ("
+                "id INTEGER PRIMARY KEY, "
+                "ticket_id INTEGER NOT NULL, "
+                "status VARCHAR(30) NOT NULL)"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO proposed_actions (ticket_id, status) "
+                "VALUES (7, 'pending_approval')"
+            )
+        )
+
+    create_database(database_engine)
+    create_database(database_engine)
+
+    columns = {
+        column["name"]
+        for column in inspect(database_engine).get_columns("proposed_actions")
+    }
+    with database_engine.connect() as connection:
+        row = connection.execute(
+            text(
+                "SELECT ticket_id, status, reviewed_by_user_id, decided_at, "
+                "execution_reference, execution_message, execution_error_code "
+                "FROM proposed_actions"
+            )
+        ).one()
+
+    assert {
+        "reviewed_by_user_id",
+        "decided_at",
+        "execution_reference",
+        "execution_message",
+        "execution_error_code",
+    } <= columns
+    assert row.ticket_id == 7
+    assert row.status == "pending_approval"
+    assert tuple(row)[2:] == (None, None, None, None, None)
 
 
 def test_existing_database_receives_proposed_action_table(database_engine) -> None:

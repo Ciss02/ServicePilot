@@ -12,10 +12,13 @@ from sqlalchemy.orm import Session
 
 from app.ai import AIUnavailableError
 from app.ai.dependencies import get_ai_model, get_embedding_model
+from app.actions import ActionExecutionResult
+from app.actions.dependencies import get_action_service_client
 from app.db import (
     AuthSession,
     KnowledgeDocument,
     KnowledgeSegment,
+    ProposedAction,
     Site,
     Ticket,
     TicketSolutionSource,
@@ -26,6 +29,8 @@ from app.db import (
 )
 from app.knowledge import KNOWLEDGE_STORAGE_DIRECTORY_ENV
 from app.domain.vocabulary import (
+    ActionStatus,
+    ActionType,
     ClassificationReviewStatus,
     Impact,
     Priority,
@@ -166,6 +171,33 @@ def web_client(tmp_path, monkeypatch) -> Iterator[tuple[TestClient, Engine, str]
                             status=TicketStatus.NEW,
                         ),
                     ]
+                )
+                session.flush()
+                action_ticket = session.scalar(
+                    select(Ticket).where(
+                        Ticket.title == "VPN demo in attesa di informazioni"
+                    )
+                )
+                session.add(
+                    ProposedAction(
+                        ticket_id=action_ticket.id,
+                        action_type=ActionType.NOTIFY_REQUESTER,
+                        rationale=(
+                            "Il richiedente attende un aggiornamento demo sulla verifica."
+                        ),
+                        payload_json=json.dumps(
+                            {
+                                "message": (
+                                    "La verifica VPN demo è in corso. "
+                                    "Ti aggiorneremo dopo il controllo."
+                                )
+                            },
+                            ensure_ascii=False,
+                        ),
+                        expected_effect=(
+                            "Registrare una comunicazione demo senza invii reali."
+                        ),
+                    )
                 )
                 session.commit()
 
@@ -885,6 +917,126 @@ def test_admin_can_use_the_same_technical_queue(web_client) -> None:
     assert response.status_code == 200
     assert "Area tecnica" in response.text
     assert "Ticket riservato a un altro dipendente" in response.text
+
+
+class WebActionServiceStub:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def execute(self, proposal):
+        self.calls.append(proposal)
+        return ActionExecutionResult(
+            succeeded=True,
+            reference="COM-WEB-DEMO",
+            message="Comunicazione demo registrata senza inviare messaggi reali.",
+        )
+
+
+def test_technician_sees_action_details_before_deciding(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "tecnico.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        ticket_id = session.scalar(
+            select(Ticket.id).where(
+                Ticket.title == "VPN demo in attesa di informazioni"
+            )
+        )
+
+    response = client.get(f"/app/tickets/{ticket_id}")
+
+    assert response.status_code == 200
+    assert "Azioni proposte" in response.text
+    assert "Approvazione obbligatoria" in response.text
+    assert "Perché viene proposta" in response.text
+    assert "Effetto previsto" in response.text
+    assert "La verifica VPN demo è in corso" in response.text
+    assert "Approva ed esegui" in response.text
+    assert "Rifiuta proposta" in response.text
+
+
+def test_technician_approval_calls_service_once_and_shows_result(web_client) -> None:
+    client, database_engine, password = web_client
+    service = WebActionServiceStub()
+    client.app.dependency_overrides[get_action_service_client] = lambda: service
+    login_web(client, "tecnico.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        action = session.scalar(select(ProposedAction))
+        ticket_id = action.ticket_id
+        action_id = action.id
+
+    response = client.post(
+        f"/app/tickets/{ticket_id}/actions/{action_id}/decision",
+        data={"decision": "approve"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"].endswith("?action_result=succeeded")
+    assert len(service.calls) == 1
+    with Session(database_engine) as session:
+        stored = session.get(ProposedAction, action_id)
+        assert stored.status is ActionStatus.SUCCEEDED
+        assert stored.execution_reference == "COM-WEB-DEMO"
+        assert stored.reviewed_by_user_id is not None
+
+    detail = client.get(response.headers["location"])
+    assert "Azione approvata e completata" in detail.text
+    assert "Completata" in detail.text
+    assert "COM-WEB-DEMO" in detail.text
+    assert 'name="decision" value="approve"' not in detail.text
+
+
+def test_web_rejection_never_calls_the_service(web_client) -> None:
+    client, database_engine, password = web_client
+    service = WebActionServiceStub()
+    client.app.dependency_overrides[get_action_service_client] = lambda: service
+    login_web(client, "admin.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        action = session.scalar(select(ProposedAction))
+        ticket_id = action.ticket_id
+        action_id = action.id
+
+    response = client.post(
+        f"/app/tickets/{ticket_id}/actions/{action_id}/decision",
+        data={"decision": "reject"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"].endswith("?action_result=rejected")
+    assert service.calls == []
+    with Session(database_engine) as session:
+        assert session.get(ProposedAction, action_id).status is ActionStatus.REJECTED
+
+    detail = client.get(response.headers["location"])
+    assert "Nessun servizio è stato chiamato" in detail.text
+    assert "Rifiutata" in detail.text
+
+
+def test_employee_cannot_decide_a_proposed_action_from_the_web(web_client) -> None:
+    client, database_engine, password = web_client
+    service = WebActionServiceStub()
+    client.app.dependency_overrides[get_action_service_client] = lambda: service
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        action = session.scalar(select(ProposedAction))
+        ticket_id = action.ticket_id
+        action_id = action.id
+
+    response = client.post(
+        f"/app/tickets/{ticket_id}/actions/{action_id}/decision",
+        data={"decision": "approve"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/app"
+    assert service.calls == []
+    with Session(database_engine) as session:
+        assert (
+            session.get(ProposedAction, action_id).status
+            is ActionStatus.PENDING_APPROVAL
+        )
 
 
 def test_technician_can_open_full_ticket_detail(web_client) -> None:

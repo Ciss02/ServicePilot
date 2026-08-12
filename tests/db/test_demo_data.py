@@ -6,9 +6,23 @@ import pytest
 from sqlalchemy import func, inspect, select
 from sqlalchemy.orm import Session
 
-from app.db import Site, Ticket, User, build_engine, create_database, load_demo_data
+from app.db import (
+    ProposedAction,
+    Site,
+    Ticket,
+    User,
+    build_engine,
+    create_database,
+    load_demo_data,
+)
 from app.domain.priority import calculate_priority
-from app.domain.vocabulary import ClassificationReviewStatus, Priority, Role
+from app.domain.vocabulary import (
+    ActionStatus,
+    ActionType,
+    ClassificationReviewStatus,
+    Priority,
+    Role,
+)
 from app.security.demo_credentials import (
     DEMO_PASSWORD_ENV_BY_ROLE,
     DemoCredentialsError,
@@ -56,6 +70,7 @@ def test_demo_data_load_is_repeatable(database_engine) -> None:
         assert _count(session, Site) == 6
         assert _count(session, User) == 5
         assert _count(session, Ticket) == 6
+        assert session.scalar(select(func.count()).select_from(ProposedAction)) == 3
 
 
 def test_missing_credentials_stop_before_database_changes(
@@ -125,6 +140,8 @@ def test_reload_restores_expected_demo_values(database_engine) -> None:
         assert ticket is not None
         site.name = "Valore modificato"
         ticket.priority = Priority.P4
+        action = session.scalar(select(ProposedAction).limit(1))
+        action.status = ActionStatus.REJECTED
         session.commit()
 
     load_demo_data(database_engine)
@@ -140,6 +157,9 @@ def test_reload_restores_expected_demo_values(database_engine) -> None:
         assert ticket is not None
         assert site.name == "Sede centrale Polaris Demo"
         assert ticket.priority is Priority.P1
+        action = session.scalar(select(ProposedAction).limit(1))
+        assert action.status is ActionStatus.PENDING_APPROVAL
+        assert action.reviewed_by_user_id is None
 
 
 def test_load_preserves_records_outside_demo_dataset(database_engine) -> None:
@@ -189,4 +209,10 @@ def test_demo_records_are_synthetic_and_coherent(database_engine) -> None:
             ticket.classification_review_status
             is ClassificationReviewStatus.HUMAN_REVIEWED
             for ticket in tickets
+        )
+        actions = session.scalars(select(ProposedAction)).all()
+        assert len(actions) == 3
+        assert {action.action_type for action in actions} == set(ActionType)
+        assert all(
+            action.status is ActionStatus.PENDING_APPROVAL for action in actions
         )

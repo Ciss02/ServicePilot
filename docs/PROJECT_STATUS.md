@@ -99,6 +99,13 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
   al richiedente ed escalation al fornitore.
 - Successi `200` ed errori demo `503` deterministici, con riferimenti stabili e senza
   effetti reali, persistenza o esposizione nelle rotte del portale.
+- Tre proposte completamente fittizie disponibili nel dataset demo, una per tipo di
+  azione, ripristinate in attesa senza duplicati.
+- Sezione tecnica con motivazione, payload, effetto previsto e stato di ogni proposta.
+- Approvazione o rifiuto espliciti riservati a tecnico e amministratore nel backend.
+- Decisione salvata prima dell'esecuzione e chiamata REST singola soltanto dopo
+  l'approvazione, con doppio invio bloccato.
+- Decisore, data, riferimento, messaggio o errore del simulatore conservati e visibili.
 
 ## Milestone attiva
 
@@ -106,22 +113,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-071 - Servizi REST simulati**
+**SP-072 - Approvazione del tecnico**
 
-Tre endpoint HTTP locali imitano assegnazione, comunicazione ed escalation. Ogni
-richiesta è validata, produce un riferimento ripetibile in caso di successo oppure un
-errore `503` controllato. L'app dei simulatori resta separata dal portale e non esegue o
-salva alcun effetto reale.
+Tecnico e amministratore possono valutare ogni proposta nel dettaglio del ticket. Il
+rifiuto non chiama servizi; l'approvazione viene salvata prima di una singola chiamata
+REST e conserva successo o errore. Ruoli non autorizzati, riferimenti errati e doppi
+invii non producono esecuzioni.
 
 ## Prossima attività
 
-**SP-072 - Approvazione del tecnico**
+**SP-073 - Audit log**
 
 Risultato atteso:
 
-- mostrare al tecnico payload, motivazione ed effetto previsto dell'azione;
-- permettere approvazione o rifiuto espliciti soltanto a tecnico e amministratore;
-- chiamare il servizio simulato esclusivamente dopo l'approvazione.
+- registrare operazioni umane, AI, approvazioni ed esiti come eventi consultabili;
+- conservare autore, tipo, ticket, data e dettagli controllati di ogni evento;
+- permettere di ricostruire il percorso completo di un ticket.
 
 ## Blocchi o decisioni aperte
 
@@ -131,11 +138,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-072.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-073.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-071` con il codice dell'attività successiva.
+Sostituire `SP-073` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -420,4 +427,20 @@ Prima di terminare verificare che:
 - Verificato che gli endpoint simulati non siano inclusi nell'applicazione del portale.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-071.
 - `pytest`: 305 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificati rifiuto, ruolo dipendente e riferimento ticket errato senza alcuna chiamata
+  al servizio simulato.
+- Verificato che `approved` ed `executing` siano persistenti prima della singola chiamata
+  REST e che un secondo invio non la ripeta.
+- Verificati successo, errore `503`, simulatore irraggiungibile e risposta controllata
+  senza modificare stato, assegnazione o soluzione del ticket.
+- Verificati decisore, data, riferimento, messaggio e codice di errore persistenti.
+- Verificate tre proposte demo ripetibili senza duplicati e migrazione dei database
+  locali precedenti senza perdita delle righe esistenti.
+- Verificata nel browser la chiamata reale portale `8010` → simulatore `8011`, con
+  riferimento di esecuzione visibile e dati demo poi ripristinati.
+- Verificato il layout a 390 × 844 senza scorrimento orizzontale e senza errori nella
+  console; pagina lasciata aperta nel browser integrato sul ticket `SP-0001`.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-072.
+- `pytest`: 324 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.

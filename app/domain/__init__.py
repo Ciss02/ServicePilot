@@ -1,6 +1,7 @@
 """Concetti e regole condivisi del dominio ServicePilot."""
 
 from app.domain.vocabulary import (
+    ActionDecision,
     ActionStatus,
     ActionType,
     Impact,
@@ -29,6 +30,7 @@ from app.domain.ticket_workflow import ALLOWED_STATUS_TRANSITIONS, can_transitio
 __all__ = [
     "ActionProposalCreate",
     "ActionProposalRead",
+    "ActionDecision",
     "ActionStatus",
     "ActionType",
     "AssignmentActionPayload",

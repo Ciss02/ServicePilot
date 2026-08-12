@@ -166,6 +166,39 @@ def create_database(target_engine: Engine = engine) -> None:
                 )
             )
 
+    proposed_action_migrations = {
+        "reviewed_by_user_id": (
+            "ALTER TABLE proposed_actions ADD COLUMN reviewed_by_user_id INTEGER"
+        ),
+        "decided_at": (
+            "ALTER TABLE proposed_actions ADD COLUMN decided_at DATETIME"
+        ),
+        "execution_reference": (
+            "ALTER TABLE proposed_actions ADD COLUMN execution_reference VARCHAR(80)"
+        ),
+        "execution_message": (
+            "ALTER TABLE proposed_actions ADD COLUMN execution_message TEXT"
+        ),
+        "execution_error_code": (
+            "ALTER TABLE proposed_actions ADD COLUMN execution_error_code VARCHAR(100)"
+        ),
+    }
+    proposed_action_columns = {
+        column["name"]
+        for column in inspect(target_engine).get_columns("proposed_actions")
+    }
+    for column_name, statement in proposed_action_migrations.items():
+        if column_name not in proposed_action_columns:
+            with target_engine.begin() as connection:
+                connection.execute(text(statement))
+    with target_engine.begin() as connection:
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_proposed_actions_reviewed_by_user_id "
+                "ON proposed_actions (reviewed_by_user_id)"
+            )
+        )
+
 
 def get_session() -> Iterator[Session]:
     """Fornisce una sessione isolata e la chiude dopo ogni richiesta."""
