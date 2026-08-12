@@ -134,6 +134,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Adapter del modello AI](docs/AI_MODEL_ADAPTER.md)
 - [Estrazione AI dei dati del ticket](docs/AI_TICKET_EXTRACTION.md)
 - [Classificazione AI suggerita](docs/AI_TICKET_CLASSIFICATION.md)
+- [Upload sicuro dei documenti](docs/KNOWLEDGE_UPLOAD.md)
 
 ### Avvertenza
 

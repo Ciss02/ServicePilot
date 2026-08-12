@@ -114,7 +114,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 **Risultato:** il tecnico riceve suggerimenti fondati su procedure consultabili.
 
-- [ ] **SP-060 - Upload sicuro dei documenti**
+- [x] **SP-060 - Upload sicuro dei documenti**
   Accettare PDF e Markdown con controlli di tipo e dimensione.
   Verifica: file non ammessi vengono rifiutati.
 - [ ] **SP-061 - Estrazione e segmentazione**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-060**. La milestone attiva è **Milestone 6**.
+La prossima attività è **SP-061**. La milestone attiva è **Milestone 6**.

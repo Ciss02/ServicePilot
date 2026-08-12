@@ -66,6 +66,11 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Stato persistente che distingue proposta AI, verifica umana e fallimenti controllati.
 - Conferma tecnica esplicita con correzione e nuovo calcolo deterministico della priorità.
 - Messaggi visibili per provider non disponibile e risposta AI non valida.
+- Area amministrativa per caricare e consultare i documenti della knowledge base.
+- Upload limitato a PDF e Markdown, con massimo 5 MB e controllo del contenuto reale.
+- File conservati con nome interno casuale in una cartella esclusa da Git.
+- Metadati persistenti con nome originale, formato, dimensione, impronta e autore.
+- Pulizia automatica dei file temporanei o definitivi quando il salvataggio fallisce.
 
 ## Milestone attiva
 
@@ -73,22 +78,22 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-053 - Revisione umana e gestione errori**
+**SP-060 - Upload sicuro dei documenti**
 
-Il dettaglio tecnico distingue una proposta AI dai valori verificati e offre una
-conferma umana separata dal normale aggiornamento. Timeout, provider disattivato e
-risposte non valide non fanno perdere il ticket: il tecnico riceve un messaggio sicuro
-e può completare manualmente la classificazione.
+L'amministratore dispone di una pagina dedicata per caricare PDF e Markdown fittizi.
+Il backend verifica nome, estensione, tipo, contenuto e limite di 5 MB prima di salvare
+il file con un nome casuale e registrare i metadati. Ogni errore lascia archivio e
+database senza modifiche parziali.
 
 ## Prossima attività
 
-**SP-060 - Upload sicuro dei documenti**
+**SP-061 - Estrazione e segmentazione**
 
 Risultato atteso:
 
-- accettare documenti PDF e Markdown per la knowledge base;
-- controllare tipo e dimensione prima di conservarli;
-- rifiutare file non ammessi senza modifiche parziali.
+- estrarre testo leggibile dai PDF e dai documenti Markdown conservati;
+- dividere il testo in segmenti utili alla futura ricerca;
+- mantenere per ogni segmento documento e sezione di origine.
 
 ## Blocchi o decisioni aperte
 
@@ -98,11 +103,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-060.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-061.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-060` con il codice dell'attività successiva.
+Sostituire `SP-061` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -305,4 +310,16 @@ Prima di terminare verificare che:
   console; server locale aggiornato su `127.0.0.1:8010`.
 - Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-053.
 - `pytest`: 213 test superati senza avvisi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Verificati upload validi di PDF e Markdown con nome interno casuale, impronta SHA-256
+  e metadati collegati all'amministratore.
+- Verificato il rifiuto senza modifiche parziali di estensioni non ammesse, PDF finti,
+  tipi incoerenti, Markdown binari, file vuoti e documenti oltre 5 MB.
+- Verificato che un errore del database rimuova anche il file già scritto.
+- Verificato che dipendenti e tecnici non possano aprire la pagina né caricare file.
+- Verificata nel browser integrato l'area amministrativa responsive con navigazione,
+  regole di sicurezza, modulo di upload e archivio vuoto; server aggiornato su
+  `127.0.0.1:8010`.
+- Verificata la sintassi di tutti i file in `app/` e `tests/` dopo SP-060.
+- `pytest`: 228 test superati senza avvisi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
