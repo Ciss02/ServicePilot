@@ -1,7 +1,7 @@
 # Strumenti amministrativi
 
-SP-074 completa l'area riservata all'amministratore con gestione delle fonti e
-ripristino controllato della demo.
+L'area riservata all'amministratore comprende gestione delle fonti e ripristino
+controllato della demo.
 
 ## Quale problema risolve
 

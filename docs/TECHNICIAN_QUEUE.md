@@ -1,6 +1,7 @@
 # Coda tecnica
 
-Questo documento riassume in modo semplice la funzionalità SP-044.
+Questo documento descrive la coda usata da tecnici e amministratori per organizzare il
+lavoro sui ticket.
 
 ## Quale problema risolve
 

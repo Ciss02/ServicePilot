@@ -1,10 +1,8 @@
 # Modello delle azioni proposte
 
-SP-070 introduce la base persistente delle azioni suggerite dall'agente. Una proposta
-descrive un possibile passo successivo, ma non lo applica al ticket e non contatta
-alcun servizio. I simulatori REST separati sono ora disponibili con SP-071;
-approvazione e collegamento dell'esecuzione sono disponibili con SP-072; l'audit
-generale verrà aggiunto con SP-073.
+Una proposta descrive un possibile passo successivo suggerito dall'agente, ma non lo
+applica al ticket senza una decisione umana. Dopo l'approvazione, ServicePilot chiama un
+servizio REST simulato e registra decisione, tentativo e risultato nell'audit.
 
 ## Quale problema risolve
 
@@ -38,13 +36,13 @@ vocabolario condiviso.
 ## Dove vengono salvati
 
 La tabella `proposed_actions` conserva tipo, motivazione, payload JSON normalizzato,
-effetto previsto, stato e date. La proposta è collegata al ticket e viene eliminata
-insieme a esso. Lo stato iniziale viene deciso dal backend ed è sempre
-`pending_approval`.
+effetto previsto, stato, decisione, risultato e date. La proposta è collegata al ticket
+e viene eliminata insieme a esso. Lo stato iniziale viene deciso dal backend ed è sempre
+`pending_approval`; i campi operativi vengono completati dal servizio di approvazione.
 
-La tabella non contiene un risultato di esecuzione e la funzione di creazione non
-riceve alcun client REST. Questa separazione rende impossibile eseguire accidentalmente
-un'azione durante il semplice salvataggio della proposta.
+La funzione che crea la proposta non compila decisione o risultato e non riceve alcun
+client REST. Questi campi vengono aggiornati soltanto dal flusso di approvazione: il
+semplice salvataggio della proposta non può quindi eseguire accidentalmente un'azione.
 
 ## Cosa può andare storto
 
@@ -56,9 +54,9 @@ un'azione durante il semplice salvataggio della proposta.
 
 ## Chi può usare la funzionalità
 
-SP-070 espone un servizio interno e non aggiunge ancora una pagina o un endpoint
-pubblico. SP-072 permetterà soltanto a tecnico e amministratore di approvare o rifiutare
-le proposte. Il dipendente non potrà autorizzare azioni operative.
+Tecnico e amministratore possono approvare o rifiutare le proposte dal dettaglio del
+ticket. Il dipendente non può autorizzare azioni operative e il backend verifica il
+ruolo anche se qualcuno prova a inviare direttamente una richiesta.
 
 ## Quale test dimostra che funziona
 

@@ -139,6 +139,15 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
   amministrativo verificato a 6 ticket, 3 azioni e 9 eventi iniziali.
 - Compatibilità Gemini 3.5 Flash-Lite verificata tramite JSON Schema standard e chiamata
   reale con dati esclusivamente fittizi.
+- README portfolio completo in italiano e inglese con demo, funzioni, avvio locale,
+  sicurezza, limiti e roadmap.
+- Architettura documentata con componenti, flussi, confini di sicurezza e scelte di
+  deploy.
+- Cinque schermate reali prodotte da un dataset temporaneo esclusivamente sintetico.
+- Indice completo della documentazione con separazione tra guide tecniche attuali e
+  registri storici.
+- Revisionati 26 documenti tecnici per eliminare riferimenti operativi alle vecchie
+  issue e descrivere le funzionalità nello stato realmente disponibile.
 
 ## Milestone attiva
 
@@ -146,26 +155,24 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-082 - Deploy e ripristino**
+**SP-083 - Documentazione portfolio**
 
-La demo è pubblicata su Render con HTTPS, segreti lato server e una sola istanza. Il
-collaudo anonimo ha verificato creazione AI di un ticket, revisione tecnica, azione
-simulata con audit e ripristino completo del dataset.
+Il repository presenta ora problema, soluzione, demo, scelte tecniche e limiti in
+italiano e inglese. Architettura, immagini e istruzioni verificate permettono a una
+persona esterna di comprendere e avviare il progetto senza usare segreti o dati reali.
 
 ## Prossima attività
 
-**SP-083 - Documentazione portfolio**
+**SP-084 - Video e release MVP**
 
 Risultato atteso:
 
-- completare README in italiano e inglese;
-- aggiungere architettura, screenshot, limiti e roadmap;
-- permettere a una persona esterna di comprendere e avviare il progetto.
+- preparare uno script semplice per una demo di 2-3 minuti;
+- registrare e collegare il video nel README;
+- pubblicare la release GitHub `v0.1.0` con note e materiali finali.
 
 ## Blocchi o decisioni aperte
 
-- Il Blueprint Render segue temporaneamente il ramo `codex/sp-082-deploy-and-reset`;
-  dopo il merge della PR #71 va spostato su `main`.
 - Il piano Render Free spegne il servizio dopo inattività e non conserva SQLite o file
   caricati; questa perdita controllata è accettata soltanto per la demo portfolio.
 
@@ -173,11 +180,11 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-083.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-084.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-083` con il codice dell'attività successiva.
+Sostituire `SP-084` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -531,3 +538,17 @@ Prima di terminare verificare che:
   creazione di `SP-0007`, revisione umana, azione simulata `ASG-62D227858B3B` e audit.
 - Verificato il reset pubblico: `SP-0007` restituisce 404, la coda torna a 6 ticket, le
   tre azioni tornano in attesa e `SP-0001` conserva soltanto i 4 eventi iniziali.
+- Verificati tutti i collegamenti e le immagini locali del README e del documento di
+  architettura.
+- Verificato due volte l'avvio da database vuoto con `python -m app.deployment`: 6 sedi,
+  5 utenti, 6 ticket, portale `8010` e simulatore `8011` disponibili.
+- Verificate nel browser le schermate dipendente, raccolta guidata, coda tecnica,
+  dettaglio operativo e knowledge base con soli dati temporanei fittizi.
+- `pip check`: nessuna dipendenza mancante o incompatibile.
+- Ruff: controllo superato e 150 file conformi alla formattazione.
+- `pytest -W error`: 354 test superati senza avvisi dopo SP-083.
+- Verificati tutti i collegamenti Markdown locali dell'intero repository: nessun file o
+  immagine mancante.
+- Verificato che i codici attività restino soltanto nei registri storici; `SP-0007` in
+  `DEPLOYMENT.md` è esplicitamente identificato come ticket demo.
+- `git diff --check`: nessun errore di spaziatura nella revisione generale dei documenti.

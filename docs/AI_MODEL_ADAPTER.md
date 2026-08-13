@@ -1,15 +1,15 @@
 # Adapter del modello AI
 
-Questo documento descrive la base introdotta con SP-050. Da SP-051 l'adapter è usato
-dalla raccolta guidata per estrarre i dati presenti nella descrizione; da SP-052 usa lo
-stesso contratto per classificare il ticket confermato.
+L'adapter AI è usato dalla raccolta guidata per estrarre i dati presenti nella
+descrizione, per classificare il ticket confermato e per produrre suggerimenti tecnici
+basati sulla knowledge base.
 
 ## Quale problema risolve
 
 ServicePilot non dipende direttamente da Gemini. Il resto dell'applicazione conosce
 soltanto il contratto `AIModel`, che riceve un testo e lo schema Pydantic della risposta
-attesa. In questo modo Gemini può essere sostituito nei test o in futuro senza cambiare
-il flusso dei ticket.
+attesa. In questo modo Gemini può essere sostituito nei test o in una nuova versione
+senza cambiare il flusso dei ticket.
 
 ```text
 ServicePilot -> AIModel -> GeminiAIModel -> Gemini API
@@ -35,9 +35,10 @@ errata produce `AIInvalidResponseError` e non viene passata al resto dell'applic
 
 ## Dove vengono salvati
 
-L'adapter non salva prompt o risposte nel database. SP-050 non crea né modifica ticket.
-La chiave API viene letta dall'ambiente e non viene stampata, salvata o inclusa nel
-repository.
+L'adapter non salva direttamente prompt o risposte nel database. Sono i servizi che lo
+usano a conservare soltanto i dati applicativi necessari, come classificazione o
+suggerimento. La chiave API viene letta dall'ambiente e non viene stampata, salvata o
+inclusa nel repository.
 
 ## Configurazione
 
@@ -74,14 +75,14 @@ nei comandi salvati o nella documentazione.
 - il limite locale per minuto o giorno può essere raggiunto.
 
 L'adapter trasforma questi casi in errori comuni di ServicePilot senza mostrare la
-chiave o i dettagli interni del provider. La gestione visibile e il percorso di
-ripiego verranno collegati all'interfaccia in SP-053.
+chiave o i dettagli interni del provider. L'interfaccia segnala il problema e mantiene
+disponibili i percorsi manuali o prudenziali previsti.
 
 ## Chi può usarlo
 
-L'adapter è un componente interno del backend. Non espone nuovi endpoint e non cambia i
-permessi dei ruoli. Le funzionalità future continueranno ad applicare autorizzazione e
-conferma nel backend.
+L'adapter è un componente interno del backend. Non espone direttamente endpoint e non
+cambia i permessi dei ruoli: autorizzazione e conferma restano applicate dai servizi e
+dalle pagine che lo utilizzano.
 
 ## Quale test dimostra che funziona
 

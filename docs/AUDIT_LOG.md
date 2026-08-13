@@ -1,7 +1,7 @@
 # Audit log
 
-SP-073 aggiunge una cronologia persistente e consultabile delle operazioni rilevanti
-eseguite sui ticket.
+ServicePilot conserva una cronologia persistente e consultabile delle operazioni
+rilevanti eseguite sui ticket.
 
 ## 1. Quale problema risolve
 
@@ -50,7 +50,7 @@ intervenire: la demo locale non pretende di sostituire un archivio esterno
 antimanomissione.
 
 L'unica eliminazione prevista dall'app è il ripristino amministrativo dell'intero
-dataset dimostrativo introdotto in SP-074. Richiede la frase `RIPRISTINA DEMO`, cancella
+dataset dimostrativo. Richiede la frase `RIPRISTINA DEMO`, cancella
 insieme ticket e relativa cronologia e crea i 9 eventi iniziali. Non permette di
 modificare o rimuovere singoli eventi e non è una funzione adatta a un ambiente reale.
 
@@ -61,7 +61,7 @@ modificare o rimuovere singoli eventi e non è una funzione adatta a un ambiente
 - un'azione rifiutata registra la decisione ma non crea eventi di esecuzione;
 - un servizio simulato non disponibile registra l'approvazione, l'avvio e l'esito
   fallito senza inventare un successo;
-- un doppio invio già bloccato da SP-072 non aggiunge una seconda esecuzione;
+- un doppio invio già bloccato dal servizio non aggiunge una seconda esecuzione;
 - un dettaglio JSON illeggibile non viene mostrato liberamente nella pagina.
 - il reset della demo elimina intenzionalmente l'intera cronologia operativa precedente.
 

@@ -22,9 +22,9 @@ controllati separatamente dal backend, come descritto in
 | `confirmed` | Deve essere `true` | Impedisce la creazione prima della conferma. |
 
 Il contratto non accetta campi aggiuntivi, incluso `requester_id`: il richiedente viene
-ricavato dalla sessione autenticata. Identificativo del ticket, stato iniziale, date e
-audit saranno assegnati dal backend. La classificazione avviene dopo la creazione, come
-previsto dal flusso della specifica.
+ricavato dalla sessione autenticata. Identificativo del ticket, stato iniziale e date
+sono assegnati dal backend. La classificazione e il primo evento di audit vengono creati
+dal servizio applicativo dopo il salvataggio.
 
 ## Classificazione
 
@@ -62,12 +62,11 @@ date. Può leggere
 direttamente un modello SQLAlchemy, mantenendo separata la struttura della risposta
 dalla tabella del database.
 
-## Cosa non viene ancora gestito
+## Dati gestiti separatamente
 
-- allegati;
-- date, cronologia e audit trail;
-- azioni dell'agente e fonti della knowledge base.
+`TicketRead` non incorpora audit, azioni proposte o fonti della knowledge base. Questi
+dati esistono, ma hanno contratti ed endpoint separati per evitare una risposta ticket
+troppo grande e difficile da capire. Gli allegati restano fuori dal perimetro dell'MVP.
 
 Le transizioni consentite sono controllate dal dominio e dall'API di aggiornamento,
-perché dipendono anche dallo stato già salvato. Le responsabilità elencate sopra
-appartengono alle successive attività del piano e non vengono simulate nei contratti.
+perché dipendono anche dallo stato già salvato.

@@ -1,9 +1,9 @@
 # Indicizzazione e ricerca della knowledge base
 
-SP-062 trasforma i segmenti di SP-061 in vettori confrontabili e recupera i passaggi
-più pertinenti rispetto a una domanda tecnica. SP-063 riutilizza questi risultati per
-generare un suggerimento tecnico con fonti verificabili; SP-064 impedisce la generazione
-quando nessun risultato raggiunge la soglia prudenziale `0,55`.
+La pipeline trasforma i segmenti dei documenti in vettori confrontabili e recupera i
+passaggi più pertinenti rispetto a una domanda tecnica. Gli stessi risultati alimentano
+un suggerimento con fonti verificabili; la generazione si ferma quando nessun passaggio
+raggiunge la soglia prudenziale `0,55`.
 
 ## Quale problema risolve
 
@@ -81,14 +81,14 @@ e limiti possono cambiare: verificare sempre il listino prima di un uso non dimo
 - modello cambiato: i vecchi vettori non vengono confrontati con quelli nuovi;
 - domanda vuota o troppo lunga: la ricerca viene fermata prima della chiamata.
 
-La futura reindicizzazione amministrativa permetterà di riallineare documenti creati
-con un modello precedente. La soglia iniziale di SP-064 dovrà essere rivalutata quando
-sarà disponibile un insieme più ampio di domande e procedure dimostrative.
+La rielaborazione amministrativa permette di riallineare documenti creati con un
+modello precedente. La soglia iniziale dovrà essere rivalutata se sarà disponibile un
+insieme più ampio di domande e procedure dimostrative.
 
 ## Chi può usare la funzionalità
 
 Il laboratorio visibile è riservato all'amministratore, come l'upload. Il servizio di
-ricerca è separato dalla pagina ed è riutilizzato nel dettaglio tecnico da SP-063.
+ricerca è separato dalla pagina ed è riutilizzato nel dettaglio tecnico.
 Dipendenti e tecnici non possono modificare l'indice tramite questa attività.
 
 ## Quale test dimostra che funziona

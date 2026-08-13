@@ -1,9 +1,9 @@
 # Raccolta guidata dei dati
 
-SP-042 e SP-043 permettono a un dipendente autenticato di descrivere un problema,
-completare i dati essenziali e controllare tutto prima dell'invio. Da SP-051 l'AI prova
-a ricavare titolo, sede, servizio e persone coinvolte: il modulo mostra soltanto i campi
-ancora mancanti. Se l'AI è disattivata, resta disponibile la raccolta manuale completa.
+Il percorso guidato permette a un dipendente autenticato di descrivere il problema con
+parole proprie. L'AI prova a ricavare titolo, sede, servizio e persone coinvolte; il
+modulo mostra soltanto i dati ancora mancanti e chiede una conferma prima di creare il
+ticket. Se l'AI è disattivata, resta disponibile la raccolta manuale completa.
 
 ## Quale problema risolve
 

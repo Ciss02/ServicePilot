@@ -44,8 +44,8 @@ ticket e quindi non ha uno stato in questo elenco.
 | `resolved` | Risolto | È stata applicata una soluzione, in attesa della chiusura. |
 | `closed` | Chiuso | Il lavoro sul ticket è terminato. |
 
-Le regole che stabiliscono quali passaggi tra stati sono consentiti verranno definite
-insieme alla gestione tecnica dei ticket; SP-010 definisce soltanto i valori ammessi.
+Le regole che stabiliscono quali passaggi tra stati sono consentiti sono applicate dal
+dominio e dall'API, come descritto in [`TICKET_API.md`](TICKET_API.md).
 
 ## Impatto
 
@@ -98,7 +98,7 @@ vocabolario. La funzione rifiuta testi liberi e non consulta né AI né database
 
 ## Gruppi di assegnazione AI
 
-SP-052 limita anche il gruppo suggerito a un elenco fittizio controllato:
+Anche il gruppo suggerito dall'AI è limitato a un elenco fittizio controllato:
 
 - `Service desk`;
 - `Supporto workplace`;
@@ -108,7 +108,7 @@ SP-052 limita anche il gruppo suggerito a un elenco fittizio controllato:
 - `Supporto magazzino`;
 - `Sicurezza IT`.
 
-Il modello non può inventare un gruppo esterno. Il tecnico potrà correggere la proposta
+Il modello non può inventare un gruppo esterno. Il tecnico può correggere la proposta
 nel dettaglio operativo.
 
 ## Stato della revisione della classificazione
@@ -139,16 +139,15 @@ tipi inventati dal modello.
 | Valore interno | Significato |
 | --- | --- |
 | `pending_approval` | Proposta salvata, nessuna autorizzazione o esecuzione. |
-| `approved` | Un tecnico ha autorizzato la futura esecuzione. |
+| `approved` | Un tecnico ha autorizzato l'esecuzione. |
 | `rejected` | Un tecnico ha rifiutato la proposta. |
 | `executing` | Il servizio simulato sta elaborando l'azione. |
 | `succeeded` | Il servizio simulato ha completato l'azione. |
 | `failed` | Il servizio simulato ha restituito un errore controllato. |
 
-SP-070 crea esclusivamente lo stato `pending_approval`. SP-071 rende disponibili
-successi ed errori dei servizi simulati. SP-072 applica le transizioni soltanto dopo una
-decisione esplicita di tecnico o amministratore; SP-073 registra ogni passaggio nel
-registro generale.
+Una nuova proposta nasce in `pending_approval`. Le transizioni successive avvengono
+soltanto dopo una decisione esplicita di tecnico o amministratore; successi, errori e
+decisioni vengono registrati nel [`registro di audit`](AUDIT_LOG.md).
 
 ## Origine degli eventi di audit
 

@@ -1,6 +1,6 @@
 # Approvazione umana delle azioni
 
-SP-072 collega le proposte di SP-070 ai servizi REST simulati di SP-071. Tecnico e
+Il flusso di approvazione collega le proposte ai servizi REST simulati. Tecnico e
 amministratore vedono i dettagli nel ticket e devono scegliere esplicitamente se
 approvare oppure rifiutare ogni proposta.
 
@@ -29,7 +29,7 @@ Il backend verifica che:
 - il profilo sia `technician` oppure `admin`;
 - proposta e ticket esistano e siano collegati;
 - la proposta sia ancora `pending_approval`;
-- il payload salvato superi nuovamente i contratti di SP-070;
+- il payload salvato superi nuovamente i contratti delle proposte;
 - la decisione sia uno dei due valori ammessi.
 
 Un aggiornamento condizionale nel database prenota la decisione una sola volta. Due
@@ -54,7 +54,7 @@ pending_approval -> approved -> executing -> failed
 
 Prima della chiamata REST vengono salvati sia `approved` sia `executing`. Se il processo
 si interrompe, la proposta non torna falsamente in attesa e non viene ripetuta da un
-doppio clic. SP-073 aggiungerà il registro audit generale e immutabile degli eventi.
+doppio clic. Ogni passaggio viene inoltre scritto nel registro audit generale.
 
 ## Cosa può andare storto
 

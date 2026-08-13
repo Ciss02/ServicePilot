@@ -1,7 +1,7 @@
 # API essenziali dei ticket
 
-SP-022 e SP-023 introducono le operazioni REST che salvano, leggono e gestiscono ticket
-reali dal database. La documentazione interattiva è disponibile all'indirizzo `/docs`
+Le API REST salvano, leggono e gestiscono ticket reali nel database. La documentazione
+interattiva è disponibile all'indirizzo `/docs`
 mentre il server è in esecuzione.
 
 ## Creazione
@@ -80,6 +80,7 @@ passare a `resolved` o `closed` deve essere disponibile una soluzione testuale.
 
 Un errore annulla la transazione e non lascia ticket parziali.
 
-La matrice completa è documentata in [`AUTHORIZATION.md`](AUTHORIZATION.md). Filtri di
-ricerca e paginazione appartengono ad attività successive.
+La matrice completa è documentata in [`AUTHORIZATION.md`](AUTHORIZATION.md). L'MVP non
+espone ricerca testuale e paginazione nelle API; l'interfaccia tecnica offre invece i
+filtri operativi necessari alla demo.
 
