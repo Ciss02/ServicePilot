@@ -12,6 +12,8 @@ sviluppo.
   sicurezza;
 - [`ServicePilot_AI_MVP_Specification.md`](ServicePilot_AI_MVP_Specification.md) —
   perimetro approvato dell'MVP;
+- [`V020_PRODUCT_PLAN.md`](V020_PRODUCT_PLAN.md) — comportamento e decisioni condivise
+  della roadmap `v0.2.0`;
 - [`SECURITY_AND_DEMO_LIMITS.md`](SECURITY_AND_DEMO_LIMITS.md) — protezioni e limiti da
   conoscere prima di usare la demo;
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — configurazione Render, ripristino e collaudo

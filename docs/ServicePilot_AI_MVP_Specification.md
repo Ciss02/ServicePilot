@@ -319,6 +319,28 @@ Per la versione `v0.1.0` il video è stato reso facoltativo: demo online, scherm
 README bilingue e documento di architettura costituiscono il materiale di presentazione
 principale. La scelta e la motivazione sono registrate in `DECISIONS.md`.
 
+## 16. Evoluzione approvata v0.2.0
+
+L'MVP descritto nelle sezioni precedenti resta la baseline pubblicata come `v0.1.0`.
+La prossima versione estende il prodotto senza riscrivere retroattivamente i criteri con
+cui l'MVP è stato completato.
+
+La `v0.2.0` comprende:
+
+- agente conversazionale persistente con diagnosi preventiva prudente;
+- allegati sicuri e richieste condizionali di screenshot, foto o log;
+- thread pubblico cronologico tra richiedente e supporto;
+- conferma del dipendente, riapertura e chiusura automatica del ticket;
+- gruppi amministrabili, sotto-attività, worklog, timer e notifiche interne;
+- apertura per conto del dipendente;
+- procedure versionate, editor Markdown e conversione controllata dei PDF;
+- apprendimento mediato da revisione amministrativa;
+- dashboard amministrativa ed esportazioni CSV.
+
+Le decisioni trasversali, i limiti e il comportamento atteso sono descritti in
+[`V020_PRODUCT_PLAN.md`](V020_PRODUCT_PLAN.md). La sequenza implementativa ufficiale è
+in [`PROJECT_PLAN.md`](PROJECT_PLAN.md) e nelle issue GitHub `SP-090`-`SP-133`.
+
 ---
 
 # English Summary

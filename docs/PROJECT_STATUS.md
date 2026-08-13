@@ -6,6 +6,20 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Stato attuale
 
+### Evoluzione v0.2.0 pianificata
+
+- La release stabile corrente resta `v0.1.0`; nessuna funzione v0.2 è ancora
+  implementata o pubblicata.
+- Approvata la roadmap completa descritta in
+  [`V020_PRODUCT_PLAN.md`](V020_PRODUCT_PLAN.md).
+- Le milestone GitHub 0-8 sono state chiuse perché già completate nella release MVP.
+- Create le milestone GitHub 9-13 e le 22 issue da `SP-090` a `SP-133`.
+- Ogni issue contiene obiettivo, modifiche, dipendenze, rischi, criteri di accettazione e
+  verifiche.
+- La prossima attività obbligatoria è **SP-090 - Migrazioni versionate per la v0.2**.
+- La roadmap verrà implementata una issue e una pull request alla volta; il codice della
+  `v0.2.0` non è stato anticipato durante la pianificazione.
+
 - Git inizializzato localmente sul ramo `main`.
 - Repository GitHub pubblica: `https://github.com/Ciss02/ServicePilot`.
 - Primo commit della struttura iniziale pubblicato sul ramo `main`.
@@ -157,6 +171,10 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 **Milestone 8 - Qualità, pubblicazione e portfolio**
 
+## Milestone pianificata corrente
+
+**Milestone 9 - Modello operativo e collaborazione**
+
 ## Ultima attività completata
 
 **SP-084 - Release MVP v0.1.0**
@@ -166,8 +184,9 @@ Tutte le attività previste per l'MVP sono completate e verificate.
 
 ## Prossima attività
 
-Nessuna attività obbligatoria per l'MVP. Prima di una nuova evoluzione occorre aggiungere
-una voce a `PROJECT_PLAN.md` con risultato e verifica attesi.
+**SP-090 - Migrazioni versionate per la v0.2.** Introdurre la base Alembic e verificare
+sia l'aggiornamento di un database `v0.1.0` sia la creazione da database vuoto. Le issue
+successive dipendono da questa base e non devono essere anticipate.
 
 ## Blocchi o decisioni aperte
 
@@ -179,8 +198,8 @@ una voce a `PROJECT_PLAN.md` con risultato e verifica attesi.
 Prompt consigliato:
 
 > Leggi `AGENTS.md`, `docs/PROJECT_STATUS.md` e `docs/PROJECT_PLAN.md`. L'MVP è completo:
-> prima di implementare un'evoluzione, aggiungi una nuova attività con risultato e
-> verifica attesi. Spiegami in modo semplice cosa farai e perché.
+> procedi con SP-090 seguendo la relativa issue GitHub. Spiegami in modo semplice cosa
+> farai e perché, senza anticipare le issue successive.
 
 ## Come chiudere una sessione
 
