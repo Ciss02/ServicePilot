@@ -168,6 +168,7 @@ seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password pred
 - [Strumenti amministrativi e ripristino demo](docs/ADMIN_TOOLS.md)
 - [Controlli automatici di qualità](docs/QUALITY_CHECKS.md)
 - [Sicurezza e limiti della demo](docs/SECURITY_AND_DEMO_LIMITS.md)
+- [Deploy e ripristino della demo](docs/DEPLOYMENT.md)
 
 ### Avvertenza
 
