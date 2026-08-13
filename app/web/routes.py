@@ -57,7 +57,14 @@ from app.audit import (
     list_ticket_audit_events,
     present_audit_events,
 )
-from app.db.models import AuditEvent, KnowledgeDocument, KnowledgeSegment, Site, Ticket, User
+from app.db.models import (
+    AuditEvent,
+    KnowledgeDocument,
+    KnowledgeSegment,
+    Site,
+    Ticket,
+    User,
+)
 from app.domain.auth_contracts import LoginRequest
 from app.domain.ticket_contracts import TicketClassification, TicketCreate, TicketUpdate
 from app.domain.ticket_intake import (
@@ -99,6 +106,21 @@ from app.security.authentication import (
 )
 from app.security.demo_credentials import DemoCredentialsError, load_demo_passwords
 from app.security.session_cookie import delete_session_cookie, set_session_cookie
+from app.support_groups import (
+    DuplicateSupportGroupError,
+    InvalidSupportGroupDataError,
+    InvalidSupportGroupMemberError,
+    SupportGroupNotFoundError,
+    SupportGroupPersistenceError,
+    create_support_group,
+    list_active_support_groups,
+    list_eligible_group_members,
+    list_support_groups,
+    replace_support_group_members,
+    set_support_group_active,
+    support_group_members_by_group,
+    update_support_group,
+)
 from app.tickets.creation import (
     TicketPersistenceError,
     TicketSiteNotFoundError,
@@ -107,6 +129,7 @@ from app.tickets.creation import (
 from app.tickets.management import (
     ClassificationReviewRequiredError,
     InvalidStatusTransitionError,
+    ManagedSupportGroupUnavailableError,
     ManagedTechnicianNotFoundError,
     ManagedTechnicianUnavailableError,
     ManagedTicketNotFoundError,
@@ -287,6 +310,39 @@ def _admin_only(current_user: User) -> RedirectResponse | None:
     if current_user.role is not Role.ADMIN:
         return RedirectResponse(url="/app", status_code=status.HTTP_303_SEE_OTHER)
     return None
+
+
+def _support_groups_context(
+    session: Session,
+    current_user: User,
+    *,
+    group_action: str | None = None,
+    error: str | None = None,
+    values: dict[str, str] | None = None,
+    editing_group_id: int | None = None,
+) -> dict[str, object]:
+    """Prepara catalogo, membri tecnici e feedback dei moduli amministrativi."""
+
+    members_by_group = support_group_members_by_group(session)
+    groups = list_support_groups(session)
+    context = _workspace_context(current_user, "Gruppi di supporto")
+    context.update(
+        {
+            "groups": groups,
+            "members_by_group": members_by_group,
+            "member_ids_by_group": {
+                group_id: {member.id for member in members}
+                for group_id, members in members_by_group.items()
+            },
+            "eligible_members": list_eligible_group_members(session),
+            "active_group_count": sum(group.is_active for group in groups),
+            "group_action": group_action,
+            "error": error,
+            "values": values or {},
+            "editing_group_id": editing_group_id,
+        }
+    )
+    return context
 
 
 def _knowledge_context(
@@ -499,6 +555,12 @@ def _technical_ticket_context(
         {
             "ticket": ticket_view,
             "technicians": list_active_technical_users(session),
+            "support_groups": list_active_support_groups(session),
+            "current_group_is_inactive": bool(
+                ticket.assigned_group
+                and ticket.assigned_group
+                not in {group.name for group in list_active_support_groups(session)}
+            ),
             "status_options": [
                 option
                 for option in STATUS_OPTIONS
@@ -764,6 +826,171 @@ def new_ticket_start(
         name="employee_ticket_intake.html",
         context=_intake_context(current_user, step="problem"),
         headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.get("/app/admin/groups", response_class=HTMLResponse)
+def support_groups_page(
+    request: Request,
+    session: DatabaseSession,
+    current_user: WebUser,
+    group_action: Annotated[str | None, Query(max_length=30)] = None,
+) -> Response:
+    """Mostra il catalogo amministrabile e le appartenenze tecniche."""
+
+    if redirect := _admin_only(current_user):
+        return redirect
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_support_groups.html",
+        context=_support_groups_context(
+            session,
+            current_user,
+            group_action=group_action,
+        ),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/app/admin/groups", response_class=HTMLResponse)
+def create_support_group_from_web(
+    request: Request,
+    session: DatabaseSession,
+    current_user: WebUser,
+    name: Annotated[str, Form()] = "",
+    description: Annotated[str, Form()] = "",
+) -> Response:
+    """Crea un gruppo soltanto dopo la validazione lato server."""
+
+    if redirect := _admin_only(current_user):
+        return redirect
+    try:
+        create_support_group(session, name=name, description=description)
+    except DuplicateSupportGroupError:
+        error = "Esiste già un gruppo con questo nome."
+    except InvalidSupportGroupDataError as exception:
+        error = str(exception)
+    except SupportGroupPersistenceError:
+        error = "Non siamo riusciti a salvare il gruppo. Riprova tra poco."
+    else:
+        return RedirectResponse(
+            url="/app/admin/groups?group_action=created",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_support_groups.html",
+        context=_support_groups_context(
+            session,
+            current_user,
+            error=error,
+            values={"name": name[:100], "description": description[:500]},
+        ),
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/app/admin/groups/{group_id}/update", response_class=HTMLResponse)
+def update_support_group_from_web(
+    request: Request,
+    group_id: Annotated[int, PathParameter(gt=0)],
+    session: DatabaseSession,
+    current_user: WebUser,
+    name: Annotated[str, Form()] = "",
+    description: Annotated[str, Form()] = "",
+) -> Response:
+    """Aggiorna nome e descrizione senza riscrivere i ticket storici."""
+
+    if redirect := _admin_only(current_user):
+        return redirect
+    try:
+        update_support_group(
+            session,
+            group_id,
+            name=name,
+            description=description,
+        )
+    except SupportGroupNotFoundError:
+        return RedirectResponse(
+            url="/app/admin/groups?group_action=not_found",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    except DuplicateSupportGroupError:
+        error = "Esiste già un gruppo con questo nome."
+    except InvalidSupportGroupDataError as exception:
+        error = str(exception)
+    except SupportGroupPersistenceError:
+        error = "Non siamo riusciti a salvare le modifiche. Riprova tra poco."
+    else:
+        return RedirectResponse(
+            url="/app/admin/groups?group_action=updated",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_support_groups.html",
+        context=_support_groups_context(
+            session,
+            current_user,
+            error=error,
+            values={"name": name[:100], "description": description[:500]},
+            editing_group_id=group_id,
+        ),
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.post("/app/admin/groups/{group_id}/state")
+def change_support_group_state_from_web(
+    group_id: Annotated[int, PathParameter(gt=0)],
+    session: DatabaseSession,
+    current_user: WebUser,
+    is_active: Annotated[bool, Form()],
+) -> RedirectResponse:
+    """Attiva o disattiva il gruppo mantenendolo leggibile nello storico."""
+
+    if redirect := _admin_only(current_user):
+        return redirect
+    try:
+        set_support_group_active(session, group_id, is_active=is_active)
+    except SupportGroupNotFoundError:
+        action = "not_found"
+    except SupportGroupPersistenceError:
+        action = "save_failed"
+    else:
+        action = "activated" if is_active else "deactivated"
+    return RedirectResponse(
+        url=f"/app/admin/groups?group_action={action}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/app/admin/groups/{group_id}/members")
+def update_support_group_members_from_web(
+    group_id: Annotated[int, PathParameter(gt=0)],
+    session: DatabaseSession,
+    current_user: WebUser,
+    member_ids: Annotated[list[int] | None, Form()] = None,
+) -> RedirectResponse:
+    """Sostituisce le appartenenze accettando solo account tecnici attivi."""
+
+    if redirect := _admin_only(current_user):
+        return redirect
+    try:
+        replace_support_group_members(session, group_id, member_ids or [])
+    except SupportGroupNotFoundError:
+        action = "not_found"
+    except InvalidSupportGroupMemberError:
+        action = "invalid_member"
+    except SupportGroupPersistenceError:
+        action = "save_failed"
+    else:
+        action = "members_updated"
+    return RedirectResponse(
+        url=f"/app/admin/groups?group_action={action}",
+        status_code=status.HTTP_303_SEE_OTHER,
     )
 
 
@@ -1679,6 +1906,8 @@ def update_technical_ticket(
         )
     except (ManagedTechnicianNotFoundError, ManagedTechnicianUnavailableError):
         errors["assigned_technician_id"] = "Seleziona un tecnico attivo."
+    except ManagedSupportGroupUnavailableError:
+        errors["assigned_group"] = "Seleziona un gruppo attivo dall'elenco."
     except InvalidStatusTransitionError:
         errors["status"] = "Questo passaggio di stato non è consentito."
     except ResolutionRequiredError:

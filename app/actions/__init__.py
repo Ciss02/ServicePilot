@@ -9,6 +9,7 @@ from app.actions.decisions import (
 )
 from app.actions.proposals import (
     ActionProposalDataError,
+    ActionProposalDestinationError,
     ActionProposalPersistenceError,
     create_action_proposal,
     list_action_proposals,
@@ -35,6 +36,7 @@ __all__ = [
     "ActionExecutionResult",
     "ActionNotFoundError",
     "ActionProposalDataError",
+    "ActionProposalDestinationError",
     "ActionProposalPersistenceError",
     "ActionServiceClient",
     "ActionServiceConfigurationError",

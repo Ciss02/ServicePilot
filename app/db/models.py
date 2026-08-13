@@ -74,6 +74,55 @@ class User(Base):
     )
 
 
+class SupportGroup(Base):
+    """Gruppo tecnico amministrabile usato per le nuove assegnazioni."""
+
+    __tablename__ = "support_groups"
+    __table_args__ = (
+        CheckConstraint(
+            "length(trim(name)) BETWEEN 2 AND 100",
+            name="ck_support_groups_name_length",
+        ),
+        CheckConstraint(
+            "length(trim(description)) BETWEEN 2 AND 500",
+            name="ck_support_groups_description_length",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    name_key: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    description: Mapped[str] = mapped_column(String(500), nullable=False)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=true()
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+    )
+
+
+class SupportGroupMembership(Base):
+    """Appartenenza di un tecnico o amministratore a un gruppo di supporto."""
+
+    __tablename__ = "support_group_memberships"
+
+    support_group_id: Mapped[int] = mapped_column(
+        ForeignKey("support_groups.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
+    )
+
+
 class AuthSession(Base):
     """Sessione autenticata; il codice originale resta soltanto nel browser."""
 

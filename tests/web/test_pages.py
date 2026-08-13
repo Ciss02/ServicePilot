@@ -22,6 +22,8 @@ from app.db import (
     KnowledgeSegment,
     ProposedAction,
     Site,
+    SupportGroup,
+    SupportGroupMembership,
     Ticket,
     TicketSolutionSource,
     User,
@@ -106,6 +108,29 @@ def web_client(tmp_path, monkeypatch) -> Iterator[tuple[TestClient, Engine, str]
                     ]
                 )
                 session.flush()
+                support_groups = [
+                    SupportGroup(
+                        name="Supporto rete",
+                        name_key="supporto rete",
+                        description="Connettività della sede web demo.",
+                    ),
+                    SupportGroup(
+                        name="Supporto workplace",
+                        name_key="supporto workplace",
+                        description="Postazioni della sede web demo.",
+                    ),
+                ]
+                session.add_all(support_groups)
+                session.flush()
+                session.add_all(
+                    [
+                        SupportGroupMembership(
+                            support_group_id=group.id,
+                            user_id=technician.id,
+                        )
+                        for group in support_groups
+                    ]
+                )
                 session.add_all(
                     [
                         Ticket(
@@ -435,6 +460,102 @@ def test_admin_can_open_knowledge_upload_page(web_client) -> None:
     assert 'name="q"' in response.text
     assert 'enctype="multipart/form-data"' in response.text
     assert 'aria-current="page"' in response.text
+
+
+def test_admin_manages_group_data_state_and_members(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "admin.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        technician_id = session.scalar(
+            select(User.id).where(User.email == "tecnico.web@servicepilot.example")
+        )
+        admin_id = session.scalar(
+            select(User.id).where(User.email == "admin.web@servicepilot.example")
+        )
+
+    page = client.get("/app/admin/groups")
+    created = client.post(
+        "/app/admin/groups",
+        data={
+            "name": "Supporto applicazioni demo",
+            "description": "Applicazioni fittizie usate nella demo web.",
+        },
+        follow_redirects=False,
+    )
+    assert page.status_code == 200
+    assert "Gruppi di supporto" in page.text
+    assert 'aria-current="page"' in page.text
+    assert created.status_code == 303
+
+    with Session(database_engine) as session:
+        group = session.scalar(
+            select(SupportGroup).where(SupportGroup.name == "Supporto applicazioni demo")
+        )
+        assert group is not None
+        group_id = group.id
+
+    members = client.post(
+        f"/app/admin/groups/{group_id}/members",
+        data={"member_ids": [str(technician_id), str(admin_id)]},
+        follow_redirects=False,
+    )
+    renamed = client.post(
+        f"/app/admin/groups/{group_id}/update",
+        data={
+            "name": "Supporto applicativo demo",
+            "description": "Catalogo applicativo fittizio aggiornato.",
+        },
+        follow_redirects=False,
+    )
+    deactivated = client.post(
+        f"/app/admin/groups/{group_id}/state",
+        data={"is_active": "false"},
+        follow_redirects=False,
+    )
+
+    assert members.status_code == 303
+    assert renamed.status_code == 303
+    assert deactivated.status_code == 303
+    with Session(database_engine) as session:
+        group = session.get(SupportGroup, group_id)
+        assert group.name == "Supporto applicativo demo"
+        assert group.is_active is False
+        assert set(
+            session.scalars(
+                select(SupportGroupMembership.user_id).where(
+                    SupportGroupMembership.support_group_id == group_id
+                )
+            )
+        ) == {technician_id, admin_id}
+
+
+@pytest.mark.parametrize(
+    "email",
+    [
+        "dipendente.web@servicepilot.example",
+        "tecnico.web@servicepilot.example",
+    ],
+)
+def test_non_admin_cannot_manage_support_groups(web_client, email: str) -> None:
+    client, database_engine, password = web_client
+    login_web(client, email, password)
+
+    page = client.get("/app/admin/groups", follow_redirects=False)
+    creation = client.post(
+        "/app/admin/groups",
+        data={"name": "Gruppo vietato", "description": "Dato fittizio vietato."},
+        follow_redirects=False,
+    )
+
+    assert page.status_code == 303
+    assert page.headers["location"] == "/app"
+    assert creation.status_code == 303
+    assert creation.headers["location"] == "/app"
+    with Session(database_engine) as session:
+        assert (
+            session.scalar(select(SupportGroup.id).where(SupportGroup.name == "Gruppo vietato"))
+            is None
+        )
 
 
 def test_admin_can_consult_and_filter_the_full_audit_log(web_client) -> None:

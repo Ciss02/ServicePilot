@@ -10,6 +10,8 @@ from app.db import (
     AuditEvent,
     ProposedAction,
     Site,
+    SupportGroup,
+    SupportGroupMembership,
     Ticket,
     User,
     build_engine,
@@ -69,6 +71,8 @@ def test_demo_data_load_is_repeatable(database_engine) -> None:
         assert _count(session, Site) == 6
         assert _count(session, User) == 5
         assert _count(session, Ticket) == 6
+        assert _count(session, SupportGroup) == 7
+        assert session.scalar(select(func.count()).select_from(SupportGroupMembership)) == 11
         assert session.scalar(select(func.count()).select_from(ProposedAction)) == 3
         assert session.scalar(select(func.count()).select_from(AuditEvent)) == 9
         event_keys = list(session.scalars(select(AuditEvent.event_key)).all())
@@ -188,6 +192,12 @@ def test_demo_records_are_synthetic_and_coherent(database_engine) -> None:
             Role.ADMIN,
         }
         assert len(tickets) == 6
+        groups = session.scalars(select(SupportGroup)).all()
+        memberships = session.scalars(select(SupportGroupMembership)).all()
+        employee_ids = {user.id for user in users if user.role is Role.EMPLOYEE}
+        assert len(groups) == 7
+        assert all(group.is_active for group in groups)
+        assert not employee_ids.intersection(membership.user_id for membership in memberships)
         assert all(ticket.impact is not None for ticket in tickets)
         assert all(ticket.urgency is not None for ticket in tickets)
         assert all(

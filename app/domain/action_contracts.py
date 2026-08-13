@@ -5,7 +5,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.domain.vocabulary import ActionStatus, ActionType, AssignmentGroup
+from app.domain.vocabulary import ActionStatus, ActionType
 
 Identifier = Annotated[int, Field(strict=True, gt=0)]
 Rationale = Annotated[str, Field(min_length=20, max_length=1_000)]
@@ -16,6 +16,7 @@ EscalationSummary = Annotated[str, Field(min_length=10, max_length=2_000)]
 ExecutionReference = Annotated[str, Field(min_length=5, max_length=80)]
 ExecutionMessage = Annotated[str, Field(min_length=10, max_length=500)]
 ExecutionErrorCode = Annotated[str, Field(min_length=3, max_length=100)]
+AssignmentGroupName = Annotated[str, Field(min_length=2, max_length=100)]
 
 
 class _ActionContract(BaseModel):
@@ -25,7 +26,7 @@ class _ActionContract(BaseModel):
 class AssignmentActionPayload(_ActionContract):
     """Destinazione proposta; almeno gruppo o tecnico deve essere presente."""
 
-    assigned_group: AssignmentGroup | None = None
+    assigned_group: AssignmentGroupName | None = None
     assigned_technician_id: Identifier | None = None
 
     @model_validator(mode="after")

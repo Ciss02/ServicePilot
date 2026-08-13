@@ -1,10 +1,11 @@
 """Operazioni condivise per la gestione tecnica dei ticket."""
 
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.audit import TicketAuditSnapshot, record_ticket_update_events
-from app.db.models import Site, Ticket, User
+from app.db.models import Site, SupportGroup, Ticket, User
 from app.domain.ticket_contracts import TicketUpdate
 from app.domain.ticket_workflow import can_transition_status
 from app.domain.vocabulary import ClassificationReviewStatus, Role, TicketStatus
@@ -28,6 +29,10 @@ class ManagedTechnicianNotFoundError(TicketManagementError):
 
 class ManagedTechnicianUnavailableError(TicketManagementError):
     """L'account indicato non può ricevere ticket."""
+
+
+class ManagedSupportGroupUnavailableError(TicketManagementError):
+    """Il gruppo indicato non è attivo o non appartiene al catalogo."""
 
 
 class InvalidStatusTransitionError(TicketManagementError):
@@ -74,6 +79,19 @@ def update_managed_ticket(
             raise ManagedTechnicianNotFoundError
         if technician.role not in {Role.TECHNICIAN, Role.ADMIN} or not technician.is_active:
             raise ManagedTechnicianUnavailableError
+
+    if (
+        payload.assigned_group is not None
+        and payload.assigned_group != ticket.assigned_group
+        and session.scalar(
+            select(SupportGroup.id).where(
+                SupportGroup.name == payload.assigned_group,
+                SupportGroup.is_active.is_(True),
+            )
+        )
+        is None
+    ):
+        raise ManagedSupportGroupUnavailableError
 
     if payload.status is not None:
         if not can_transition_status(ticket.status, payload.status):

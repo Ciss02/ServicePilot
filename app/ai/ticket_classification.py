@@ -1,6 +1,7 @@
 """Classificazione AI controllata dei ticket già confermati."""
 
 import json
+from collections.abc import Sequence
 
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.exc import SQLAlchemyError
@@ -12,7 +13,6 @@ from app.db.models import Site, Ticket
 from app.domain.priority import calculate_priority
 from app.domain.ticket_contracts import ShortText
 from app.domain.vocabulary import (
-    AssignmentGroup,
     ClassificationReviewStatus,
     Impact,
     Priority,
@@ -30,7 +30,7 @@ class AIProposedTicketClassification(BaseModel):
     subcategory: ShortText | None
     impact: Impact
     urgency: Urgency
-    assigned_group: AssignmentGroup
+    assigned_group: ShortText
 
 
 class TicketClassificationSuggestion(BaseModel):
@@ -42,7 +42,7 @@ class TicketClassificationSuggestion(BaseModel):
     subcategory: ShortText | None
     impact: Impact
     urgency: Urgency
-    assigned_group: AssignmentGroup
+    assigned_group: ShortText
     priority: Priority
 
 
@@ -79,6 +79,7 @@ def suggest_ticket_classification(
     *,
     site: Site,
     ai_model: AIModel,
+    allowed_assignment_groups: Sequence[str],
 ) -> TicketClassificationSuggestion:
     """Richiede una proposta valida e aggiunge la priorità deterministica."""
 
@@ -96,7 +97,7 @@ def suggest_ticket_classification(
             },
             "allowed_impacts": [item.value for item in Impact],
             "allowed_urgencies": [item.value for item in Urgency],
-            "allowed_assignment_groups": [item.value for item in AssignmentGroup],
+            "allowed_assignment_groups": list(allowed_assignment_groups),
         },
         ensure_ascii=False,
     )
@@ -107,6 +108,8 @@ def suggest_ticket_classification(
     )
     if not isinstance(proposed, AIProposedTicketClassification):
         raise AIInvalidResponseError("Il modello AI ha restituito una classificazione non valida")
+    if proposed.assigned_group not in allowed_assignment_groups:
+        raise AIInvalidResponseError("Il modello AI ha proposto un gruppo non disponibile")
 
     return TicketClassificationSuggestion(
         **proposed.model_dump(),
@@ -141,7 +144,14 @@ def classify_confirmed_ticket(
     if site is None:
         raise TicketClassificationPersistenceError("La sede del ticket non è disponibile")
     try:
-        suggestion = suggest_ticket_classification(ticket, site=site, ai_model=ai_model)
+        from app.support_groups import active_support_group_names
+
+        suggestion = suggest_ticket_classification(
+            ticket,
+            site=site,
+            ai_model=ai_model,
+            allowed_assignment_groups=active_support_group_names(session),
+        )
     except AIInvalidResponseError:
         ticket.classification_review_status = ClassificationReviewStatus.AI_INVALID_RESPONSE
         return _save_classification_result(session, ticket)
@@ -154,7 +164,7 @@ def classify_confirmed_ticket(
     ticket.impact = suggestion.impact
     ticket.urgency = suggestion.urgency
     ticket.priority = suggestion.priority
-    ticket.assigned_group = suggestion.assigned_group.value
+    ticket.assigned_group = suggestion.assigned_group
     ticket.classification_review_status = ClassificationReviewStatus.AI_SUGGESTED
 
     return _save_classification_result(session, ticket)

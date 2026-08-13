@@ -43,7 +43,7 @@ repository e vengono condivise separatamente per le presentazioni del portfolio.
 | --- | --- |
 | Dipendente | Apre un ticket con una conversazione guidata, conferma i dati e consulta soltanto le proprie richieste. |
 | Tecnico IT | Filtra la coda, verifica la classificazione AI, corregge impatto e urgenza, consulta suggerimenti con fonti e approva o rifiuta azioni. |
-| Amministratore | Gestisce PDF e Markdown della knowledge base, consulta l'audit completo e ripristina il dataset demo. |
+| Amministratore | Gestisce gruppi di supporto, knowledge base e reset demo, consulta l'audit completo e usa tutti gli strumenti tecnici. |
 
 Scelte centrali dell'MVP:
 

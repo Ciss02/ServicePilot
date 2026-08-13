@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.ai.dependencies import get_ai_model
 from app.api.dependencies import require_roles
-from app.db import Site, Ticket, User, build_engine, create_database, get_session
+from app.db import Site, SupportGroup, Ticket, User, build_engine, create_database, get_session
 from app.domain.vocabulary import ClassificationReviewStatus, Priority, Role
 from app.main import create_app
 from app.security.passwords import hash_password
@@ -62,6 +62,21 @@ def api_client(tmp_path) -> Iterator[tuple[TestClient, Engine, str]]:
                     ),
                     Site(code="API-DEMO", name="Sede API Demo"),
                     Site(code="API-DEMO-2", name="Seconda sede API Demo"),
+                    SupportGroup(
+                        name="Supporto rete",
+                        name_key="supporto rete",
+                        description="Connettività della demo API.",
+                    ),
+                    SupportGroup(
+                        name="Service desk",
+                        name_key="service desk",
+                        description="Primo contatto della demo API.",
+                    ),
+                    SupportGroup(
+                        name="Supporto workplace",
+                        name_key="supporto workplace",
+                        description="Postazioni della demo API.",
+                    ),
                 ]
             )
             session.commit()

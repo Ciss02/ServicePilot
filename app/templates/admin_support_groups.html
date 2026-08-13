@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% set active_section = "groups" %}
+{% block app_navigation %}{% include "_technical_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <section class="groups-admin shell" aria-labelledby="groups-title">
+    <header class="groups-hero">
+      <div>
+        <p class="eyebrow">Configurazione operativa</p>
+        <h1 id="groups-title">Gruppi di supporto</h1>
+        <p>Gestisci i gruppi disponibili per assegnazioni e classificazione AI. I gruppi disattivati restano leggibili nei ticket storici.</p>
+      </div>
+      <div class="groups-summary"><strong>{{ active_group_count }}</strong><span>gruppi attivi</span></div>
+    </header>
+
+    {% if group_action in ["created", "updated", "activated", "deactivated", "members_updated"] %}
+      <div class="success-message" role="status">Modifica salvata correttamente.</div>
+    {% elif group_action %}
+      <div class="form-alert" role="alert">Non è stato possibile completare l'operazione richiesta.</div>
+    {% endif %}
+    {% if error %}<div class="form-alert" role="alert">{{ error }}</div>{% endif %}
+
+    <div class="groups-layout">
+      <aside class="group-create-card">
+        <p class="card-label">Nuovo gruppo</p>
+        <h2>Aggiungi al catalogo</h2>
+        <form method="post" action="/app/admin/groups" class="group-form">
+          <div class="field-group"><label for="new-group-name">Nome univoco</label><input id="new-group-name" name="name" maxlength="100" required value="{{ values.name if not editing_group_id else '' }}"></div>
+          <div class="field-group"><label for="new-group-description">Descrizione</label><textarea id="new-group-description" name="description" maxlength="500" required>{{ values.description if not editing_group_id else '' }}</textarea></div>
+          <button class="primary-button" type="submit">Crea gruppo</button>
+        </form>
+      </aside>
+
+      <section class="groups-catalog" aria-labelledby="catalog-title">
+        <div class="groups-catalog-heading"><div><p class="card-label">Catalogo condiviso</p><h2 id="catalog-title">{{ groups | length }} gruppi configurati</h2></div><span>Solo gli attivi sono assegnabili</span></div>
+        <div class="group-card-list">
+          {% for group in groups %}
+            <article class="group-card {% if not group.is_active %}is-inactive{% endif %}">
+              <header><div><span class="group-state">{{ "Attivo" if group.is_active else "Non attivo" }}</span><h3>{{ group.name }}</h3><p>{{ group.description }}</p></div>{% set member_count = members_by_group.get(group.id, []) | length %}<strong>{{ member_count }} {{ "membro" if member_count == 1 else "membri" }}</strong></header>
+              <details {% if editing_group_id == group.id %}open{% endif %}>
+                <summary>Modifica dati e appartenenze</summary>
+                <div class="group-editor">
+                  <form method="post" action="/app/admin/groups/{{ group.id }}/update" class="group-form">
+                    <div class="field-group"><label for="group-name-{{ group.id }}">Nome</label><input id="group-name-{{ group.id }}" name="name" maxlength="100" required value="{{ values.name if editing_group_id == group.id else group.name }}"></div>
+                    <div class="field-group"><label for="group-description-{{ group.id }}">Descrizione</label><textarea id="group-description-{{ group.id }}" name="description" maxlength="500" required>{{ values.description if editing_group_id == group.id else group.description }}</textarea></div>
+                    <button class="secondary-button" type="submit">Salva dati</button>
+                  </form>
+                  <form method="post" action="/app/admin/groups/{{ group.id }}/members" class="group-members-form">
+                    <fieldset><legend>Membri tecnici</legend>
+                      {% for member in eligible_members %}
+                        <label><input type="checkbox" name="member_ids" value="{{ member.id }}" {% if member.id in member_ids_by_group.get(group.id, []) %}checked{% endif %}><span>{{ member.display_name }}<small>{{ "Amministratore" if member.role.value == "admin" else "Tecnico" }}</small></span></label>
+                      {% else %}<p>Nessun account tecnico attivo disponibile.</p>{% endfor %}
+                    </fieldset>
+                    <button class="secondary-button" type="submit">Salva membri</button>
+                  </form>
+                  <form method="post" action="/app/admin/groups/{{ group.id }}/state" class="group-state-form">
+                    <input type="hidden" name="is_active" value="{{ 'false' if group.is_active else 'true' }}">
+                    <button class="text-button" type="submit">{{ "Disattiva gruppo" if group.is_active else "Riattiva gruppo" }}</button>
+                  </form>
+                </div>
+              </details>
+            </article>
+          {% else %}
+            <div class="groups-empty"><strong>Nessun gruppo configurato</strong><p>Crea il primo gruppo per rendere disponibili assegnazioni e classificazione AI.</p></div>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+  </section>
+{% endblock %}

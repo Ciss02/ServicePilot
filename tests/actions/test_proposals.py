@@ -3,15 +3,17 @@
 import json
 
 import pytest
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.actions import (
     ActionProposalDataError,
+    ActionProposalDestinationError,
     ActionProposalPersistenceError,
     create_action_proposal,
     list_action_proposals,
 )
-from app.db import ProposedAction, Site, Ticket, User, build_engine, create_database
+from app.db import ProposedAction, Site, SupportGroup, Ticket, User, build_engine, create_database
 from app.domain import (
     ActionProposalCreate,
     ActionStatus,
@@ -20,7 +22,7 @@ from app.domain import (
     RequesterCommunicationPayload,
     VendorEscalationPayload,
 )
-from app.domain.vocabulary import AssignmentGroup, Role, TicketStatus
+from app.domain.vocabulary import Role, TicketStatus
 
 
 @pytest.fixture
@@ -34,7 +36,12 @@ def action_context(tmp_path):
             role=Role.EMPLOYEE,
         )
         site = Site(code="ACT-DEMO", name="Sede Azioni Demo")
-        session.add_all([requester, site])
+        group = SupportGroup(
+            name="Supporto rete",
+            name_key="supporto rete",
+            description="Connettività della demo azioni.",
+        )
+        session.add_all([requester, site, group])
         session.flush()
         ticket = Ticket(
             title="VPN demo da verificare",
@@ -53,9 +60,7 @@ def action_context(tmp_path):
 
 def _proposal(action_type: ActionType) -> ActionProposalCreate:
     payloads = {
-        ActionType.ASSIGN_TICKET: AssignmentActionPayload(
-            assigned_group=AssignmentGroup.NETWORK_SUPPORT
-        ),
+        ActionType.ASSIGN_TICKET: AssignmentActionPayload(assigned_group="Supporto rete"),
         ActionType.NOTIFY_REQUESTER: RequesterCommunicationPayload(
             message="Indica l'orario dell'ultima interruzione della VPN demo."
         ),
@@ -162,3 +167,21 @@ def test_corrupted_stored_payload_is_reported(action_context) -> None:
 
         with pytest.raises(ActionProposalDataError):
             list_action_proposals(session, ticket_id)
+
+
+def test_new_proposal_cannot_target_inactive_group(action_context) -> None:
+    engine, ticket_id = action_context
+    with Session(engine) as session:
+        ticket = session.get(Ticket, ticket_id)
+        group = session.scalar(select(SupportGroup).where(SupportGroup.name == "Supporto rete"))
+        group.is_active = False
+        session.commit()
+
+        with pytest.raises(ActionProposalDestinationError):
+            create_action_proposal(
+                session,
+                ticket,
+                _proposal(ActionType.ASSIGN_TICKET),
+            )
+
+        assert session.scalar(select(func.count()).select_from(ProposedAction)) == 0
