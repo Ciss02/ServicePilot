@@ -25,6 +25,7 @@ from app.db.base import Base
 from app.domain.vocabulary import (
     ActionStatus,
     ActionType,
+    AttachmentContextType,
     AuditActorType,
     AuditEventType,
     ClassificationReviewStatus,
@@ -296,6 +297,34 @@ class Ticket(Base):
         nullable=False,
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
+    )
+
+
+class Attachment(Base):
+    """File privato collegato a un solo contesto applicativo controllato."""
+
+    __tablename__ = "attachments"
+    __table_args__ = (
+        CheckConstraint("context_id > 0", name="ck_attachments_context_id"),
+        CheckConstraint("size_bytes > 0", name="ck_attachments_size"),
+        Index("ix_attachments_context", "context_type", "context_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    context_type: Mapped[AttachmentContextType] = mapped_column(
+        _enum_column(AttachmentContextType, "attachment_context_type"), nullable=False
+    )
+    context_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    owner_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    storage_filename: Mapped[str] = mapped_column(String(80), nullable=False, unique=True)
+    content_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    checksum_sha256: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
     )
 
 

@@ -14,8 +14,10 @@ from app.actions import ActionExecutionResult
 from app.actions.dependencies import get_action_service_client
 from app.ai import AIUnavailableError
 from app.ai.dependencies import get_ai_model, get_embedding_model
+from app.attachments import ATTACHMENT_STORAGE_DIRECTORY_ENV
 from app.audit import record_action_proposed, record_ticket_created
 from app.db import (
+    Attachment,
     AuditEvent,
     AuthSession,
     KnowledgeDocument,
@@ -59,6 +61,10 @@ def web_client(tmp_path, monkeypatch) -> Iterator[tuple[TestClient, Engine, str]
     monkeypatch.setenv(
         KNOWLEDGE_STORAGE_DIRECTORY_ENV,
         str(tmp_path / "knowledge-storage"),
+    )
+    monkeypatch.setenv(
+        ATTACHMENT_STORAGE_DIRECTORY_ENV,
+        str(tmp_path / "attachment-storage"),
     )
     database_engine = build_engine(f"sqlite:///{tmp_path / 'web-pages-test.db'}")
 
@@ -2229,3 +2235,62 @@ def test_guided_intake_is_not_available_to_technician(
 
     assert response.status_code == 303
     assert response.headers["location"] == "/app"
+
+
+def test_ticket_attachment_download_is_private_and_uses_safe_headers(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "dipendente.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        ticket_id = session.scalar(
+            select(Ticket.id).where(Ticket.title == "VPN demo in attesa di informazioni")
+        )
+
+    upload = client.post(
+        f"/app/tickets/{ticket_id}/attachments",
+        files={"files": ("diagnostica.log", b"riga di log demo\n", "text/plain")},
+        follow_redirects=False,
+    )
+
+    assert upload.status_code == 303
+    assert upload.headers["location"] == f"/app/tickets/{ticket_id}?attachment_uploaded=true"
+    with Session(database_engine) as session:
+        attachment = session.scalar(select(Attachment))
+        assert attachment is not None
+        attachment_id = attachment.id
+        storage_filename = attachment.storage_filename
+        assert storage_filename not in upload.headers["location"]
+
+    detail = client.get(upload.headers["location"])
+
+    assert detail.status_code == 200
+    assert "Allegati caricati" in detail.text
+    assert storage_filename not in detail.text
+
+    download = client.get(f"/app/attachments/{attachment_id}/download")
+
+    assert download.status_code == 200
+    assert download.content == b"riga di log demo\n"
+    assert download.headers["content-type"].startswith("text/plain")
+    assert download.headers["content-disposition"].startswith("attachment")
+    assert "diagnostica.log" in download.headers["content-disposition"]
+    assert download.headers["x-content-type-options"] == "nosniff"
+    assert "sandbox" in download.headers["content-security-policy"]
+
+    unavailable_preview = client.get(f"/app/attachments/{attachment_id}/preview")
+
+    assert unavailable_preview.status_code == 404
+
+    client.post("/logout", follow_redirects=False)
+    login_web(client, "altro.dipendente.web@servicepilot.example", password)
+    forbidden = client.get(f"/app/attachments/{attachment_id}/download")
+    forbidden_upload = client.post(
+        f"/app/tickets/{ticket_id}/attachments",
+        files={"files": ("estraneo.log", b"contenuto estraneo", "text/plain")},
+        follow_redirects=False,
+    )
+
+    assert forbidden.status_code == 404
+    assert forbidden_upload.status_code == 303
+    assert forbidden_upload.headers["location"] == "/app"
+    with Session(database_engine) as session:
+        assert session.scalar(select(func.count()).select_from(Attachment)) == 1

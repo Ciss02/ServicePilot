@@ -11,7 +11,6 @@ from app.db.base import Base
 
 ALEMBIC_VERSION_TABLE = "alembic_version"
 BASELINE_REVISION = "0001_v010_baseline"
-CURRENT_REVISION = "0003_support_groups"
 V010_TABLE_NAMES = {
     "audit_events",
     "auth_sessions",
@@ -23,6 +22,7 @@ V010_TABLE_NAMES = {
     "tickets",
     "users",
 }
+CURRENT_REVISION = "0004_secure_attachments"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 MIGRATIONS_DIRECTORY = PROJECT_ROOT / "migrations"
 ALEMBIC_CONFIG_PATH = PROJECT_ROOT / "alembic.ini"

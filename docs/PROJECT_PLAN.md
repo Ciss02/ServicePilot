@@ -187,7 +187,7 @@ versionata.
 - [x] **[SP-091 - Gruppi di supporto e appartenenze](https://github.com/Ciss02/ServicePilot/issues/75)**
   Rendere i gruppi amministrabili e collegare ogni tecnico a uno o più gruppi.
   Verifica: gruppi disattivati restano nello storico ma non sono assegnabili.
-- [ ] **[SP-092 - Allegati sicuri](https://github.com/Ciss02/ServicePilot/issues/76)**
+- [x] **[SP-092 - Allegati sicuri](https://github.com/Ciss02/ServicePilot/issues/76)**
   Conservare file controllati per bozze, ticket e messaggi con download autorizzato.
   Verifica: tipi camuffati, limiti e accessi estranei vengono rifiutati.
 - [ ] **[SP-093 - Comunicazioni cronologiche sul ticket](https://github.com/Ciss02/ServicePilot/issues/77)**

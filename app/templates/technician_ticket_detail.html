@@ -57,6 +57,26 @@
           </dl>
         </section>
 
+        <section class="detail-card attachment-card" aria-labelledby="attachments-title">
+          <p class="card-label">Allegati privati</p>
+          <h2 id="attachments-title">File del ticket</h2>
+          {% if attachment_uploaded %}<div class="ticket-created-alert attachment-uploaded-alert" role="status"><span aria-hidden="true">✓</span><p><strong>Allegati caricati</strong>I file sono stati controllati e conservati.</p></div>{% endif %}
+          {% if attachment_error %}<div class="form-alert" role="alert">Non siamo riusciti a controllare o conservare gli allegati. Verifica formato e limiti, poi riprova.</div>{% endif %}
+          {% if attachments %}
+            <ul class="attachment-list">
+              {% for attachment in attachments %}
+                <li><span>{{ attachment.original_filename }}</span><a href="/app/attachments/{{ attachment.id }}/download">Scarica</a>{% if attachment.content_type in ["image/png", "image/jpeg", "application/pdf"] %}<a href="/app/attachments/{{ attachment.id }}/preview">Anteprima</a>{% endif %}</li>
+              {% endfor %}
+            </ul>
+          {% else %}<p class="attachment-empty">Nessun file allegato.</p>{% endif %}
+          <form class="attachment-upload-form" method="post" action="/app/tickets/{{ ticket.id }}/attachments" enctype="multipart/form-data">
+            <label for="ticket-files">Aggiungi file</label>
+            <input id="ticket-files" name="files" type="file" multiple accept=".png,.jpg,.jpeg,.pdf,.txt,.log,image/png,image/jpeg,application/pdf,text/plain" required>
+            <small>Fino a 5 file per invio, 10 MB ciascuno e 100 MB per ticket.</small>
+            <button class="secondary-button" type="submit">Carica allegati</button>
+          </form>
+        </section>
+
         <section class="detail-card ai-solution-card" id="ai-solution" aria-labelledby="ai-solution-title">
           <div class="ai-solution-heading">
             <div>

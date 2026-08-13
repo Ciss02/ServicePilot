@@ -17,7 +17,9 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Ogni issue contiene obiettivo, modifiche, dipendenze, rischi, criteri di accettazione e
   verifiche.
 - **SP-090 - Migrazioni versionate per la v0.2** è completata e pubblicata su `main`.
-- **SP-091 - Gruppi di supporto e appartenenze** è completata e verificata localmente.
+- **SP-091 - Gruppi di supporto e appartenenze** è completata e pubblicata su `main`.
+- **SP-092 - Allegati sicuri** è completata e verificata localmente sulla base di SP-091,
+  senza anticipare le funzioni di SP-093.
 - La roadmap verrà implementata una issue e una pull request alla volta; il codice della
   `v0.2.0` non è stato anticipato durante la pianificazione.
 
@@ -178,16 +180,16 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-091 - Gruppi di supporto e appartenenze**
+**SP-092 - Allegati sicuri**
 
-I gruppi sono dati amministrabili con appartenenze molti-a-molti per tecnici e admin.
-Modulo ticket e classificazione AI usano la stessa lista attiva del database; rinomina e
-disattivazione non riscrivono il testo storico conservato sui ticket.
+Archivio privato riutilizzabile per ticket, bozze e messaggi, con contesto controllato,
+nomi casuali, controlli reali dei contenuti e download autorizzato. Il primo collegamento
+web è il dettaglio ticket; le future issue useranno gli stessi servizi per bozze e messaggi.
 
 ## Prossima attività
 
-**SP-092 - Allegati sicuri.** Conservare file controllati per bozze, ticket e messaggi
-con download autorizzato, senza anticipare il thread cronologico previsto in SP-093.
+**SP-093 - Comunicazioni cronologiche sul ticket.** Introdurre il thread pubblico
+append-only per richiedente e supporto, riusando gli allegati autorizzati di SP-092.
 
 ## Blocchi o decisioni aperte
 
@@ -199,7 +201,7 @@ con download autorizzato, senza anticipare il thread cronologico previsto in SP-
 Prompt consigliato:
 
 > Leggi `AGENTS.md`, `docs/PROJECT_STATUS.md` e `docs/PROJECT_PLAN.md`. L'MVP è completo:
-> procedi con SP-092 seguendo la relativa issue GitHub. Spiegami in modo semplice cosa
+> procedi con SP-093 seguendo la relativa issue GitHub. Spiegami in modo semplice cosa
 > farai e perché, senza anticipare le issue successive.
 
 ## Come chiudere una sessione
@@ -610,3 +612,19 @@ Prima di terminare verificare che:
 - `pytest -W error`: 358 test superati senza avvisi dopo SP-091.
 - Ruff: controllo superato e 161 file Python conformi alla formattazione.
 - `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-091.
+- Aggiunta Pillow `12.3.0` per decodificare e ricodificare PNG/JPEG senza metadati;
+  PDF, TXT e LOG sono validati con parser o testo UTF-8 reale.
+- Aggiunta migrazione `0004_secure_attachments`, successiva a `0003_support_groups`;
+  fresh install e upgrade v0.1.0 producono anche la tabella privata `attachments` senza
+  perdere righe esistenti.
+- Verificati file validi e camuffati, limiti per invio/file/ticket, errori disco,
+  integrità SHA-256, autorizzazione dipendente/tecnico/admin e pulizia ripetibile di
+  metadati e file del contesto.
+- Verificati nel browser integrato riquadro Allegati privati, caricamento di un LOG
+  sintetico, download autorizzato, vista tecnica e layout mobile senza overflow o errori
+  console; il file di collaudo è stato poi rimosso.
+- `alembic current`: revisione `0004_secure_attachments (head)`; `alembic check`: nessuna
+  nuova operazione rilevata rispetto ai modelli SQLAlchemy.
+- `pytest -W error`: 386 test superati senza avvisi dopo la revisione completa di SP-092.
+- Ruff: controllo superato e 168 file Python conformi alla formattazione.
+- `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-092.

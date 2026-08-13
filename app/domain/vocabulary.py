@@ -11,6 +11,14 @@ class Role(StrEnum):
     ADMIN = "admin"
 
 
+class AttachmentContextType(StrEnum):
+    """Contesti interni ai quali può appartenere un allegato privato."""
+
+    DRAFT = "draft"
+    TICKET = "ticket"
+    MESSAGE = "message"
+
+
 class TicketCategory(StrEnum):
     """Categorie iniziali usate per classificare i ticket."""
 
