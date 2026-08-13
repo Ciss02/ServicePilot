@@ -166,10 +166,11 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-083 - Documentazione portfolio**
   Completare README bilingue, architettura, screenshot, limiti e roadmap.
   Verifica: una persona esterna comprende e avvia il progetto.
-- [ ] **SP-084 - Video e release MVP**
-  Registrare la demo e pubblicare la versione `v0.1.0`.
-  Verifica: video di 2-3 minuti e release collegati nel README.
+- [x] **SP-084 - Release MVP v0.1.0**
+  Pubblicare la versione stabile e collegarla nel README; il video resta facoltativo.
+  Verifica: release accessibile con note finali e documentazione aggiornata.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-084**. La milestone attiva è **Milestone 8**.
+Tutte le attività dell'MVP sono completate e la **Milestone 8** è conclusa. Eventuali
+evoluzioni successive devono essere aggiunte alla tasklist prima dell'implementazione.

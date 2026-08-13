@@ -305,7 +305,8 @@ Il progetto deve essere accompagnato da:
 - descrizione del problema aziendale;
 - utenti e bisogni;
 - diagramma dell'architettura;
-- video dimostrativo di 2-3 minuti;
+- demo pubblica utilizzabile;
+- video dimostrativo facoltativo;
 - schermate dei flussi principali;
 - decisioni tecniche e alternative considerate;
 - sezione sicurezza e privacy;
@@ -313,6 +314,10 @@ Il progetto deve essere accompagnato da:
 - limiti noti;
 - sviluppi futuri;
 - dichiarazione trasparente sull'utilizzo di strumenti AI durante lo sviluppo.
+
+Per la versione `v0.1.0` il video è stato reso facoltativo: demo online, schermate reali,
+README bilingue e documento di architettura costituiscono il materiale di presentazione
+principale. La scelta e la motivazione sono registrate in `DECISIONS.md`.
 
 ---
 
