@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.ai.configuration import AIProvider, AISettings
 from app.ai.contracts import AIInvalidResponseError, AIModel, AIUnavailableError
@@ -13,6 +13,8 @@ from app.ai.gemini import RETRYABLE_HTTP_STATUS_CODES, GeminiAIModel
 
 
 class ExampleResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     category: str
     confidence: float
 
@@ -113,7 +115,9 @@ def test_gemini_adapter_uses_structured_output_and_controlled_limits() -> None:
     call = client.models.calls[0]
     assert call["model"] == "gemini-test-model"
     assert call["contents"] == "Problema VPN fittizio"
-    assert call["config"].response_schema is ExampleResponse
+    assert call["config"].response_schema is None
+    assert call["config"].response_json_schema == ExampleResponse.model_json_schema()
+    assert call["config"].response_json_schema["additionalProperties"] is False
     assert call["config"].response_mime_type == "application/json"
     assert call["config"].max_output_tokens == 512
 

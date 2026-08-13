@@ -59,7 +59,7 @@ class GeminiAIModel:
         generation_config = types.GenerateContentConfig(
             system_instruction=system_instruction,
             response_mime_type="application/json",
-            response_schema=response_schema,
+            response_json_schema=response_schema.model_json_schema(),
             max_output_tokens=self._settings.max_output_tokens,
         )
 
