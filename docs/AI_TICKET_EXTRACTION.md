@@ -1,6 +1,6 @@
 # Estrazione AI dei dati del ticket
 
-SP-051 collega l'adapter AI alla prima domanda della raccolta guidata. Il dipendente può
+La raccolta guidata collega l'adapter AI alla prima domanda. Il dipendente può
 descrivere liberamente il problema; ServicePilot prepara i dati riconoscibili e chiede
 soltanto le informazioni che non può ricavare con sicurezza.
 
@@ -30,7 +30,7 @@ viene calcolata da ServicePilot e non viene accettata come decisione libera del 
 
 Le istruzioni dicono al modello di ignorare eventuali comandi scritti nella descrizione,
 di non classificare ancora il ticket e di non inventare informazioni. Categoria,
-impatto e urgenza appartengono alla successiva attività SP-052.
+impatto e urgenza vengono calcolati soltanto dopo la conferma e la creazione del ticket.
 
 ## Dove vengono salvati
 
@@ -45,9 +45,9 @@ pulsante `Conferma e crea ticket` salva il ticket, come nel flusso precedente.
 - la risposta può avere una forma non valida;
 - il modello può indicare una sede che non appartiene all'elenco consentito.
 
-Se l'AI è disattivata o restituisce un errore controllato, il percorso manuale resta
-disponibile e chiede i quattro dati essenziali. La gestione visibile più completa di
-timeout e altri errori del provider verrà affrontata in SP-053.
+Se l'AI è disattivata, supera il tempo disponibile o restituisce un errore controllato,
+il percorso manuale resta disponibile e chiede i quattro dati essenziali. L'interfaccia
+mostra un messaggio comprensibile senza esporre dettagli interni del provider.
 
 ## Chi può usare la funzionalità
 

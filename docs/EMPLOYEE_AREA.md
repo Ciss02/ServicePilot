@@ -1,7 +1,7 @@
 # Area del dipendente
 
-SP-041 permette a un dipendente autenticato di consultare dal browser soltanto le
-proprie richieste e di aprirne il dettaglio.
+Un dipendente autenticato può consultare dal browser soltanto le proprie richieste,
+aprirne il dettaglio e avviare una nuova segnalazione guidata.
 
 ## Quale problema risolve
 
@@ -15,11 +15,11 @@ aggiornamenti del supporto e soluzione finale in una vista leggibile e responsiv
 - `GET /app?filter=active`, `waiting` o `completed` filtra l'elenco tramite i tre
   riepiloghi cliccabili;
 - `GET /app/tickets/{ticket_id}` mostra il dettaglio di una richiesta personale;
-- tecnico e amministratore conservano la pagina provvisoria fino alla coda di SP-044.
+- tecnico e amministratore vengono indirizzati alla coda completa dei ticket.
 
-La voce “Nuova richiesta” apre ora il percorso deterministico di SP-042, descritto in
-[`GUIDED_TICKET_INTAKE.md`](GUIDED_TICKET_INTAKE.md). Il riepilogo e la conferma
-appartengono a SP-043.
+La voce “Nuova richiesta” apre il percorso descritto in
+[`GUIDED_TICKET_INTAKE.md`](GUIDED_TICKET_INTAKE.md), che comprende descrizione libera,
+eventuali domande integrative, riepilogo e conferma.
 
 ## Dati ricevuti e controlli
 
@@ -42,9 +42,9 @@ rimuove il filtro.
 
 ## Dove vengono salvati i dati
 
-SP-041 è una funzionalità di sola lettura e non salva nuovi dati. Ticket, sedi, utenti e
-sessioni continuano a risiedere nel database SQLite già configurato. Non sono state
-aggiunte tabelle, migrazioni o dipendenze. L'indice esistente su `requester_id` supporta
+Elenco e dettaglio sono funzioni di sola lettura. Il percorso guidato salva invece una
+bozza temporanea nella sessione e crea il ticket nel database soltanto dopo la conferma.
+Ticket, sedi, utenti e sessioni risiedono nel database configurato. L'indice esistente su `requester_id` supporta
 il filtro personale.
 
 ## Cosa può andare storto
@@ -57,9 +57,9 @@ il filtro personale.
 
 ## Chi può usare la funzionalità
 
-L'elenco e il dettaglio implementati in SP-041 sono destinati al ruolo `employee`.
-Tecnico e amministratore potranno consultare la coda completa attraverso l'interfaccia
-prevista da SP-044; le loro API autorizzate restano invariate.
+L'elenco personale, il dettaglio e la creazione guidata sono destinati al ruolo
+`employee`. Tecnico e amministratore consultano invece la coda completa attraverso la
+loro interfaccia dedicata.
 
 ## Quali test dimostrano che funziona
 
@@ -73,4 +73,4 @@ I test HTTP creano dati fittizi per due dipendenti differenti e verificano che:
 - i tre riepiloghi mostrino soltanto ticket attivi, in attesa o completati e permettano
   di tornare all'elenco completo;
 - una persona anonima venga rimandata al login;
-- il tecnico non riceva in anticipo la schermata della futura coda.
+- tecnico e amministratore vengano indirizzati alla propria coda.

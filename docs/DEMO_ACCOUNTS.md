@@ -1,7 +1,8 @@
 # Account demo e password sicure
 
-SP-030 prepara i cinque account sintetici per il login senza conservare password
-leggibili nel repository o nel database. SP-031 aggiunge l'accesso e le sessioni.
+ServicePilot include cinque account sintetici per provare il portale senza conservare
+password leggibili nel repository o nel database. Autenticazione, sessioni e permessi
+per ruolo sono collegati sia alle API sia all'interfaccia web.
 
 ## Account disponibili
 
@@ -52,5 +53,6 @@ Dopo il seed, `POST /auth/login` accetta l'email di uno degli account elencati e
 password configurata per il suo ruolo. Il flusso completo è descritto in
 [`AUTHENTICATION.md`](AUTHENTICATION.md).
 
-SP-032 applicherà i permessi dei tre ruoli alle API; SP-040 aggiungerà la pagina grafica
-di accesso.
+Dopo l'accesso, i permessi dei tre ruoli seguono la matrice descritta in
+[`AUTHORIZATION.md`](AUTHORIZATION.md); la pagina grafica è descritta in
+[`WEB_INTERFACE.md`](WEB_INTERFACE.md).

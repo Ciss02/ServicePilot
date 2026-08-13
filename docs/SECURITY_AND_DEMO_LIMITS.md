@@ -1,7 +1,7 @@
 # Sicurezza e limiti della demo
 
-Questa revisione conclude SP-081 e descrive le protezioni effettive dell'MVP al 13
-agosto 2026. ServicePilot resta una demo portfolio con dati fittizi: non va usato per
+Questo documento descrive le protezioni effettive dell'MVP al 13 agosto 2026.
+ServicePilot resta una demo portfolio con dati fittizi: non va usato per
 password, documenti aziendali o informazioni personali reali.
 
 ## Obiettivo della revisione
@@ -34,7 +34,8 @@ e rendere visibili i limiti ancora accettati.
 
 Google raccomanda di trattare la chiave come una password, conservarla lato server,
 limitarla alla sola API necessaria e configurare avvisi di spesa. Queste ultime due
-operazioni dipendono dall'account cloud e saranno controllate durante SP-082:
+operazioni dipendono dall'account cloud e vanno controllate nel progetto che ospita la
+demo:
 [gestione sicura delle chiavi Gemini](https://ai.google.dev/gemini-api/docs/api-key).
 
 Se una chiave compare per errore in Git, rimuovere il testo dal commit non basta:
@@ -46,7 +47,7 @@ Il backend non si fida del nome scelto nel browser. Controlla estensione, tipo d
 contenuto riconoscibile e dimensione; salva con un UUID in una cartella non pubblica e
 ignorata da Git. Un errore rimuove file temporanei e salvataggi parziali.
 
-SP-081 aggiunge un secondo tetto dopo l'estrazione: un PDF compresso di pochi megabyte
+Un secondo tetto si applica dopo l'estrazione: un PDF compresso di pochi megabyte
 può infatti produrre molto testo. Oltre 500.000 caratteri o 500 segmenti, il documento
 viene marcato come non elaborabile e nessun embedding viene richiesto.
 
@@ -101,12 +102,12 @@ dalle quote Gemini, che possono variare per modello e progetto; Google applica l
 per minuto, token e giorno e mostra quelli effettivi in AI Studio:
 [quote Gemini](https://ai.google.dev/gemini-api/docs/rate-limits).
 
-Il contatore è volutamente semplice e vive in memoria. Per SP-082 la demo deve quindi
-partire con una sola istanza. Prima di aumentare il numero di processi servirà spostare
+Il contatore è volutamente semplice e vive in memoria. La demo pubblica parte quindi
+con una sola istanza. Prima di aumentare il numero di processi servirà spostare
 il conteggio in un archivio condiviso. Anche il riavvio azzera il contatore locale: quote
 del provider e avvisi di spesa restano il secondo livello obbligatorio.
 
-## Configurazione minima per SP-082
+## Configurazione minima del deploy
 
 ```text
 SERVICEPILOT_PUBLIC_DEMO=true

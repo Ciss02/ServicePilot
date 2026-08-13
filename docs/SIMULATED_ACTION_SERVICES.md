@@ -1,6 +1,6 @@
 # Servizi REST simulati per le azioni
 
-SP-071 aggiunge una piccola applicazione FastAPI separata dal portale principale. I
+Una piccola applicazione FastAPI separata dal portale principale espone tre endpoint. I
 suoi tre endpoint imitano integrazioni operative senza assegnare ticket reali, inviare
 messaggi o contattare fornitori.
 
@@ -30,17 +30,18 @@ Gli endpoint sono:
 ## Dove vengono controllati
 
 Pydantic controlla UUID, identificativi positivi, lunghezze, vocabolari e campi
-aggiuntivi. I payload riusano i contratti di SP-070, quindi un'assegnazione continua a
-richiedere almeno un gruppo o un tecnico e nessun endpoint accetta comandi generici.
+aggiuntivi. I payload riusano i contratti delle proposte, quindi un'assegnazione
+continua a richiedere almeno un gruppo o un tecnico e nessun endpoint accetta comandi
+generici.
 
 ## Dove vengono salvati
 
-SP-071 non salva dati. Con `success` restituisce `200`, stato `succeeded`, messaggio e
+Il simulatore non salva dati. Con `success` restituisce `200`, stato `succeeded`, messaggio e
 un riferimento stabile derivato dal `request_id`. Ripetere la stessa richiesta produce
 lo stesso risultato, senza duplicare effetti perché non esistono effetti reali.
 
-SP-072 collega questi servizi alle proposte soltanto dopo l'approvazione; SP-073
-conserverà la sequenza completa nell'audit log.
+Il portale collega questi servizi alle proposte soltanto dopo l'approvazione e conserva
+la sequenza completa nell'audit log.
 
 ## Cosa può andare storto
 
@@ -48,7 +49,7 @@ conserverà la sequenza completa nell'audit log.
 - scenario `service_unavailable`: risposta controllata `503`, stato `failed`, codice
   `simulated_service_unavailable` e indicazione che il tentativo è ripetibile;
 - richiesta duplicata: stesso riferimento e stessa risposta;
-- simulatore non avviato: il futuro chiamante dovrà gestire l'indisponibilità come un
+- simulatore non avviato: il portale gestisce l'indisponibilità come un
   errore esterno, senza fingere un successo.
 
 Gli errori sono scelti esplicitamente e non casuali, così i test sono riproducibili.
@@ -66,7 +67,7 @@ Per una prova manuale locale possono essere avviati soltanto sull'indirizzo di l
   --host 127.0.0.1 --port 8011
 ```
 
-La documentazione interattiva sarà disponibile in `http://127.0.0.1:8011/docs` e lo
+La documentazione interattiva è disponibile in `http://127.0.0.1:8011/docs` e lo
 stato minimo in `http://127.0.0.1:8011/health`. Non sono necessarie chiavi API.
 
 ## Quale test dimostra che funziona

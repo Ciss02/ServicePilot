@@ -1,9 +1,8 @@
 # Upload sicuro dei documenti
 
-SP-060 introduce il primo passaggio della knowledge base: l'amministratore può
-caricare una procedura PDF o Markdown e il server la conserva soltanto dopo averla
-controllata. In questa attività non vengono ancora estratti testo e sezioni e non
-viene creata alcuna indicizzazione.
+L'amministratore può caricare una procedura PDF o Markdown. Il server la conserva
+soltanto dopo averla controllata, quindi estrae il testo, crea segmenti rintracciabili e
+prepara l'indice usato dalla ricerca.
 
 ## Quale problema risolve
 
@@ -37,7 +36,7 @@ Il tipo generico `application/octet-stream` viene accettato perché alcuni brows
 usano per file Markdown o PDF; in quel caso il contenuto reale continua comunque a
 essere verificato.
 
-Dopo l'estrazione, SP-081 accetta al massimo 500.000 caratteri e 500 segmenti per
+Dopo l'estrazione, il sistema accetta al massimo 500.000 caratteri e 500 segmenti per
 documento. Questo secondo tetto protegge da PDF piccoli ma molto compressi e impedisce
 che un singolo upload produca migliaia di righe o una richiesta embedding eccessiva.
 
@@ -78,6 +77,6 @@ non possono salvare documenti neppure inviando direttamente la richiesta HTTP.
 - un documento che supera il limite del testo estratto viene marcato come fallito senza
   creare segmenti né chiamare il provider embedding.
 
-SP-061 usa ora i documenti conservati per estrarre il testo e dividerlo in segmenti
-con riferimenti alla fonte. Il comportamento è descritto in
+I documenti conservati vengono trasformati in segmenti con riferimenti alla fonte. Il
+comportamento è descritto in
 [`KNOWLEDGE_EXTRACTION.md`](KNOWLEDGE_EXTRACTION.md).

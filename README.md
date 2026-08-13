@@ -8,7 +8,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.141-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[Italiano](#italiano) · [English](#english) · [Demo online](https://servicepilot-ai-demo-ciss02.onrender.com) · [Architettura](docs/ARCHITECTURE.md)
+[Italiano](#italiano) · [English](#english) · [Demo online](https://servicepilot-ai-demo-ciss02.onrender.com) · [Documentazione](docs/README.md) · [Architettura](docs/ARCHITECTURE.md)
 
 ![Area dipendente di ServicePilot AI](docs/screenshots/employee-dashboard.jpg)
 
@@ -228,6 +228,7 @@ di apprendimento è in
 
 ### Documentazione principale
 
+- [Indice completo della documentazione](docs/README.md)
 - [Specifica dell'MVP](docs/ServicePilot_AI_MVP_Specification.md)
 - [Architettura e flussi](docs/ARCHITECTURE.md)
 - [Decisioni tecniche](docs/DECISIONS.md)
@@ -347,6 +348,9 @@ explicit limits. This remains a portfolio demo rather than a production service:
 
 Read [`docs/SECURITY_AND_DEMO_LIMITS.md`](docs/SECURITY_AND_DEMO_LIMITS.md) for the full
 review.
+
+The complete documentation map, including the distinction between current technical
+guides and historical project records, is in [`docs/README.md`](docs/README.md).
 
 ### Roadmap
 

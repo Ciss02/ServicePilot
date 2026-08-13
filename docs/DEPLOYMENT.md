@@ -1,6 +1,6 @@
 # Deploy della demo
 
-SP-082 pubblica ServicePilot su una singola istanza gratuita Render nella regione di
+ServicePilot è pubblicato su una singola istanza gratuita Render nella regione di
 Francoforte. Il portale è raggiungibile tramite HTTPS; il secondo processo FastAPI che
 simula le azioni ascolta soltanto su `127.0.0.1` e quindi non è esposto a Internet.
 
@@ -13,7 +13,7 @@ simula le azioni ascolta soltanto su `127.0.0.1` e quindi non è esposto a Inter
 - Servizio: `servicepilot-ai-demo-ciss02`
 
 Il 13 agosto 2026 sono stati verificati l'endpoint `/health`, la pagina di login HTTPS e
-un percorso completo partito da una sessione anonima. Il collaudo ha creato `SP-0007`
+un percorso completo partito da una sessione anonima. Il collaudo ha creato il ticket demo `SP-0007`
 da una sola descrizione fittizia, confermato la classificazione come tecnico, eseguito
 un'assegnazione simulata con audit e infine ripristinato i dati iniziali come admin.
 

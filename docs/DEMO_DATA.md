@@ -1,7 +1,7 @@
 # Dataset dimostrativo
 
-SP-021 fornisce dati sintetici coerenti per sviluppare e mostrare ServicePilot senza
-usare informazioni di persone o aziende reali.
+Il progetto include dati sintetici coerenti per sviluppare e mostrare ServicePilot
+senza usare informazioni di persone o aziende reali.
 
 ## Contenuto
 

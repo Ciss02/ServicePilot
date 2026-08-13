@@ -1,20 +1,24 @@
-# Interfaccia web iniziale
+# Interfaccia web
 
-SP-040 introduce la base grafica responsive di ServicePilot AI e collega il modulo di
-accesso alle sessioni già disponibili nel backend.
+ServicePilot AI offre un portale responsive collegato alle sessioni e ai permessi già
+applicati dal backend.
 
 ## Quale problema risolve
 
-Prima di SP-040 l'autenticazione poteva essere provata soltanto tramite API. Ora una
-persona può accedere dal browser con un modulo comprensibile, raggiungere una pagina
-protetta e chiudere la sessione.
+Una persona può accedere dal browser con un modulo comprensibile, raggiungere le pagine
+consentite dal proprio ruolo e chiudere la sessione.
 
 ## Pagine disponibili
 
 - `GET /` indirizza verso l'area dell'applicazione;
 - `GET /login` mostra il modulo di accesso;
 - `POST /login` controlla email e password e avvia la sessione;
-- `GET /app` mostra la base dell'area autenticata;
+- `GET /app` mostra la dashboard personale oppure la coda tecnica in base al ruolo;
+- `/app/new-ticket` gestisce descrizione, integrazione dei dati e conferma del ticket;
+- `GET /app/tickets/{ticket_id}` mostra il dettaglio autorizzato e, per tecnico e admin,
+  i comandi operativi;
+- `GET /app/knowledge` permette all'amministratore di gestire e provare le fonti;
+- `GET /app/audit` permette all'amministratore di consultare gli eventi;
 - `POST /logout` revoca la sessione e torna alla pagina di accesso.
 
 Una persona non autenticata che visita `/app` viene accompagnata a `/login`. Chi ha già
@@ -50,14 +54,15 @@ Sono presenti:
 - `Jinja2 3.1.6` trasforma i template HTML nei documenti inviati al browser;
 - `python-multipart 0.0.32` permette a FastAPI di leggere i campi inviati dai moduli.
 
-Non è stato aggiunto JavaScript: la pagina di accesso non ne ha bisogno. HTMX rimane una
-tecnologia prevista e potrà essere introdotta quando una funzione interattiva ne trarrà
-un beneficio reale.
+Il portale usa pagine HTML generate dal server e normali moduli o collegamenti. Per
+l'MVP non è stato necessario introdurre HTMX o un framework JavaScript: questo mantiene
+il flusso semplice e riduce le parti che possono rompersi.
 
-## Limiti attuali
+## Funzioni collegate
 
-SP-041 estende `/app` con l'elenco e il riepilogo del dipendente e aggiunge il dettaglio
-personale descritto in [`EMPLOYEE_AREA.md`](EMPLOYEE_AREA.md). SP-042 aggiunge la
-[`raccolta guidata`](GUIDED_TICKET_INTAKE.md), mentre riepilogo e conferma appartengono a
-SP-043. Tecnico e amministratore mantengono una base protetta fino alla coda di SP-044.
-Limiti ai tentativi ripetuti e revisione finale della sicurezza sono previsti in SP-081.
+- il dipendente consulta le proprie richieste e usa la
+  [`raccolta guidata`](GUIDED_TICKET_INTAKE.md);
+- tecnico e amministratore lavorano dalla [`coda tecnica`](TECHNICIAN_QUEUE.md);
+- l'amministratore gestisce knowledge base, audit e ripristino dei dati demo;
+- limiti ai tentativi ripetuti, cookie sicuri e controlli dell'origine sono descritti in
+  [`SECURITY_AND_DEMO_LIMITS.md`](SECURITY_AND_DEMO_LIMITS.md).

@@ -144,6 +144,10 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Architettura documentata con componenti, flussi, confini di sicurezza e scelte di
   deploy.
 - Cinque schermate reali prodotte da un dataset temporaneo esclusivamente sintetico.
+- Indice completo della documentazione con separazione tra guide tecniche attuali e
+  registri storici.
+- Revisionati 26 documenti tecnici per eliminare riferimenti operativi alle vecchie
+  issue e descrivere le funzionalità nello stato realmente disponibile.
 
 ## Milestone attiva
 
@@ -541,5 +545,10 @@ Prima di terminare verificare che:
 - Verificate nel browser le schermate dipendente, raccolta guidata, coda tecnica,
   dettaglio operativo e knowledge base con soli dati temporanei fittizi.
 - `pip check`: nessuna dipendenza mancante o incompatibile.
-- Ruff: controllo superato e 149 file Python conformi alla formattazione.
+- Ruff: controllo superato e 150 file conformi alla formattazione.
 - `pytest -W error`: 354 test superati senza avvisi dopo SP-083.
+- Verificati tutti i collegamenti Markdown locali dell'intero repository: nessun file o
+  immagine mancante.
+- Verificato che i codici attività restino soltanto nei registri storici; `SP-0007` in
+  `DEPLOYMENT.md` è esplicitamente identificato come ticket demo.
+- `git diff --check`: nessun errore di spaziatura nella revisione generale dei documenti.

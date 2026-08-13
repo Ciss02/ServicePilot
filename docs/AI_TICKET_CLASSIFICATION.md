@@ -1,7 +1,7 @@
 # Classificazione AI suggerita
 
-SP-052 classifica un ticket subito dopo la sua creazione confermata. SP-053 rende
-esplicita la successiva verifica umana e gli errori controllati. L'AI propone
+ServicePilot classifica un ticket subito dopo la sua creazione confermata e rende
+esplicita la successiva verifica umana. L'AI propone
 categoria, sottocategoria, impatto, urgenza e gruppo di supporto; ServicePilot controlla
 la proposta e calcola autonomamente la priorità.
 

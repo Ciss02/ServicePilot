@@ -1,7 +1,7 @@
 # Login, sessione e logout
 
-SP-031 permette agli account demo di autenticarsi tramite API e di mantenere la propria
-identità tra richieste successive. SP-040 usa lo stesso meccanismo nell'interfaccia web.
+Gli account demo possono autenticarsi tramite API o interfaccia web e mantenere la
+propria identità tra richieste successive grazie a una sessione protetta.
 
 ## Perché esiste
 
@@ -32,8 +32,9 @@ su HTTP; in un ambiente HTTPS occorre impostare:
 $env:SERVICEPILOT_SECURE_COOKIES = "true"
 ```
 
-SP-081 limita inoltre il login a 10 tentativi al minuto per client, elimina le sessioni
-scadute durante un nuovo accesso e conserva al massimo 20 sessioni attive per account.
+La protezione del portale limita inoltre il login a 10 tentativi al minuto per client,
+elimina le sessioni scadute durante un nuovo accesso e conserva al massimo 20 sessioni
+attive per account.
 La modalità pubblica richiede cookie HTTPS e applica controllo dell'origine, host ammessi
 e intestazioni di sicurezza come descritto in
 [`SECURITY_AND_DEMO_LIMITS.md`](SECURITY_AND_DEMO_LIMITS.md).
@@ -77,9 +78,9 @@ esiste una sessione.
 Una copia del database non contiene quindi né password né codici di sessione direttamente
 utilizzabili.
 
-## Autorizzazione e limiti attuali
+## Autorizzazione e limiti
 
-SP-032 usa questa identità per proteggere le API ticket secondo la matrice descritta in
-[`AUTHORIZATION.md`](AUTHORIZATION.md). SP-040 aggiunge la pagina grafica descritta in
+Questa identità protegge le API ticket secondo la matrice descritta in
+[`AUTHORIZATION.md`](AUTHORIZATION.md) e la pagina grafica descritta in
 [`WEB_INTERFACE.md`](WEB_INTERFACE.md). I contatori di login vivono nel singolo processo:
 un deploy con più istanze richiederà un archivio condiviso.

@@ -1,6 +1,8 @@
-# Database iniziale
+# Database
 
-SP-020 introduce la persistenza minima di ServicePilot con SQLAlchemy e SQLite.
+ServicePilot usa SQLAlchemy per salvare i dati. L'MVP usa SQLite sia in locale sia nella
+demo gratuita; l'astrazione mantiene l'accesso al database separato dal resto
+dell'applicazione, ma PostgreSQL resta un'evoluzione successiva.
 
 ## Perché esiste
 
@@ -26,9 +28,9 @@ tra ticket, utenti e sedi.
 - `audit_events`: eventi append-only collegati al ticket, con origine, tipo, riepilogo,
   dettagli controllati, autore umano facoltativo e azione collegata facoltativa.
 
-La classificazione può essere vuota quando il ticket nasce perché, nel flusso MVP,
-viene proposta dopo la conferma. La priorità sarà sempre calcolata dal backend prima
-di essere salvata. Gli allegati richiederanno un'attività dedicata.
+La classificazione può essere vuota quando il ticket nasce perché viene proposta dopo
+la conferma. La priorità è sempre calcolata dal backend prima di essere salvata. Gli
+allegati non fanno parte del perimetro dell'MVP.
 
 ## Configurazione
 
@@ -42,10 +44,10 @@ Per creare le tabelle mancanti:
 .\.venv\Scripts\python.exe -m app.db
 ```
 
-Il comando può essere eseguito più volte e non cancella i dati esistenti. SP-030 include
-un aggiornamento compatibile che aggiunge `password_hash` alle tabelle `users` create
-nelle sessioni precedenti. Un sistema generale di migrazioni resta necessario per
-modifiche strutturali future.
+Il comando può essere eseguito più volte e non cancella i dati esistenti. L'avvio
+include piccoli aggiornamenti compatibili per database creati da versioni precedenti.
+Un sistema generale di migrazioni resta necessario se il progetto evolverà oltre
+l'MVP con modifiche strutturali più ampie.
 
 ## Controlli applicati
 

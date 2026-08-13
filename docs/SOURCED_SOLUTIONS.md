@@ -1,15 +1,15 @@
 # Suggerimenti tecnici con fonti
 
-SP-063 completa il primo percorso RAG di ServicePilot: il sistema recupera passaggi
-pertinenti, chiede a Gemini un suggerimento tecnico e conserva le fonti realmente
-citate. SP-064 aggiunge uno stop prudenziale quando quelle fonti non sono abbastanza
-solide. Il risultato assiste il tecnico ma non modifica automaticamente il ticket.
+Il percorso RAG di ServicePilot recupera passaggi pertinenti, chiede a Gemini un
+suggerimento tecnico e conserva le fonti realmente citate. Una soglia prudenziale
+ferma la generazione quando le fonti non sono abbastanza solide. Il risultato assiste
+il tecnico ma non modifica automaticamente il ticket.
 
 ## Quale problema risolve
 
-La ricerca semantica di SP-062 mostra testo utile, ma richiede al tecnico di riunire i
-passaggi in una proposta operativa. SP-063 produce una prima sintesi verificabile e
-mantiene sempre accessibili i testi originali da cui deriva.
+La ricerca semantica mostra testo utile, ma richiederebbe al tecnico di riunire i
+passaggi in una proposta operativa. Il generatore produce una prima sintesi
+verificabile e mantiene sempre accessibili i testi originali da cui deriva.
 
 ## Quali dati riceve
 

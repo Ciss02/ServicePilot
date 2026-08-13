@@ -1,8 +1,8 @@
 # Autorizzazione per ruolo
 
-SP-032 applica l'identità della sessione alle API dei ticket. I controlli sono eseguiti
-dal backend: nascondere un pulsante nell'interfaccia non sarebbe sufficiente, perché una
-persona potrebbe comunque chiamare direttamente l'API.
+ServicePilot applica l'identità della sessione alle API e alle pagine protette. I
+controlli sono eseguiti dal backend: nascondere un pulsante nell'interfaccia non sarebbe
+sufficiente, perché una persona potrebbe comunque chiamare direttamente l'API.
 
 ## Matrice dei permessi
 
@@ -26,9 +26,9 @@ quindi un browser non può creare un ticket a nome di un altro utente.
 - `TechnicalUser` accetta `technician` e `admin`;
 - `AdminUser` accetta soltanto `admin`.
 
-Gli endpoint amministrativi non esistono ancora. `AdminUser` prepara e verifica il
-confine che dovranno usare quando saranno implementati, senza aggiungere ora operazioni
-fittizie fuori dal piano.
+`AdminUser` protegge le operazioni riservate, tra cui gestione della knowledge base,
+consultazione dell'audit e ripristino dei dati demo. Nascondere i relativi pulsanti agli
+altri ruoli migliora l'esperienza, ma il controllo decisivo resta sempre nel backend.
 
 ## Risposte di sicurezza
 
