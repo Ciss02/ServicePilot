@@ -18,7 +18,9 @@ from app.support_groups import (
     DuplicateSupportGroupError,
     InvalidSupportGroupMemberError,
     active_support_group_names,
+    add_support_group_member,
     create_support_group,
+    remove_support_group_member,
     replace_support_group_members,
     set_support_group_active,
     support_group_members_by_group,
@@ -111,6 +113,25 @@ def test_employee_cannot_become_group_member(group_database) -> None:
             replace_support_group_members(session, group.id, [employee.id])
 
         assert session.scalar(select(func.count()).select_from(SupportGroupMembership)) == 0
+
+
+def test_single_member_can_be_added_and_removed_without_replacing_others(
+    group_database,
+) -> None:
+    with Session(group_database) as session:
+        technician, admin, _ = _users(session)
+        group = create_support_group(
+            session,
+            name="Supporto compatto",
+            description="Gruppo per verificare la selezione compatta.",
+        )
+
+        add_support_group_member(session, group.id, technician.id)
+        add_support_group_member(session, group.id, admin.id)
+        remove_support_group_member(session, group.id, technician.id)
+
+        members = support_group_members_by_group(session)
+        assert {member.id for member in members[group.id]} == {admin.id}
 
 
 def test_inactive_group_keeps_ticket_history_but_cannot_be_new_assignment(

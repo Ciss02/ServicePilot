@@ -485,6 +485,9 @@ def test_admin_manages_group_data_state_and_members(web_client) -> None:
     assert page.status_code == 200
     assert "Gruppi di supporto" in page.text
     assert 'aria-current="page"' in page.text
+    assert "Nuovo gruppo" in page.text
+    assert 'type="checkbox"' not in page.text
+    assert "Seleziona tecnico o admin" in page.text
     assert created.status_code == 303
 
     with Session(database_engine) as session:
@@ -494,9 +497,14 @@ def test_admin_manages_group_data_state_and_members(web_client) -> None:
         assert group is not None
         group_id = group.id
 
-    members = client.post(
-        f"/app/admin/groups/{group_id}/members",
-        data={"member_ids": [str(technician_id), str(admin_id)]},
+    technician_added = client.post(
+        f"/app/admin/groups/{group_id}/members/add",
+        data={"member_id": str(technician_id)},
+        follow_redirects=False,
+    )
+    admin_added = client.post(
+        f"/app/admin/groups/{group_id}/members/add",
+        data={"member_id": str(admin_id)},
         follow_redirects=False,
     )
     renamed = client.post(
@@ -513,7 +521,8 @@ def test_admin_manages_group_data_state_and_members(web_client) -> None:
         follow_redirects=False,
     )
 
-    assert members.status_code == 303
+    assert technician_added.status_code == 303
+    assert admin_added.status_code == 303
     assert renamed.status_code == 303
     assert deactivated.status_code == 303
     with Session(database_engine) as session:
@@ -527,6 +536,20 @@ def test_admin_manages_group_data_state_and_members(web_client) -> None:
                 )
             )
         ) == {technician_id, admin_id}
+
+    removed = client.post(
+        f"/app/admin/groups/{group_id}/members/{technician_id}/remove",
+        follow_redirects=False,
+    )
+    assert removed.status_code == 303
+    with Session(database_engine) as session:
+        assert set(
+            session.scalars(
+                select(SupportGroupMembership.user_id).where(
+                    SupportGroupMembership.support_group_id == group_id
+                )
+            )
+        ) == {admin_id}
 
 
 @pytest.mark.parametrize(

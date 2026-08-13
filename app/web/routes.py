@@ -112,11 +112,12 @@ from app.support_groups import (
     InvalidSupportGroupMemberError,
     SupportGroupNotFoundError,
     SupportGroupPersistenceError,
+    add_support_group_member,
     create_support_group,
     list_active_support_groups,
     list_eligible_group_members,
     list_support_groups,
-    replace_support_group_members,
+    remove_support_group_member,
     set_support_group_active,
     support_group_members_by_group,
     update_support_group,
@@ -325,16 +326,24 @@ def _support_groups_context(
 
     members_by_group = support_group_members_by_group(session)
     groups = list_support_groups(session)
+    eligible_members = list_eligible_group_members(session)
+    member_ids_by_group = {
+        group_id: {member.id for member in members}
+        for group_id, members in members_by_group.items()
+    }
     context = _workspace_context(current_user, "Gruppi di supporto")
     context.update(
         {
             "groups": groups,
             "members_by_group": members_by_group,
-            "member_ids_by_group": {
-                group_id: {member.id for member in members}
-                for group_id, members in members_by_group.items()
+            "available_members_by_group": {
+                group.id: [
+                    member
+                    for member in eligible_members
+                    if member.id not in member_ids_by_group.get(group.id, set())
+                ]
+                for group in groups
             },
-            "eligible_members": list_eligible_group_members(session),
             "active_group_count": sum(group.is_active for group in groups),
             "group_action": group_action,
             "error": error,
@@ -967,19 +976,19 @@ def change_support_group_state_from_web(
     )
 
 
-@router.post("/app/admin/groups/{group_id}/members")
-def update_support_group_members_from_web(
+@router.post("/app/admin/groups/{group_id}/members/add")
+def add_support_group_member_from_web(
     group_id: Annotated[int, PathParameter(gt=0)],
     session: DatabaseSession,
     current_user: WebUser,
-    member_ids: Annotated[list[int] | None, Form()] = None,
+    member_id: Annotated[int, Form(gt=0)],
 ) -> RedirectResponse:
-    """Sostituisce le appartenenze accettando solo account tecnici attivi."""
+    """Aggiunge dal menu compatto un solo account tecnico attivo."""
 
     if redirect := _admin_only(current_user):
         return redirect
     try:
-        replace_support_group_members(session, group_id, member_ids or [])
+        add_support_group_member(session, group_id, member_id)
     except SupportGroupNotFoundError:
         action = "not_found"
     except InvalidSupportGroupMemberError:
@@ -987,7 +996,32 @@ def update_support_group_members_from_web(
     except SupportGroupPersistenceError:
         action = "save_failed"
     else:
-        action = "members_updated"
+        action = "member_added"
+    return RedirectResponse(
+        url=f"/app/admin/groups?group_action={action}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/app/admin/groups/{group_id}/members/{user_id}/remove")
+def remove_support_group_member_from_web(
+    group_id: Annotated[int, PathParameter(gt=0)],
+    user_id: Annotated[int, PathParameter(gt=0)],
+    session: DatabaseSession,
+    current_user: WebUser,
+) -> RedirectResponse:
+    """Rimuove una singola appartenenza senza mostrare l'intero organico."""
+
+    if redirect := _admin_only(current_user):
+        return redirect
+    try:
+        remove_support_group_member(session, group_id, user_id)
+    except SupportGroupNotFoundError:
+        action = "not_found"
+    except SupportGroupPersistenceError:
+        action = "save_failed"
+    else:
+        action = "member_removed"
     return RedirectResponse(
         url=f"/app/admin/groups?group_action={action}",
         status_code=status.HTTP_303_SEE_OTHER,

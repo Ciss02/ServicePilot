@@ -49,6 +49,10 @@ controllato. La disattivazione non elimina gruppo, appartenenze o testo storico.
 ## Chi può usare la funzionalità
 
 Solo l'amministratore può aprire `/app/admin/groups` e modificare catalogo o membri.
+La pagina mantiene compatto il catalogo: il modulo di creazione si apre dal pulsante
+**Nuovo gruppo**, mentre le appartenenze correnti sono mostrate come etichette rimovibili
+e i nuovi membri si aggiungono da un selettore che propone soltanto gli account idonei
+non ancora presenti nel gruppo.
 Tecnici e amministratori possono scegliere un gruppo attivo durante la gestione ticket;
 il dipendente vede soltanto l'eventuale assegnazione del proprio ticket.
 

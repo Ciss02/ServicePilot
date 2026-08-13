@@ -190,3 +190,41 @@ def replace_support_group_members(
     _save(session)
     session.refresh(group)
     return group
+
+
+def add_support_group_member(
+    session: Session,
+    group_id: int,
+    user_id: int,
+) -> SupportGroup:
+    """Aggiunge una sola appartenenza senza riscrivere gli altri membri."""
+
+    group = session.get(SupportGroup, group_id)
+    if group is None:
+        raise SupportGroupNotFoundError
+    user = session.get(User, user_id)
+    if user is None or user.role not in {Role.TECHNICIAN, Role.ADMIN} or not user.is_active:
+        raise InvalidSupportGroupMemberError
+    if session.get(SupportGroupMembership, (group_id, user_id)) is None:
+        session.add(SupportGroupMembership(support_group_id=group_id, user_id=user_id))
+        _save(session)
+        session.refresh(group)
+    return group
+
+
+def remove_support_group_member(
+    session: Session,
+    group_id: int,
+    user_id: int,
+) -> SupportGroup:
+    """Rimuove una singola appartenenza mantenendo gruppo e account."""
+
+    group = session.get(SupportGroup, group_id)
+    if group is None:
+        raise SupportGroupNotFoundError
+    membership = session.get(SupportGroupMembership, (group_id, user_id))
+    if membership is not None:
+        session.delete(membership)
+        _save(session)
+        session.refresh(group)
+    return group
