@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.db import Site, Ticket, User, build_engine, create_database
 from app.db.base import Base
-from app.db.migrations import CURRENT_REVISION, DatabaseMigrationError
+from app.db.migrations import CURRENT_REVISION, V010_TABLE_NAMES, DatabaseMigrationError
 from app.domain.vocabulary import Role, TicketStatus
 
 APPLICATION_TABLES = set(Base.metadata.tables)
@@ -90,7 +90,10 @@ def _create_populated_v010_database(
 ) -> None:
     """Simula un database finale v0.1.0 privo della tabella Alembic."""
 
-    Base.metadata.create_all(engine)
+    Base.metadata.create_all(
+        engine,
+        tables=[Base.metadata.tables[name] for name in V010_TABLE_NAMES],
+    )
     if historical_alter_shape:
         with engine.begin() as connection:
             operations = Operations(MigrationContext.configure(connection))

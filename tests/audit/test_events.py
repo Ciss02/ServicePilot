@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.audit import list_ticket_audit_events
-from app.db import AuditEvent, Site, User, build_engine, create_database
+from app.db import AuditEvent, Site, SupportGroup, User, build_engine, create_database
 from app.domain.ticket_contracts import TicketCreate, TicketUpdate
 from app.domain.vocabulary import AuditEventType, Role, TicketStatus
 from app.tickets.creation import create_confirmed_ticket
@@ -33,7 +33,12 @@ def audit_context(tmp_path):
             role=Role.TECHNICIAN,
         )
         site = Site(code="AUDIT-DEMO", name="Sede Audit Demo")
-        session.add_all([requester, technician, site])
+        group = SupportGroup(
+            name="Supporto audit demo",
+            name_key="supporto audit demo",
+            description="Gruppo fittizio per verificare gli eventi di audit.",
+        )
+        session.add_all([requester, technician, site, group])
         session.commit()
         context = {
             "requester_id": requester.id,

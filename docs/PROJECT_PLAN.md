@@ -184,7 +184,7 @@ versionata.
 - [x] **[SP-090 - Migrazioni versionate per la v0.2](https://github.com/Ciss02/ServicePilot/issues/74)**
   Introdurre Alembic e garantire upgrade da `v0.1.0` e creazione da database vuoto.
   Verifica: i due percorsi producono lo stesso schema senza perdere dati.
-- [ ] **[SP-091 - Gruppi di supporto e appartenenze](https://github.com/Ciss02/ServicePilot/issues/75)**
+- [x] **[SP-091 - Gruppi di supporto e appartenenze](https://github.com/Ciss02/ServicePilot/issues/75)**
   Rendere i gruppi amministrabili e collegare ogni tecnico a uno o più gruppi.
   Verifica: gruppi disattivati restano nello storico ma non sono assegnabili.
 - [ ] **[SP-092 - Allegati sicuri](https://github.com/Ciss02/ServicePilot/issues/76)**
@@ -272,5 +272,5 @@ lo storico.
 
 ## Prossima attività
 
-**SP-091 - Gruppi di supporto e appartenenze.** Rendere i gruppi amministrabili e
-collegare i tecnici a uno o più gruppi, usando la base Alembic verificata in SP-090.
+**SP-092 - Allegati sicuri.** Conservare file controllati per bozze, ticket e messaggi
+con download autorizzato, senza anticipare il thread cronologico previsto in SP-093.

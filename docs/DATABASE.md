@@ -15,6 +15,8 @@ tra ticket, utenti e sedi.
 - `users`: identità fittizia, nome visibile, ruolo, hash della password e stato attivo;
 - `auth_sessions`: impronta del codice casuale, utente collegato, creazione e scadenza;
 - `sites`: codice, nome e stato attivo di una sede fittizia;
+- `support_groups`: catalogo amministrabile con nome univoco, descrizione e stato;
+- `support_group_memberships`: appartenenze molti-a-molti tra gruppi e account tecnici;
 - `knowledge_documents`: file della knowledge base, metadati, stato di estrazione e
   stato dell'indice con modello, dimensione e data;
 - `knowledge_segments`: testo estratto, posizione, sezione o pagina di origine e
@@ -53,7 +55,8 @@ pubblicato con `v0.1.0`. Su un database vuoto crea tutte le tabelle. Su un datab
 v0.1.0 esistente verifica prima l'intera struttura e registra la baseline. La revisione
 `0002_normalize_v010` corregge poi la sola variante storica prodotta dai precedenti
 `ALTER TABLE`, conservando le righe e facendo convergere entrambi i percorsi allo stesso
-schema. Un database non versionato parziale o sconosciuto viene rifiutato senza essere
+schema. `0003_support_groups` aggiunge catalogo e appartenenze senza riscrivere il testo
+storico `tickets.assigned_group`. Un database non versionato parziale o sconosciuto viene rifiutato senza essere
 marcato come aggiornato.
 
 Per controllare la revisione dalla radice del repository:
@@ -70,6 +73,8 @@ bootstrap in automatico e non richiedono un passaggio manuale separato.
 ## Controlli applicati
 
 - email utente e codice sede unici;
+- nome gruppo univoco anche dopo la normalizzazione applicativa di spazi e maiuscole;
+- appartenenza gruppo-utente non duplicabile e collegata a record esistenti;
 - password degli account demo conservata soltanto come hash Argon2;
 - codici di sessione conservati nel database soltanto come impronte SHA-256;
 - sessioni collegate a utenti esistenti e rimosse con l'utente;
@@ -108,4 +113,7 @@ Il comando seguente applica le migrazioni e carica il dataset sintetico:
 
 Contenuto e comportamento sono descritti in
 [`DEMO_DATA.md`](DEMO_DATA.md).
+
+La gestione del catalogo è descritta in
+[`SUPPORT_GROUPS.md`](SUPPORT_GROUPS.md).
 

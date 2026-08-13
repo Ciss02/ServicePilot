@@ -8,9 +8,13 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.audit import record_action_proposed
-from app.db.models import ProposedAction, Ticket
-from app.domain.action_contracts import ActionProposalCreate, ActionProposalRead
-from app.domain.vocabulary import ActionStatus
+from app.db.models import ProposedAction, SupportGroup, Ticket
+from app.domain.action_contracts import (
+    ActionProposalCreate,
+    ActionProposalRead,
+    AssignmentActionPayload,
+)
+from app.domain.vocabulary import ActionStatus, ActionType
 
 
 class ActionProposalPersistenceError(RuntimeError):
@@ -19,6 +23,10 @@ class ActionProposalPersistenceError(RuntimeError):
 
 class ActionProposalDataError(RuntimeError):
     """Una proposta salvata contiene dati non più validi o leggibili."""
+
+
+class ActionProposalDestinationError(RuntimeError):
+    """La destinazione proposta non è disponibile nel catalogo operativo."""
 
 
 def read_action_proposal(row: ProposedAction) -> ActionProposalRead:
@@ -53,6 +61,20 @@ def create_action_proposal(
     proposal: ActionProposalCreate,
 ) -> ProposedAction:
     """Salva soltanto l'intenzione dell'agente, senza applicarla al ticket."""
+
+    if (
+        proposal.action_type is ActionType.ASSIGN_TICKET
+        and isinstance(proposal.payload, AssignmentActionPayload)
+        and proposal.payload.assigned_group is not None
+        and session.scalar(
+            select(SupportGroup.id).where(
+                SupportGroup.name == proposal.payload.assigned_group,
+                SupportGroup.is_active.is_(True),
+            )
+        )
+        is None
+    ):
+        raise ActionProposalDestinationError
 
     action = ProposedAction(
         ticket_id=ticket.id,

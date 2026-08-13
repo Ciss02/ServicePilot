@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% set active_section = "groups" %}
+{% block app_navigation %}{% include "_technical_navigation.html" %}{% endblock %}
+
+{% block content %}
+  <section class="groups-admin shell" aria-labelledby="groups-title">
+    <header class="groups-hero">
+      <div>
+        <p class="eyebrow">Configurazione operativa</p>
+        <h1 id="groups-title">Gruppi di supporto</h1>
+        <p>Gestisci i gruppi disponibili per assegnazioni e classificazione AI. I gruppi disattivati restano leggibili nei ticket storici.</p>
+      </div>
+    </header>
+
+    {% if group_action in ["created", "updated", "activated", "deactivated", "member_added", "member_removed", "members_updated"] %}
+      <div class="success-message" role="status">Modifica salvata correttamente.</div>
+    {% elif group_action %}
+      <div class="form-alert" role="alert">Non è stato possibile completare l'operazione richiesta.</div>
+    {% endif %}
+    {% if error %}<div class="form-alert" role="alert">{{ error }}</div>{% endif %}
+
+    <section class="groups-catalog" aria-labelledby="catalog-title">
+        <div class="groups-catalog-heading">
+          <div><p class="card-label">Catalogo condiviso</p><h2 id="catalog-title">{{ groups | length }} gruppi configurati</h2><span>{{ active_group_count }} attivi · Solo gli attivi sono assegnabili</span></div>
+          <details class="group-create-disclosure" {% if error and not editing_group_id %}open{% endif %}>
+            <summary class="primary-button">Nuovo gruppo</summary>
+            <div class="group-create-panel">
+              <div><p class="card-label">Nuovo gruppo</p><h3>Aggiungi al catalogo</h3></div>
+              <form method="post" action="/app/admin/groups" class="group-form">
+                <div class="field-group"><label for="new-group-name">Nome univoco</label><input id="new-group-name" name="name" maxlength="100" required value="{{ values.name if not editing_group_id else '' }}"></div>
+                <div class="field-group"><label for="new-group-description">Descrizione</label><textarea id="new-group-description" name="description" maxlength="500" required>{{ values.description if not editing_group_id else '' }}</textarea></div>
+                <button class="primary-button" type="submit">Crea gruppo</button>
+              </form>
+            </div>
+          </details>
+        </div>
+        <div class="group-card-list">
+          {% for group in groups %}
+            <article class="group-card {% if not group.is_active %}is-inactive{% endif %}">
+              <header><div><span class="group-state">{{ "Attivo" if group.is_active else "Non attivo" }}</span><h3>{{ group.name }}</h3><p>{{ group.description }}</p></div>{% set member_count = members_by_group.get(group.id, []) | length %}<strong>{{ member_count }} {{ "membro" if member_count == 1 else "membri" }}</strong></header>
+              <details {% if editing_group_id == group.id %}open{% endif %}>
+                <summary>Modifica dati e appartenenze</summary>
+                <div class="group-editor">
+                  <form method="post" action="/app/admin/groups/{{ group.id }}/update" class="group-form">
+                    <div class="field-group"><label for="group-name-{{ group.id }}">Nome</label><input id="group-name-{{ group.id }}" name="name" maxlength="100" required value="{{ values.name if editing_group_id == group.id else group.name }}"></div>
+                    <div class="field-group"><label for="group-description-{{ group.id }}">Descrizione</label><textarea id="group-description-{{ group.id }}" name="description" maxlength="500" required>{{ values.description if editing_group_id == group.id else group.description }}</textarea></div>
+                    <button class="secondary-button" type="submit">Salva dati</button>
+                  </form>
+                  <section class="group-members-panel" aria-labelledby="group-members-{{ group.id }}">
+                    <div class="group-members-heading"><div><span class="card-label">Appartenenze</span><h4 id="group-members-{{ group.id }}">Membri tecnici</h4></div><strong>{{ member_count }}</strong></div>
+                    <div class="group-member-chips">
+                      {% for member in members_by_group.get(group.id, []) %}
+                        <div class="group-member-chip">
+                          <span>{{ member.display_name }}<small>{{ "Admin" if member.role.value == "admin" else "Tecnico" }}</small></span>
+                          <form method="post" action="/app/admin/groups/{{ group.id }}/members/{{ member.id }}/remove">
+                            <button type="submit" aria-label="Rimuovi {{ member.display_name }} da {{ group.name }}">×</button>
+                          </form>
+                        </div>
+                      {% else %}<p class="group-members-empty">Nessun membro assegnato.</p>{% endfor %}
+                    </div>
+                    {% set available_members = available_members_by_group.get(group.id, []) %}
+                    {% if available_members %}
+                      <form method="post" action="/app/admin/groups/{{ group.id }}/members/add" class="group-member-add-form">
+                        <label for="member-{{ group.id }}">Aggiungi membro</label>
+                        <div><select id="member-{{ group.id }}" name="member_id" required><option value="">Seleziona tecnico o admin</option>{% for member in available_members %}<option value="{{ member.id }}">{{ member.display_name }} · {{ "Admin" if member.role.value == "admin" else "Tecnico" }}</option>{% endfor %}</select><button class="secondary-button" type="submit">Aggiungi</button></div>
+                      </form>
+                    {% else %}<p class="group-members-complete">Tutti gli account tecnici disponibili sono già membri.</p>{% endif %}
+                  </section>
+                  <form method="post" action="/app/admin/groups/{{ group.id }}/state" class="group-state-form">
+                    <input type="hidden" name="is_active" value="{{ 'false' if group.is_active else 'true' }}">
+                    <button class="text-button" type="submit">{{ "Disattiva gruppo" if group.is_active else "Riattiva gruppo" }}</button>
+                  </form>
+                </div>
+              </details>
+            </article>
+          {% else %}
+            <div class="groups-empty"><strong>Nessun gruppo configurato</strong><p>Crea il primo gruppo per rendere disponibili assegnazioni e classificazione AI.</p></div>
+          {% endfor %}
+        </div>
+    </section>
+  </section>
+{% endblock %}

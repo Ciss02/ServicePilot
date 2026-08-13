@@ -19,14 +19,16 @@ Il modello riceve soltanto dati già confermati e fittizi:
 - servizio coinvolto;
 - numero di persone interessate;
 - codice e nome della sede;
-- categorie, livelli e gruppi ammessi dal backend.
+- categorie e livelli ammessi dal backend;
+- nomi dei soli gruppi attivi letti dal database.
 
 Non riceve password, chiavi API o dati di altri ticket.
 
 ## Dove vengono controllati
 
-La risposta deve rispettare `AIProposedTicketClassification`. Categoria, impatto,
-urgenza e gruppo sono valori chiusi: un codice o un gruppo inventato viene rifiutato.
+La risposta deve rispettare `AIProposedTicketClassification`. Categoria, impatto e
+urgenza sono codici chiusi; il gruppo deve coincidere esattamente con uno dei nomi attivi
+letti dal database e inseriti nel prompt. Un codice o un gruppo inventato viene rifiutato.
 La sottocategoria è un testo breve oppure `null`. Anche campi aggiuntivi vengono
 rifiutati, compreso un eventuale campo `priority` inviato dal modello.
 
@@ -37,8 +39,9 @@ matrice deterministica `impatto × urgenza` per aggiungere la priorità.
 
 Solo dopo la conferma del dipendente il backend crea il ticket. La classificazione viene
 quindi salvata nei campi già esistenti della tabella `tickets`: categoria,
-sottocategoria, impatto, urgenza, priorità e gruppo assegnato. Non sono state aggiunte
-nuove tabelle o dipendenze. Il campo `classification_review_status` conserva soltanto
+sottocategoria, impatto, urgenza, priorità e gruppo assegnato. Il catalogo operativo è
+nelle tabelle `support_groups` e `support_group_memberships`; sul ticket resta il nome
+come fotografia storica. Il campo `classification_review_status` conserva soltanto
 lo stato sicuro del processo, non la risposta grezza o il messaggio del provider.
 
 Un ticket già classificato non viene inviato nuovamente al modello, evitando chiamate

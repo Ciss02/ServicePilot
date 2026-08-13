@@ -16,7 +16,8 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Create le milestone GitHub 9-13 e le 22 issue da `SP-090` a `SP-133`.
 - Ogni issue contiene obiettivo, modifiche, dipendenze, rischi, criteri di accettazione e
   verifiche.
-- **SP-090 - Migrazioni versionate per la v0.2** è completata e verificata localmente.
+- **SP-090 - Migrazioni versionate per la v0.2** è completata e pubblicata su `main`.
+- **SP-091 - Gruppi di supporto e appartenenze** è completata e verificata localmente.
 - La roadmap verrà implementata una issue e una pull request alla volta; il codice della
   `v0.2.0` non è stato anticipato durante la pianificazione.
 
@@ -177,16 +178,16 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-090 - Migrazioni versionate per la v0.2**
+**SP-091 - Gruppi di supporto e appartenenze**
 
-Alembic è la fonte versionata dello schema. La baseline `0001_v010_baseline` crea un
-database vuoto oppure riconosce uno schema v0.1.0 completo senza perdere righe; avvio
-locale, applicazione e deploy applicano lo stesso bootstrap in modo ripetibile.
+I gruppi sono dati amministrabili con appartenenze molti-a-molti per tecnici e admin.
+Modulo ticket e classificazione AI usano la stessa lista attiva del database; rinomina e
+disattivazione non riscrivono il testo storico conservato sui ticket.
 
 ## Prossima attività
 
-**SP-091 - Gruppi di supporto e appartenenze.** Rendere i gruppi amministrabili e
-collegare ogni tecnico a uno o più gruppi, conservando nello storico quelli disattivati.
+**SP-092 - Allegati sicuri.** Conservare file controllati per bozze, ticket e messaggi
+con download autorizzato, senza anticipare il thread cronologico previsto in SP-093.
 
 ## Blocchi o decisioni aperte
 
@@ -198,7 +199,7 @@ collegare ogni tecnico a uno o più gruppi, conservando nello storico quelli dis
 Prompt consigliato:
 
 > Leggi `AGENTS.md`, `docs/PROJECT_STATUS.md` e `docs/PROJECT_PLAN.md`. L'MVP è completo:
-> procedi con SP-090 seguendo la relativa issue GitHub. Spiegami in modo semplice cosa
+> procedi con SP-092 seguendo la relativa issue GitHub. Spiegami in modo semplice cosa
 > farai e perché, senza anticipare le issue successive.
 
 ## Come chiudere una sessione
@@ -593,3 +594,19 @@ Prima di terminare verificare che:
 - `pytest -W error`: 350 test superati senza avvisi dopo SP-090.
 - Ruff: controllo superato e 155 file Python conformi alla formattazione.
 - `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-090.
+- Aggiunta la migrazione `0003_support_groups` con catalogo univoco e appartenenze
+  molti-a-molti; fresh install e upgrade v0.1.0 convergono ancora allo stesso schema.
+- Convertiti i sette gruppi fissi in seed demo ripetibile con 11 appartenenze fittizie.
+- Verificati tecnico in più gruppi, rifiuto dei dipendenti, unicità normalizzata e
+  permessi di modifica riservati all'amministratore.
+- Verificato che un gruppo disattivato resti leggibile nei ticket storici ma venga
+  escluso dalle nuove assegnazioni e dalla lista fornita alla classificazione AI.
+- Rimosso l'ultimo enum di gruppi dal contratto delle azioni proposte: anche una nuova
+  proposta di assegnazione viene controllata sul catalogo attivo del database.
+- Verificate nel browser integrato pagina amministrativa, editor dei membri e dettaglio
+  ticket; layout mobile a 390 × 844 senza scorrimento orizzontale o errori console.
+- `alembic current`: revisione `0003_support_groups (head)`; `alembic check`: nessuna
+  nuova operazione rilevata rispetto ai modelli SQLAlchemy.
+- `pytest -W error`: 358 test superati senza avvisi dopo SP-091.
+- Ruff: controllo superato e 161 file Python conformi alla formattazione.
+- `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-091.

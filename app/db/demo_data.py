@@ -5,10 +5,18 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 
-from sqlalchemy import Engine, select
+from sqlalchemy import Engine, delete, select
 from sqlalchemy.orm import Session
 
-from app.db.models import AuditEvent, ProposedAction, Site, Ticket, User
+from app.db.models import (
+    AuditEvent,
+    ProposedAction,
+    Site,
+    SupportGroup,
+    SupportGroupMembership,
+    Ticket,
+    User,
+)
 from app.db.session import create_database, engine
 from app.domain.priority import calculate_priority
 from app.domain.vocabulary import (
@@ -64,6 +72,15 @@ class TicketSeed:
 
 
 @dataclass(frozen=True)
+class SupportGroupSeed:
+    """Gruppo e appartenenze iniziali completamente fittizi."""
+
+    name: str
+    description: str
+    member_emails: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ActionSeed:
     """Proposta completamente fittizia collegata a uno scenario demo."""
 
@@ -81,6 +98,7 @@ class SeedSummary:
     sites: int
     users: int
     tickets: int
+    support_groups: int
 
 
 DEMO_SITES = (
@@ -117,6 +135,44 @@ DEMO_USERS = (
         "admin@servicepilot.example",
         "Amministratore Demo",
         Role.ADMIN,
+    ),
+)
+
+DEMO_SUPPORT_GROUPS = (
+    SupportGroupSeed(
+        "Service desk",
+        "Primo contatto, triage e richieste generali della demo.",
+        ("tecnico@servicepilot.example", "admin@servicepilot.example"),
+    ),
+    SupportGroupSeed(
+        "Supporto workplace",
+        "Postazioni, periferiche, software e accesso remoto della demo.",
+        ("tecnico@servicepilot.example", "admin@servicepilot.example"),
+    ),
+    SupportGroupSeed(
+        "Supporto rete",
+        "Connettività, Wi-Fi, VPN e rete delle sedi dimostrative.",
+        ("tecnico@servicepilot.example", "admin@servicepilot.example"),
+    ),
+    SupportGroupSeed(
+        "Supporto sistemi retail",
+        "Casse e applicazioni dei punti vendita dimostrativi.",
+        ("tecnico@servicepilot.example",),
+    ),
+    SupportGroupSeed(
+        "Supporto sistemi produttivi",
+        "Sistemi e connettività degli scenari produttivi dimostrativi.",
+        ("tecnico@servicepilot.example", "admin@servicepilot.example"),
+    ),
+    SupportGroupSeed(
+        "Supporto magazzino",
+        "Dispositivi, stampa etichette e flussi del magazzino demo.",
+        ("tecnico@servicepilot.example",),
+    ),
+    SupportGroupSeed(
+        "Sicurezza IT",
+        "Segnalazioni e controlli di sicurezza informatica della demo.",
+        ("admin@servicepilot.example",),
     ),
 )
 
@@ -303,6 +359,50 @@ def _upsert_users(
     return users_by_email
 
 
+def _upsert_support_groups(
+    session: Session,
+    users_by_email: dict[str, User],
+) -> dict[str, SupportGroup]:
+    """Riallinea il catalogo demo e le appartenenze senza creare duplicati."""
+
+    groups_by_name: dict[str, SupportGroup] = {}
+    for seed in DEMO_SUPPORT_GROUPS:
+        name_key = seed.name.casefold()
+        group = session.scalar(select(SupportGroup).where(SupportGroup.name_key == name_key))
+        if group is None:
+            group = SupportGroup(
+                name=seed.name,
+                name_key=name_key,
+                description=seed.description,
+            )
+            session.add(group)
+        else:
+            group.name = seed.name
+            group.description = seed.description
+            group.is_active = True
+        groups_by_name[seed.name] = group
+    session.flush()
+
+    for seed in DEMO_SUPPORT_GROUPS:
+        group = groups_by_name[seed.name]
+        session.execute(
+            delete(SupportGroupMembership).where(
+                SupportGroupMembership.support_group_id == group.id
+            )
+        )
+        session.add_all(
+            [
+                SupportGroupMembership(
+                    support_group_id=group.id,
+                    user_id=users_by_email[email].id,
+                )
+                for email in seed.member_emails
+            ]
+        )
+    session.flush()
+    return groups_by_name
+
+
 def _upsert_tickets(
     session: Session,
     sites_by_code: dict[str, Site],
@@ -436,6 +536,7 @@ def seed_demo_data(
 
     sites_by_code = _upsert_sites(session)
     users_by_email = _upsert_users(session, demo_passwords)
+    _upsert_support_groups(session, users_by_email)
     tickets_by_title = _upsert_tickets(session, sites_by_code, users_by_email)
     actions = _upsert_actions(session, tickets_by_title)
     _seed_audit_events(session, tickets_by_title, actions, users_by_email)
@@ -445,6 +546,7 @@ def seed_demo_data(
         sites=len(DEMO_SITES),
         users=len(DEMO_USERS),
         tickets=len(DEMO_TICKETS),
+        support_groups=len(DEMO_SUPPORT_GROUPS),
     )
 
 
