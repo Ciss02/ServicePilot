@@ -131,6 +131,14 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
   giorno, applicato prima di costruire il client esterno.
 - Testo documentale limitato a 500.000 caratteri estratti e 500 segmenti prima degli
   embedding.
+- Demo pubblica su Render Free nella regione di Francoforte, disponibile tramite HTTPS
+  su `https://servicepilot-ai-demo-ciss02.onrender.com`.
+- Avvio coordinato in una sola istanza del portale pubblico e del simulatore azioni,
+  raggiungibile soltanto su `127.0.0.1`.
+- Dataset SQLite temporaneo ricreato automaticamente prima dell'avvio, con ripristino
+  amministrativo verificato a 6 ticket, 3 azioni e 9 eventi iniziali.
+- Compatibilità Gemini 3.5 Flash-Lite verificata tramite JSON Schema standard e chiamata
+  reale con dati esclusivamente fittizi.
 
 ## Milestone attiva
 
@@ -138,35 +146,38 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-081 - Sicurezza e limiti della demo**
+**SP-082 - Deploy e ripristino**
 
-La demo applica protezioni centralizzate a browser, login, sessioni, documenti e chiamate
-AI. La revisione distingue i problemi risolti dai limiti ancora accettati: i contatori
-vivono nel singolo processo e gli upload amministrativi non hanno scansione antivirus.
+La demo è pubblicata su Render con HTTPS, segreti lato server e una sola istanza. Il
+collaudo anonimo ha verificato creazione AI di un ticket, revisione tecnica, azione
+simulata con audit e ripristino completo del dataset.
 
 ## Prossima attività
 
-**SP-082 - Deploy e ripristino**
+**SP-083 - Documentazione portfolio**
 
 Risultato atteso:
 
-- scegliere e configurare il provider di deploy;
-- pubblicare la demo con HTTPS, segreti lato server e una sola istanza;
-- verificare il ripristino del dataset da una sessione anonima.
+- completare README in italiano e inglese;
+- aggiungere architettura, screenshot, limiti e roadmap;
+- permettere a una persona esterna di comprendere e avviare il progetto.
 
 ## Blocchi o decisioni aperte
 
-- Provider di deploy da decidere in una fase successiva.
+- Il Blueprint Render segue temporaneamente il ramo `codex/sp-082-deploy-and-reset`;
+  dopo il merge della PR #71 va spostato su `main`.
+- Il piano Render Free spegne il servizio dopo inattività e non conserva SQLite o file
+  caricati; questa perdita controllata è accettata soltanto per la demo portfolio.
 
 ## Come iniziare una nuova sessione
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-082.
+> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-083.
 > Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
 > aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
 
-Sostituire `SP-082` con il codice dell'attività successiva.
+Sostituire `SP-083` con il codice dell'attività successiva.
 
 ## Come chiudere una sessione
 
@@ -509,3 +520,14 @@ Prima di terminare verificare che:
 - `pip check`: nessuna dipendenza mancante o incompatibile.
 - Ruff: controllo superato e 145 file Python conformi alla formattazione.
 - `pytest -W error`: 348 test superati senza avvisi.
+- Verificato l'avvio locale coordinato di portale e simulatore con entrambi gli endpoint
+  `/health` disponibili e le porte temporanee chiuse al termine.
+- Ruff: controllo superato e 148 file Python conformi alla formattazione.
+- `pytest`: 354 test superati; stessa suite superata dalla CI GitHub sulla PR #71.
+- Verificata una chiamata reale Gemini con testo fittizio: titolo, sede, servizio e
+  persone coinvolte estratti senza campi mancanti.
+- Verificato il deploy automatico Render del commit `4242878` soltanto dopo la CI verde.
+- Verificato da sessione anonima il percorso dipendente → tecnico → amministratore:
+  creazione di `SP-0007`, revisione umana, azione simulata `ASG-62D227858B3B` e audit.
+- Verificato il reset pubblico: `SP-0007` restituisce 404, la coda torna a 6 ticket, le
+  tre azioni tornano in attesa e `SP-0001` conserva soltanto i 4 eventi iniziali.

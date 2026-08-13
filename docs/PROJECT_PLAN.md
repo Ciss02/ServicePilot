@@ -160,7 +160,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-081 - Sicurezza e limiti della demo**
   Controllare segreti, upload, sessioni e limiti delle chiamate AI.
   Verifica: revisione documentata e problemi critici risolti.
-- [ ] **SP-082 - Deploy e ripristino**
+- [x] **SP-082 - Deploy e ripristino**
   Pubblicare la demo e verificare il ripristino del dataset.
   Verifica: collaudo completo da una sessione anonima.
 - [ ] **SP-083 - Documentazione portfolio**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-082**. La milestone attiva è **Milestone 8**.
+La prossima attività è **SP-083**. La milestone attiva è **Milestone 8**.

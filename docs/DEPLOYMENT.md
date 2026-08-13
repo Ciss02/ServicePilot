@@ -4,6 +4,19 @@ SP-082 pubblica ServicePilot su una singola istanza gratuita Render nella region
 Francoforte. Il portale è raggiungibile tramite HTTPS; il secondo processo FastAPI che
 simula le azioni ascolta soltanto su `127.0.0.1` e quindi non è esposto a Internet.
 
+## Demo pubblica
+
+- URL: `https://servicepilot-ai-demo-ciss02.onrender.com`
+- Provider e piano: Render Free
+- Regione: Francoforte
+- Blueprint: `servicepilot-ai-demo`
+- Servizio: `servicepilot-ai-demo-ciss02`
+
+Il 13 agosto 2026 sono stati verificati l'endpoint `/health`, la pagina di login HTTPS e
+un percorso completo partito da una sessione anonima. Il collaudo ha creato `SP-0007`
+da una sola descrizione fittizia, confermato la classificazione come tecnico, eseguito
+un'assegnazione simulata con audit e infine ripristinato i dati iniziali come admin.
+
 ## Perché una singola istanza
 
 Il piano gratuito assegna un monte ore complessivo ai servizi e li spegne dopo un
@@ -61,8 +74,9 @@ Usare una finestra privata, così non viene riutilizzata una sessione locale:
 3. uscire e accedere come tecnico, controllare classificazione e proposta;
 4. approvare una delle azioni simulate e verificare riferimento ed evento audit;
 5. uscire e accedere come amministratore;
-6. caricare soltanto un documento fittizio, poi eseguire `RIPRISTINA DEMO`;
-7. verificare che il documento e il ticket appena creato siano spariti e che i sei
-   ticket iniziali siano nuovamente presenti.
+6. eseguire `RIPRISTINA DEMO`;
+7. verificare che il ticket appena creato sia sparito, che le azioni siano nuovamente in
+   attesa e che i sei ticket iniziali siano presenti. Se durante la prova è stato
+   caricato un documento fittizio, verificare anche la sua rimozione.
 
 Il collaudo non deve usare nomi, documenti o credenziali reali.
