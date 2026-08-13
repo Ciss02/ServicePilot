@@ -163,7 +163,7 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 - [x] **SP-082 - Deploy e ripristino**
   Pubblicare la demo e verificare il ripristino del dataset.
   Verifica: collaudo completo da una sessione anonima.
-- [ ] **SP-083 - Documentazione portfolio**
+- [x] **SP-083 - Documentazione portfolio**
   Completare README bilingue, architettura, screenshot, limiti e roadmap.
   Verifica: una persona esterna comprende e avvia il progetto.
 - [ ] **SP-084 - Video e release MVP**
@@ -172,4 +172,4 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-La prossima attività è **SP-083**. La milestone attiva è **Milestone 8**.
+La prossima attività è **SP-084**. La milestone attiva è **Milestone 8**.

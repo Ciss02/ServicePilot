@@ -1,282 +1,365 @@
 # ServicePilot AI
 
-> Progetto portfolio in fase di sviluppo / Portfolio project under development
+> AI-assisted IT service desk with deterministic rules, grounded knowledge and human approval.
+> Portale IT assistito dall'AI, con regole deterministiche, fonti verificabili e approvazione umana.
+
+[![Controlli automatici](https://github.com/Ciss02/ServicePilot/actions/workflows/quality.yml/badge.svg)](https://github.com/Ciss02/ServicePilot/actions/workflows/quality.yml)
+[![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.141-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+[Italiano](#italiano) · [English](#english) · [Demo online](https://servicepilot-ai-demo-ciss02.onrender.com) · [Architettura](docs/ARCHITECTURE.md)
+
+![Area dipendente di ServicePilot AI](docs/screenshots/employee-dashboard.jpg)
 
 ## Italiano
 
-ServicePilot AI è un'applicazione dimostrativa per la gestione intelligente delle
-richieste di assistenza IT in un'azienda fittizia con più sedi.
+### Il progetto in breve
 
-L'obiettivo è mostrare un flusso completo e verificabile:
+ServicePilot AI è un MVP da portfolio che digitalizza il ciclo completo di una richiesta
+di assistenza IT in un'azienda fittizia con più sedi. Un dipendente descrive liberamente
+il problema; l'app raccoglie i dati mancanti, richiede una conferma esplicita e crea il
+ticket. L'AI aiuta a classificare la richiesta e a trovare procedure pertinenti, ma le
+decisioni operative restano sotto il controllo di regole verificabili e persone reali.
 
-1. un dipendente descrive e conferma una richiesta;
-2. il sistema crea e classifica il ticket;
-3. il backend calcola la priorità con regole deterministiche;
-4. un tecnico controlla i suggerimenti dell'AI e le relative fonti;
-5. qualsiasi azione proposta richiede approvazione umana;
-6. le operazioni importanti vengono registrate nell'audit log.
+Il progetto dimostra insieme sviluppo web, API REST, persistenza, autenticazione per
+ruolo, integrazione Gemini, RAG con citazioni, tool calling simulato, audit e deploy.
+Tutti gli utenti, i ticket, le sedi e i documenti sono sintetici.
 
-### Stato attuale
+### Demo pubblica
 
-Le fondamenta e le regole iniziali del dominio sono complete. Sono disponibili una
-prima applicazione FastAPI, il vocabolario dei ticket, la matrice della priorità, i
-contratti dati validati, il database iniziale, un dataset completamente sintetico e le
-API per creare, leggere e gestire tecnicamente i ticket, oltre agli account demo con
-password protette tramite Argon2. Gli account possono effettuare login, mantenere una
-sessione autenticata e fare logout. Le API applicano inoltre i permessi dei ruoli:
-ticket personali per i dipendenti e gestione completa per tecnico e amministratore. È
-ora disponibile anche una pagina di accesso responsive collegata alla sessione e una
-base protetta per le prossime schermate dell'applicazione. Il dipendente dispone inoltre
-di un riepilogo dei propri ticket e del relativo dettaglio, senza poter consultare le
-richieste di altri account.
+La demo è disponibile su
+**[servicepilot-ai-demo-ciss02.onrender.com](https://servicepilot-ai-demo-ciss02.onrender.com)**.
 
-La prossima attività è indicata in
-[`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
+Il piano gratuito può sospendere il servizio quando non viene usato: il primo
+caricamento può quindi richiedere fino a circa 50 secondi. Gli indirizzi degli account
+dimostrativi sono visibili nella pagina di accesso; le password non sono conservate nel
+repository e vengono condivise separatamente per le presentazioni del portfolio.
 
-### Preparazione dell'ambiente locale
+### Cosa può fare
 
-Requisito: Python 3.13.
+| Ruolo | Funzioni principali |
+| --- | --- |
+| Dipendente | Apre un ticket con una conversazione guidata, conferma i dati e consulta soltanto le proprie richieste. |
+| Tecnico IT | Filtra la coda, verifica la classificazione AI, corregge impatto e urgenza, consulta suggerimenti con fonti e approva o rifiuta azioni. |
+| Amministratore | Gestisce PDF e Markdown della knowledge base, consulta l'audit completo e ripristina il dataset demo. |
 
-Da PowerShell, nella cartella del progetto:
+Scelte centrali dell'MVP:
+
+- **priorità deterministica:** Gemini propone impatto e urgenza, mentre il backend
+  calcola P1-P4 con una matrice testata;
+- **conferma prima della creazione:** il modello non può aprire autonomamente un ticket;
+- **RAG con fonti:** un suggerimento tecnico è accettato soltanto se cita segmenti
+  realmente recuperati da una procedura;
+- **human in the loop:** assegnazione, comunicazione ed escalation partono soltanto
+  dopo l'approvazione esplicita del tecnico;
+- **audit atomico:** gli eventi vengono salvati insieme all'operazione che descrivono;
+- **funzionamento degradato:** raccolta e classificazione manuali restano disponibili
+  se Gemini è disattivato o non risponde.
+
+### Flusso principale
+
+```mermaid
+flowchart LR
+    A["Dipendente descrive il problema"] --> B["Estrazione dei dati"]
+    B --> C["Domande sui dati mancanti"]
+    C --> D["Conferma del dipendente"]
+    D --> E["Creazione ticket"]
+    E --> F["Classificazione AI"]
+    F --> G["Priorità calcolata dal backend"]
+    G --> H["Revisione del tecnico"]
+    H --> I["RAG con fonti"]
+    I --> J["Azione proposta"]
+    J --> K{"Tecnico approva?"}
+    K -- Sì --> L["Servizio REST simulato"]
+    K -- No --> M["Proposta rifiutata"]
+    E --> N["Audit log"]
+    H --> N
+    L --> N
+    M --> N
+```
+
+La vista completa dei componenti e dei confini di sicurezza è in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+### Schermate
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/guided-intake.jpg" alt="Raccolta guidata del problema"><br><strong>Raccolta guidata</strong>: il ticket nasce soltanto dopo il riepilogo e la conferma.</td>
+    <td width="50%"><img src="docs/screenshots/technician-queue.jpg" alt="Coda tecnica ordinata per priorità"><br><strong>Coda tecnica</strong>: filtri, assegnazione e priorità verificabile.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/technician-ticket-detail.jpg" alt="Dettaglio tecnico del ticket"><br><strong>Dettaglio operativo</strong>: classificazione, RAG e controllo umano nello stesso flusso.</td>
+    <td width="50%"><img src="docs/screenshots/admin-knowledge.jpg" alt="Gestione della knowledge base"><br><strong>Knowledge base</strong>: upload controllato, segmentazione, ricerca e ripristino demo.</td>
+  </tr>
+</table>
+
+### Tecnologie
+
+- Python 3.13, FastAPI e Pydantic;
+- SQLAlchemy con SQLite per l'MVP;
+- Jinja2, HTML e CSS responsive;
+- Gemini tramite adapter sostituibile;
+- embedding Gemini e recupero semantico locale;
+- PDF/Markdown con metadati di documento, sezione e pagina;
+- pytest, Ruff e GitHub Actions;
+- Render Blueprint per la demo pubblica.
+
+### Avvio locale rapido
+
+Prerequisiti: Git e Python 3.13.
+
+```bash
+git clone https://github.com/Ciss02/ServicePilot.git
+cd ServicePilot
+python -m venv .venv
+```
+
+Attivare l'ambiente e installare le dipendenze:
 
 ```powershell
-python -m venv .venv
+# Windows PowerShell
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
 ```
 
-L'attivazione fa sì che i comandi `python` e `pip` usino le librerie isolate di
-ServicePilot. Per uscire dall'ambiente:
-
-```powershell
-deactivate
+```bash
+# macOS / Linux
+source .venv/bin/activate
+python -m pip install -r requirements-dev.txt
 ```
 
-Se PowerShell impedisce l'attivazione, è possibile usare direttamente Python senza
-modificare le impostazioni del sistema:
+Configurare tre password locali, diverse e di almeno 12 caratteri. I valori seguenti
+vengono richiesti senza essere scritti nel repository:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+$env:SERVICEPILOT_DEMO_EMPLOYEE_PASSWORD = Read-Host "Password dipendenti demo"
+$env:SERVICEPILOT_DEMO_TECHNICIAN_PASSWORD = Read-Host "Password tecnico demo"
+$env:SERVICEPILOT_DEMO_ADMIN_PASSWORD = Read-Host "Password amministratore demo"
 ```
 
-### Avvio dell'applicazione
-
-Da PowerShell, nella cartella del progetto:
-
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```bash
+read -s -p "Password dipendenti demo: " SERVICEPILOT_DEMO_EMPLOYEE_PASSWORD; export SERVICEPILOT_DEMO_EMPLOYEE_PASSWORD
+read -s -p "Password tecnico demo: " SERVICEPILOT_DEMO_TECHNICIAN_PASSWORD; export SERVICEPILOT_DEMO_TECHNICIAN_PASSWORD
+read -s -p "Password amministratore demo: " SERVICEPILOT_DEMO_ADMIN_PASSWORD; export SERVICEPILOT_DEMO_ADMIN_PASSWORD
 ```
 
-Il server sarà disponibile all'indirizzo `http://127.0.0.1:8000`. L'endpoint
-`http://127.0.0.1:8000/health` verifica che il servizio risponda, mentre la
-documentazione interattiva delle API è disponibile su `http://127.0.0.1:8000/docs`.
-La pagina di accesso è disponibile su `http://127.0.0.1:8000/login`.
+Avviare portale, dataset sintetico e servizi REST simulati:
 
-I servizi REST fittizi delle azioni sono un'applicazione separata e possono essere
-avviati, quando servono per una prova locale, su `127.0.0.1:8011`:
-
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.simulated_services.main:app `
-  --host 127.0.0.1 --port 8011
+```bash
+python -m app.deployment
 ```
 
-Non assegnano ticket reali e non inviano comunicazioni. Il loro funzionamento è
-descritto in [`docs/SIMULATED_ACTION_SERVICES.md`](docs/SIMULATED_ACTION_SERVICES.md).
+Aprire `http://127.0.0.1:8000/login`. Gli account principali sono:
 
-Le operazioni di accesso sono `POST /auth/login`, `GET /auth/session` e
-`POST /auth/logout`. Sono inoltre disponibili `POST /tickets`, `GET /tickets`,
-`GET /tickets/{ticket_id}` e `PATCH /tickets/{ticket_id}`. Prima di provarle è possibile
-caricare il dataset demo con il comando descritto più sotto. Le operazioni sui ticket
-richiedono una sessione autenticata.
+- `dipendente.hq@servicepilot.example`;
+- `tecnico@servicepilot.example`;
+- `admin@servicepilot.example`.
 
-Per eseguire i test automatici:
+L'AI e gli embedding sono disattivati per impostazione predefinita: l'intero flusso
+manuale resta utilizzabile senza chiave e senza costi. Per una prova con Gemini,
+configurare localmente `GEMINI_API_KEY`, `SERVICEPILOT_AI_PROVIDER=gemini` e
+`SERVICEPILOT_EMBEDDING_PROVIDER=gemini`. La configurazione completa è descritta in
+[`docs/AI_MODEL_ADAPTER.md`](docs/AI_MODEL_ADAPTER.md) e
+[`docs/KNOWLEDGE_SEARCH.md`](docs/KNOWLEDGE_SEARCH.md).
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest
+### Verifica
+
+```bash
+python -m pip check
+python -m ruff check .
+python -m ruff format --check .
+python -m pytest -W error
 ```
 
-Per eseguire gli stessi controlli di qualità usati da GitHub:
+Gli stessi controlli vengono eseguiti da GitHub Actions su ogni pull request e su
+`main`. La suite non usa chiamate AI reali.
 
-```powershell
-.\.venv\Scripts\python.exe -m pip check
-.\.venv\Scripts\python.exe -m ruff check .
-.\.venv\Scripts\python.exe -m ruff format --check .
-.\.venv\Scripts\python.exe -m pytest -W error
+### Struttura essenziale
+
+```text
+app/
+├── actions/          # proposte, approvazione e chiamate ai servizi fittizi
+├── ai/               # adapter Gemini, output strutturati, limiti ed embedding
+├── api/              # API REST autenticate
+├── audit/            # eventi append-only
+├── db/               # modelli SQLAlchemy e dataset sintetico
+├── domain/           # vocabolario, contratti e regole deterministiche
+├── knowledge/        # upload, estrazione, segmentazione, ricerca e RAG
+├── security/         # password, sessioni, ruoli e protezioni browser
+├── templates/        # pagine Jinja2
+└── web/              # rotte e presentazione web
+tests/                # test per dominio, API, AI, sicurezza, RAG e interfaccia
+docs/                 # specifica, decisioni e documentazione tecnica
+render.yaml           # descrizione del deploy pubblico
 ```
 
-La configurazione e il significato dei risultati sono descritti in
-[`docs/QUALITY_CHECKS.md`](docs/QUALITY_CHECKS.md).
+### Sicurezza, privacy e limiti
 
-Per creare il database SQLite locale e le tabelle iniziali:
+La demo usa soltanto dati sintetici. Chiavi e password restano lato server e fuori da
+Git; le password sono trasformate con Argon2 e nel database entra soltanto l'impronta
+dei token di sessione. Upload e chiamate AI hanno limiti espliciti.
 
-```powershell
-.\.venv\Scripts\python.exe -m app.db
-```
+Limiti dichiarati dell'MVP:
 
-Il comando può essere ripetuto senza cancellare i dati. La struttura delle tabelle e
-la configurazione sono spiegate in
-[`docs/DATABASE.md`](docs/DATABASE.md).
+- account condivisi, senza registrazione, MFA o recupero password;
+- SQLite e file temporanei nel deploy gratuito: non sono adatti a dati persistenti;
+- una sola istanza e contatori AI/login in memoria;
+- nessun antivirus sugli upload, ammessi solo per l'admin e con documenti fittizi;
+- servizi di assegnazione, comunicazione ed escalation completamente simulati;
+- nessuna integrazione reale con Active Directory, Microsoft 365 o strumenti ITSM;
+- nessun uso autorizzato con dati aziendali o personali reali.
 
-Per caricare o riallineare sedi, profili e ticket dimostrativi:
+La revisione completa è in
+[`docs/SECURITY_AND_DEMO_LIMITS.md`](docs/SECURITY_AND_DEMO_LIMITS.md).
 
-```powershell
-.\.venv\Scripts\python.exe -m app.db seed
-```
+### Roadmap
 
-Prima del comando vanno configurate le tre password demo come variabili d'ambiente,
-seguendo [`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). Nessuna password predefinita
-è presente nel repository.
+- **v0.1.0 — MVP portfolio:** documentazione finale, video dimostrativo e release;
+- **dopo l'MVP:** PostgreSQL e archivio persistente, processi in background,
+  osservabilità ed evaluation automatica delle risposte RAG;
+- **per un prodotto reale:** identità aziendale, CSRF token dedicati, scansione malware,
+  rate limit condivisi, gestione centralizzata dei segreti e integrazioni ITSM reali.
 
-### Tecnologie previste
+La tasklist verificabile è in [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md); la roadmap
+di apprendimento è in
+[`docs/ServicePilot_4_Week_Learning_and_Build_Roadmap.md`](docs/ServicePilot_4_Week_Learning_and_Build_Roadmap.md).
 
-- Python e FastAPI
-- SQLAlchemy con SQLite in sviluppo
-- Jinja2 e HTMX
-- Gemini tramite un adapter indipendente dal provider
-- knowledge base PDF/Markdown con RAG
-- pytest e controlli automatici GitHub Actions
+### Documentazione principale
 
-### Documentazione
-
-- [Specifica MVP](docs/ServicePilot_AI_MVP_Specification.md)
-- [Roadmap di apprendimento e sviluppo](docs/ServicePilot_4_Week_Learning_and_Build_Roadmap.md)
-- [Piano e tasklist](docs/PROJECT_PLAN.md)
-- [Stato corrente](docs/PROJECT_STATUS.md)
-- [Decisioni di progetto](docs/DECISIONS.md)
-- [Vocabolario del dominio](docs/DOMAIN_VOCABULARY.md)
-- [Contratti dati del ticket](docs/TICKET_CONTRACTS.md)
-- [Database iniziale](docs/DATABASE.md)
-- [Dataset dimostrativo](docs/DEMO_DATA.md)
-- [Account demo e password sicure](docs/DEMO_ACCOUNTS.md)
-- [Login, sessione e logout](docs/AUTHENTICATION.md)
-- [Interfaccia web iniziale](docs/WEB_INTERFACE.md)
-- [Area del dipendente](docs/EMPLOYEE_AREA.md)
-- [Raccolta guidata dei dati](docs/GUIDED_TICKET_INTAKE.md)
-- [Autorizzazione per ruolo](docs/AUTHORIZATION.md)
-- [API essenziali dei ticket](docs/TICKET_API.md)
-- [Adapter del modello AI](docs/AI_MODEL_ADAPTER.md)
-- [Estrazione AI dei dati del ticket](docs/AI_TICKET_EXTRACTION.md)
-- [Classificazione AI suggerita](docs/AI_TICKET_CLASSIFICATION.md)
-- [Upload sicuro dei documenti](docs/KNOWLEDGE_UPLOAD.md)
-- [Estrazione e segmentazione della knowledge base](docs/KNOWLEDGE_EXTRACTION.md)
-- [Indicizzazione e ricerca della knowledge base](docs/KNOWLEDGE_SEARCH.md)
-- [Suggerimenti tecnici con fonti](docs/SOURCED_SOLUTIONS.md)
-- [Modello delle azioni proposte](docs/PROPOSED_ACTIONS.md)
-- [Servizi REST simulati per le azioni](docs/SIMULATED_ACTION_SERVICES.md)
-- [Approvazione umana delle azioni](docs/ACTION_APPROVAL.md)
-- [Audit log e cronologia dei ticket](docs/AUDIT_LOG.md)
-- [Strumenti amministrativi e ripristino demo](docs/ADMIN_TOOLS.md)
-- [Controlli automatici di qualità](docs/QUALITY_CHECKS.md)
-- [Sicurezza e limiti della demo](docs/SECURITY_AND_DEMO_LIMITS.md)
-- [Deploy e ripristino della demo](docs/DEPLOYMENT.md)
-
-### Avvertenza
-
-ServicePilot AI è una demo per portfolio. Utenti, sedi, ticket e procedure saranno
-completamente fittizi. Il progetto non utilizza dati o sistemi di aziende reali.
+- [Specifica dell'MVP](docs/ServicePilot_AI_MVP_Specification.md)
+- [Architettura e flussi](docs/ARCHITECTURE.md)
+- [Decisioni tecniche](docs/DECISIONS.md)
+- [API dei ticket](docs/TICKET_API.md)
+- [Autenticazione e autorizzazione](docs/AUTHENTICATION.md)
+- [RAG e suggerimenti con fonti](docs/SOURCED_SOLUTIONS.md)
+- [Azioni con approvazione umana](docs/ACTION_APPROVAL.md)
+- [Audit log](docs/AUDIT_LOG.md)
+- [Qualità e test](docs/QUALITY_CHECKS.md)
+- [Deploy e ripristino](docs/DEPLOYMENT.md)
 
 ## English
 
-ServicePilot AI is a portfolio demonstration application for intelligent IT service
-request management in a fictional multi-site company.
+### Overview
 
-The planned MVP covers guided ticket creation, deterministic priority calculation,
-role-based access, AI-assisted classification, grounded suggestions from a document
-knowledge base, human approval of simulated actions, and a complete audit trail.
+ServicePilot AI is a portfolio MVP covering the complete lifecycle of an IT support
+request in a fictional multi-site company. An employee describes a problem in natural
+language; the application collects missing details, requires explicit confirmation and
+creates the ticket. AI assists classification and knowledge retrieval, while business
+rules and people retain control over priority and operational actions.
 
-### Current status
+The project demonstrates web development, REST APIs, persistence, role-based access,
+Gemini integration, citation-backed RAG, simulated tool calling, auditability and public
+deployment. Every user, location, ticket and document is synthetic.
 
-The project foundation and initial domain rules are complete. A first FastAPI
-application, ticket vocabulary, priority matrix, validated data contracts, the initial
-database, a fully synthetic demo dataset, and APIs to create, read, classify, assign,
-and update tickets are available. Demo accounts store Argon2 password hashes whose
-plain-text values come only from environment variables, and can now log in, keep an
-authenticated session, and log out. Ticket APIs enforce role permissions: employees
-see only their own requests, while technicians and administrators manage the full queue.
-A responsive sign-in page now connects the browser to the same session mechanism and
-provides the protected foundation for the next application screens. Employees can also
-review their own ticket summary and details without accessing requests owned by other
-accounts.
+### Live demo
 
-See [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) for the next task.
+Open **[servicepilot-ai-demo-ciss02.onrender.com](https://servicepilot-ai-demo-ciss02.onrender.com)**.
+The free instance may sleep after inactivity, so its first response can take roughly
+50 seconds. Demo emails are shown on the sign-in page. Passwords are deliberately kept
+out of the repository and are shared separately for portfolio presentations.
 
-### Local environment setup
+### MVP capabilities
 
-Requirement: Python 3.13.
+- guided and confirmed ticket creation for employees;
+- AI-assisted extraction and classification with validated structured output;
+- deterministic P1-P4 priority calculation in the backend;
+- technician queue, assignment, correction and controlled state transitions;
+- PDF/Markdown knowledge ingestion, embeddings and semantic retrieval;
+- grounded technical suggestions with visible document and section citations;
+- human approval before any simulated assignment, notification or escalation;
+- append-only application audit trail;
+- admin-only knowledge management and repeatable demo reset;
+- local and GitHub quality checks without real AI calls.
 
-```powershell
+### Architecture
+
+```mermaid
+flowchart TB
+    Browser["Browser · Jinja2 UI"] --> Web["FastAPI web routes"]
+    Client["REST client"] --> API["FastAPI API"]
+    Web --> Security["Sessions + role checks"]
+    API --> Security
+    Security --> Services["Ticket · Knowledge · Action services"]
+    Services --> Domain["Pydantic contracts + deterministic rules"]
+    Services --> DB["SQLAlchemy · SQLite"]
+    Services --> AI["Provider-independent AI adapter"]
+    AI --> Gemini["Gemini generation + embeddings"]
+    Services --> Simulator["Separate simulated REST service"]
+    Services --> Audit["Append-only audit events"]
+    Audit --> DB
+```
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for component responsibilities,
+data flows, trust boundaries and deployment trade-offs.
+
+### Quick start
+
+Requirements: Git and Python 3.13.
+
+```bash
+git clone https://github.com/Ciss02/ServicePilot.git
+cd ServicePilot
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+source .venv/bin/activate       # macOS / Linux
+# .\.venv\Scripts\Activate.ps1 # Windows PowerShell
 python -m pip install -r requirements-dev.txt
 ```
 
-### Run the application
+Set `SERVICEPILOT_DEMO_EMPLOYEE_PASSWORD`,
+`SERVICEPILOT_DEMO_TECHNICIAN_PASSWORD` and
+`SERVICEPILOT_DEMO_ADMIN_PASSWORD` to three different values of at least 12 characters,
+then run:
 
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```bash
+python -m app.deployment
 ```
 
-Open `http://127.0.0.1:8000/health` to check the service or
-`http://127.0.0.1:8000/docs` to view the interactive API documentation.
-Open `http://127.0.0.1:8000/login` to use the browser sign-in page.
+Open `http://127.0.0.1:8000/login`. The default local configuration keeps AI and
+embeddings disabled, so no API key or paid request is required. The Italian quick-start
+section above includes ready-to-use PowerShell and shell commands.
 
-The separate fake action services can be started locally on `127.0.0.1:8011`:
+### Quality checks
 
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.simulated_services.main:app `
-  --host 127.0.0.1 --port 8011
+```bash
+python -m pip check
+python -m ruff check .
+python -m ruff format --check .
+python -m pytest -W error
 ```
 
-They do not assign real tickets or send messages. See
-[`docs/SIMULATED_ACTION_SERVICES.md`](docs/SIMULATED_ACTION_SERVICES.md).
+GitHub Actions runs the same checks for pull requests and `main`.
 
-Authentication operations are `POST /auth/login`, `GET /auth/session`, and
-`POST /auth/logout`. Ticket operations are `POST /tickets`, `GET /tickets`,
-`GET /tickets/{ticket_id}`, and `PATCH /tickets/{ticket_id}`. Ticket operations require
-an authenticated session.
+### Security and known limitations
 
-Run the automated tests with:
+Secrets remain server-side, Argon2 protects demo passwords, only session-token hashes
+are stored, browser requests receive security headers, and uploads and AI usage have
+explicit limits. This remains a portfolio demo rather than a production service:
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest
-```
+- shared accounts with no registration, MFA or password recovery;
+- ephemeral SQLite and uploaded files on the free deployment;
+- single-instance, in-memory login and AI counters;
+- no malware scanner for admin uploads;
+- fully simulated external actions;
+- no real identity, Microsoft 365 or ITSM integration;
+- synthetic data only.
 
-Run the same quality checks used by GitHub with:
+Read [`docs/SECURITY_AND_DEMO_LIMITS.md`](docs/SECURITY_AND_DEMO_LIMITS.md) for the full
+review.
 
-```powershell
-.\.venv\Scripts\python.exe -m pip check
-.\.venv\Scripts\python.exe -m ruff check .
-.\.venv\Scripts\python.exe -m ruff format --check .
-.\.venv\Scripts\python.exe -m pytest -W error
-```
+### Roadmap
 
-See [`docs/QUALITY_CHECKS.md`](docs/QUALITY_CHECKS.md) for the configuration and result
-interpretation.
+- **v0.1.0 — portfolio MVP:** final documentation, demo video and tagged release;
+- **post-MVP:** PostgreSQL and persistent object storage, background jobs,
+  observability and automated RAG evaluations;
+- **production path:** corporate identity, dedicated CSRF tokens, malware scanning,
+  shared rate limits, managed secrets and real ITSM integrations.
 
-Create the local SQLite database and its initial tables with:
+## License and AI disclosure
 
-```powershell
-.\.venv\Scripts\python.exe -m app.db
-```
+Released under the [MIT License](LICENSE).
 
-The command is repeatable and does not delete existing data. See
-[`docs/DATABASE.md`](docs/DATABASE.md) for the schema and configuration details.
-
-Load or realign the synthetic sites, profiles, and tickets with:
-
-```powershell
-.\.venv\Scripts\python.exe -m app.db seed
-```
-
-Configure the three demo password environment variables first, as explained in
-[`docs/DEMO_ACCOUNTS.md`](docs/DEMO_ACCOUNTS.md). The repository contains no default
-password.
-
-### Disclaimer
-
-This is a portfolio demo. All users, locations, tickets, documents, and procedures will
-be synthetic and unrelated to real employers or production systems.
-
-## License
-
-This project is available under the [MIT License](LICENSE).
+AI coding tools were used as development assistants. Requirements, scope, design
+decisions, implementation steps and verification evidence are kept in the repository
+and GitHub history so the result can be reviewed independently.
