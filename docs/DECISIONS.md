@@ -773,3 +773,23 @@ che una nuova rotta li dimentichi. Fermare configurazioni pubbliche incoerenti �
 sicuro che avviare l'app con un avviso ignorabile. I contatori in memoria sono semplici
 e adeguati alla singola istanza prevista per l'MVP; i limiti residui sono documentati
 esplicitamente per non presentarli come protezioni da produzione distribuita.
+
+## D-032 - Release portfolio senza video obbligatorio
+
+**Data:** 13 agosto 2026
+**Stato:** confermata durante SP-084
+
+**Decisione:**
+
+- pubblicare la release stabile `v0.1.0` dal ramo `main`;
+- non rendere il video dimostrativo un requisito di completamento;
+- usare demo online, cinque schermate reali, README bilingue e architettura come
+  materiali principali del portfolio;
+- mantenere il video come possibile aggiunta futura, senza lasciare l'MVP incompleto.
+
+**Motivazione:**
+
+Il progetto è già esplorabile direttamente e documenta sia il risultato visivo sia le
+scelte tecniche. Un video duplicherebbe materiale esistente e richiederebbe manutenzione
+quando l'interfaccia cambia. Il tag stabile conserva invece un punto di riferimento
+chiaro e verificabile per la versione presentata nel portfolio.

@@ -148,28 +148,26 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
   registri storici.
 - Revisionati 26 documenti tecnici per eliminare riferimenti operativi alle vecchie
   issue e descrivere le funzionalità nello stato realmente disponibile.
+- Release stabile [`v0.1.0`](https://github.com/Ciss02/ServicePilot/releases/tag/v0.1.0)
+  pubblicata da `main` con funzioni, controlli e limiti documentati.
+- Video dimostrativo reso facoltativo: demo online, screenshot, README e architettura
+  costituiscono il materiale principale del portfolio.
 
-## Milestone attiva
+## Milestone completata
 
 **Milestone 8 - Qualità, pubblicazione e portfolio**
 
 ## Ultima attività completata
 
-**SP-083 - Documentazione portfolio**
+**SP-084 - Release MVP v0.1.0**
 
-Il repository presenta ora problema, soluzione, demo, scelte tecniche e limiti in
-italiano e inglese. Architettura, immagini e istruzioni verificate permettono a una
-persona esterna di comprendere e avviare il progetto senza usare segreti o dati reali.
+La prima versione stabile è pubblicata con note di rilascio e collegamento nel README.
+Tutte le attività previste per l'MVP sono completate e verificate.
 
 ## Prossima attività
 
-**SP-084 - Video e release MVP**
-
-Risultato atteso:
-
-- preparare uno script semplice per una demo di 2-3 minuti;
-- registrare e collegare il video nel README;
-- pubblicare la release GitHub `v0.1.0` con note e materiali finali.
+Nessuna attività obbligatoria per l'MVP. Prima di una nuova evoluzione occorre aggiungere
+una voce a `PROJECT_PLAN.md` con risultato e verifica attesi.
 
 ## Blocchi o decisioni aperte
 
@@ -180,11 +178,9 @@ Risultato atteso:
 
 Prompt consigliato:
 
-> Leggi `AGENTS.md` e `docs/PROJECT_STATUS.md`. Occupati della task SP-084.
-> Prima spiegami in modo semplice cosa farai e perché. Alla fine esegui i controlli,
-> aggiorna lo stato del progetto e mostrami le modifiche prima del commit.
-
-Sostituire `SP-084` con il codice dell'attività successiva.
+> Leggi `AGENTS.md`, `docs/PROJECT_STATUS.md` e `docs/PROJECT_PLAN.md`. L'MVP è completo:
+> prima di implementare un'evoluzione, aggiungi una nuova attività con risultato e
+> verifica attesi. Spiegami in modo semplice cosa farai e perché.
 
 ## Come chiudere una sessione
 
@@ -192,7 +188,7 @@ Prima di terminare verificare che:
 
 1. l'attività concordata sia stata controllata;
 2. la relativa casella in `PROJECT_PLAN.md` sia aggiornata;
-3. questo documento indichi la prossima attività;
+3. questo documento indichi la prossima attività oppure che l'MVP è completo;
 4. test eseguiti e problemi aperti siano annotati;
 5. le modifiche Git siano state riepilogate.
 
@@ -552,3 +548,9 @@ Prima di terminare verificare che:
 - Verificato che i codici attività restino soltanto nei registri storici; `SP-0007` in
   `DEPLOYMENT.md` è esplicitamente identificato come ticket demo.
 - `git diff --check`: nessun errore di spaziatura nella revisione generale dei documenti.
+- Verificata la pubblicazione GitHub della release stabile `v0.1.0` da `main`, non bozza
+  e non prerelease.
+- Verificati nuovamente tutti i collegamenti Markdown locali: nessun file mancante.
+- `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-084.
+- Ruff: controllo superato e 150 file conformi alla formattazione.
+- `pytest -W error`: 354 test superati senza avvisi dopo SP-084.

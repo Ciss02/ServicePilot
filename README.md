@@ -4,11 +4,12 @@
 > Portale IT assistito dall'AI, con regole deterministiche, fonti verificabili e approvazione umana.
 
 [![Controlli automatici](https://github.com/Ciss02/ServicePilot/actions/workflows/quality.yml/badge.svg)](https://github.com/Ciss02/ServicePilot/actions/workflows/quality.yml)
+[![Release v0.1.0](https://img.shields.io/badge/release-v0.1.0-blue)](https://github.com/Ciss02/ServicePilot/releases/tag/v0.1.0)
 [![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.141-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[Italiano](#italiano) · [English](#english) · [Demo online](https://servicepilot-ai-demo-ciss02.onrender.com) · [Documentazione](docs/README.md) · [Architettura](docs/ARCHITECTURE.md)
+[Italiano](#italiano) · [English](#english) · [Demo online](https://servicepilot-ai-demo-ciss02.onrender.com) · [Release v0.1.0](https://github.com/Ciss02/ServicePilot/releases/tag/v0.1.0) · [Documentazione](docs/README.md) · [Architettura](docs/ARCHITECTURE.md)
 
 ![Area dipendente di ServicePilot AI](docs/screenshots/employee-dashboard.jpg)
 
@@ -216,7 +217,8 @@ La revisione completa è in
 
 ### Roadmap
 
-- **v0.1.0 — MVP portfolio:** documentazione finale, video dimostrativo e release;
+- **v0.1.0 — MVP portfolio pubblicato:** [release GitHub](https://github.com/Ciss02/ServicePilot/releases/tag/v0.1.0),
+  demo online, documentazione finale e schermate dei flussi principali;
 - **dopo l'MVP:** PostgreSQL e archivio persistente, processi in background,
   osservabilità ed evaluation automatica delle risposte RAG;
 - **per un prodotto reale:** identità aziendale, CSRF token dedicati, scansione malware,
@@ -354,7 +356,8 @@ guides and historical project records, is in [`docs/README.md`](docs/README.md).
 
 ### Roadmap
 
-- **v0.1.0 — portfolio MVP:** final documentation, demo video and tagged release;
+- **v0.1.0 — portfolio MVP released:** [GitHub release](https://github.com/Ciss02/ServicePilot/releases/tag/v0.1.0),
+  live demo, final documentation and screenshots of the main flows;
 - **post-MVP:** PostgreSQL and persistent object storage, background jobs,
   observability and automated RAG evaluations;
 - **production path:** corporate identity, dedicated CSRF tokens, malware scanning,
