@@ -172,5 +172,105 @@ indicare quel codice per definire con precisione il risultato da ottenere.
 
 ## Ordine di partenza
 
-Tutte le attività dell'MVP sono completate e la **Milestone 8** è conclusa. Eventuali
-evoluzioni successive devono essere aggiunte alla tasklist prima dell'implementazione.
+L'MVP `v0.1.0` e le milestone 0-8 sono completati. La roadmap approvata della `v0.2.0`
+è descritta in [`V020_PRODUCT_PLAN.md`](V020_PRODUCT_PLAN.md). Le attività successive
+vengono svolte nell'ordine seguente, una issue e una pull request alla volta.
+
+## Milestone 9 - Modello operativo e collaborazione
+
+**Risultato:** ticket, gruppi, allegati e comunicazioni hanno una base dati sicura e
+versionata.
+
+- [ ] **[SP-090 - Migrazioni versionate per la v0.2](https://github.com/Ciss02/ServicePilot/issues/74)**
+  Introdurre Alembic e garantire upgrade da `v0.1.0` e creazione da database vuoto.
+  Verifica: i due percorsi producono lo stesso schema senza perdere dati.
+- [ ] **[SP-091 - Gruppi di supporto e appartenenze](https://github.com/Ciss02/ServicePilot/issues/75)**
+  Rendere i gruppi amministrabili e collegare ogni tecnico a uno o più gruppi.
+  Verifica: gruppi disattivati restano nello storico ma non sono assegnabili.
+- [ ] **[SP-092 - Allegati sicuri](https://github.com/Ciss02/ServicePilot/issues/76)**
+  Conservare file controllati per bozze, ticket e messaggi con download autorizzato.
+  Verifica: tipi camuffati, limiti e accessi estranei vengono rifiutati.
+- [ ] **[SP-093 - Comunicazioni cronologiche sul ticket](https://github.com/Ciss02/ServicePilot/issues/77)**
+  Sostituire la nota singola con un thread pubblico append-only e allegati.
+  Verifica: più messaggi restano distinti e visibili soltanto ai partecipanti autorizzati.
+- [ ] **[SP-094 - Nuovo ciclo di vita del ticket](https://github.com/Ciss02/ServicePilot/issues/78)**
+  Separare risoluzione, conferma, riapertura, rifiuto e chiusure autonoma/automatica.
+  Verifica: finestre di 5 e 14 giorni, ruoli e audit sono testati con orologio finto.
+
+## Milestone 10 - Agente conversazionale e apertura guidata
+
+**Risultato:** l'agente raccoglie informazioni, prova soluzioni sicure e prepara un
+ticket utile al tecnico.
+
+- [ ] **[SP-100 - Bozze conversazionali persistenti](https://github.com/Ciss02/ServicePilot/issues/79)**
+  Salvare sessioni, messaggi, fatti e allegati privati riprendibili.
+  Verifica: logout, annullamento e scadenza non producono ticket o file orfani.
+- [ ] **[SP-101 - Orchestratore AI con strumenti controllati](https://github.com/Ciss02/ServicePilot/issues/80)**
+  Costruire un ciclo Gemini limitato a strumenti e output validati dal backend.
+  Verifica: limiti, timeout e fallback manuale impediscono blocchi o costi incontrollati.
+- [ ] **[SP-102 - Diagnosi preventiva basata sulle procedure](https://github.com/Ciss02/ServicePilot/issues/81)**
+  Proporre passaggi sicuri soltanto da fonti pubblicate o regole approvate.
+  Verifica: contenuti rischiosi e fonti non destinate ai dipendenti sono esclusi.
+- [ ] **[SP-103 - Allegati condizionali e ticket tecnico completo](https://github.com/Ciss02/ServicePilot/issues/82)**
+  Richiedere evidenze per regola e produrre un riepilogo tecnico confermabile.
+  Verifica: obblighi, eccezioni motivate e descrizioni originale/AI restano distinti.
+- [ ] **[SP-104 - Assistenze concluse e apprendimento controllato](https://github.com/Ciss02/ServicePilot/issues/83)**
+  Registrare problemi risolti senza ticket e generare conoscenze candidate anonimizzate.
+  Verifica: nessun candidato viene usato dalla ricerca prima della pubblicazione admin.
+- [ ] **[SP-105 - Apertura ticket per conto del dipendente](https://github.com/Ciss02/ServicePilot/issues/84)**
+  Consentire al team IT di usare l'agente scegliendo un dipendente attivo.
+  Verifica: richiedente, autore, notifica e audit restano corretti e separati.
+
+## Milestone 11 - Workspace tecnico e notifiche
+
+**Risultato:** i tecnici hanno uno spazio operativo ordinato senza modifiche accidentali.
+
+- [ ] **[SP-110 - Dettaglio ticket in sola lettura e modifica esplicita](https://github.com/Ciss02/ServicePilot/issues/85)**
+  Separare consultazione, modifica dati e comandi di stato.
+  Verifica: soluzione e motivazione vengono richieste soltanto dall'azione pertinente.
+- [ ] **[SP-111 - Sotto-attività tecniche](https://github.com/Ciss02/ServicePilot/issues/86)**
+  Aggiungere attività interne assegnabili e l'area `Le mie attività`.
+  Verifica: il dipendente non può leggerne neppure titoli, conteggi o URL.
+- [ ] **[SP-112 - Worklog manuale e timer](https://github.com/Ciss02/ServicePilot/issues/87)**
+  Registrare durata e attività manualmente o con un solo timer persistente.
+  Verifica: stop idempotente, riavvio, avviso 12 ore e chiusura ticket sono testati.
+- [ ] **[SP-113 - Centro notifiche](https://github.com/Ciss02/ServicePilot/issues/88)**
+  Aggiungere campanella, non letti, filtri e collegamenti autorizzati.
+  Verifica: destinatari, deduplicazione e permessi sono coerenti con l'evento sorgente.
+
+## Milestone 12 - Knowledge management evoluto
+
+**Risultato:** le procedure sono modificabili, versionate e pubblicate senza alterare
+lo storico.
+
+- [ ] **[SP-120 - Procedure versionate e conversione PDF](https://github.com/Ciss02/ServicePilot/issues/89)**
+  Separare procedura, versioni e originale; convertire i PDF in bozze Markdown.
+  Verifica: citazioni esistenti restano legate alla versione corretta.
+- [ ] **[SP-121 - Editor Markdown con bozza e pubblicazione](https://github.com/Ciss02/ServicePilot/issues/90)**
+  Creare editor e anteprima sicura con pubblicazione atomica.
+  Verifica: un errore mantiene attiva e ricercabile la versione precedente.
+- [ ] **[SP-122 - Revisione delle conoscenze candidate](https://github.com/Ciss02/ServicePilot/issues/91)**
+  Correggere, rifiutare o trasformare una soluzione riuscita in bozza.
+  Verifica: soltanto la successiva pubblicazione rende il contenuto ricercabile.
+
+## Milestone 13 - Report, qualità e release
+
+**Risultato:** amministratore e portfolio mostrano dati affidabili e una versione stabile.
+
+- [ ] **[SP-130 - Metriche e servizi di reporting](https://github.com/Ciss02/ServicePilot/issues/92)**
+  Calcolare volumi, tempi, lavoro e assistenze concluse con filtri condivisi.
+  Verifica: formule, casi vuoti, intervalli e fusi orari hanno test deterministici.
+- [ ] **[SP-131 - Dashboard report ed esportazione CSV](https://github.com/Ciss02/ServicePilot/issues/93)**
+  Mostrare report admin accessibili ed esportare gli stessi dati in CSV sicuri.
+  Verifica: pagina e CSV concordano e neutralizzano le formule.
+- [ ] **[SP-132 - Audit, sicurezza e dati demo v0.2](https://github.com/Ciss02/ServicePilot/issues/94)**
+  Completare eventi, seed, reset e revisione di sicurezza delle nuove funzioni.
+  Verifica: reset ripetibile, audit minimizzato e nessun dato reale o segreto.
+- [ ] **[SP-133 - Collaudo, documentazione e release v0.2.0](https://github.com/Ciss02/ServicePilot/issues/95)**
+  Collaudare i tre ruoli, aggiornare il portfolio, distribuire e pubblicare la release.
+  Verifica: CI verde, demo ripristinata, tag e release `v0.2.0` accessibili.
+
+## Prossima attività
+
+**SP-090 - Migrazioni versionate per la v0.2.** Nessun'altra issue della nuova roadmap
+deve essere implementata prima che la base delle migrazioni sia verificata e unita.

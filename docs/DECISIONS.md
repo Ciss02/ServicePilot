@@ -793,3 +793,38 @@ Il progetto è già esplorabile direttamente e documenta sia il risultato visivo
 scelte tecniche. Un video duplicherebbe materiale esistente e richiederebbe manutenzione
 quando l'interfaccia cambia. Il tag stabile conserva invece un punto di riferimento
 chiaro e verificabile per la versione presentata nel portfolio.
+
+## D-033 - Evoluzione v0.2.0 suddivisa per capacità e conferme umane
+
+**Data:** 13 agosto 2026
+**Stato:** approvata prima di SP-090
+
+**Decisione:**
+
+- mantenere `v0.1.0` come baseline stabile e raccogliere tutte le nuove capacità nella
+  release `v0.2.0`;
+- implementare la roadmap in cinque milestone e 22 issue ordinate, una pull request per
+  attività;
+- introdurre Alembic prima di qualunque nuova tabella o colonna;
+- trasformare l'apertura in una conversazione persistente, ma mantenere la conferma
+  umana come unico comando che crea il ticket;
+- limitare l'agente a strumenti backend controllati e procedure pubblicate sicure;
+- conservare racconto originale e descrizione tecnica AI come dati distinti;
+- non trasformare automaticamente una soluzione riuscita in procedura: creare un
+  candidato anonimizzato soggetto a revisione e pubblicazione amministrativa;
+- sostituire note sovrascrivibili con messaggi cronologici e separare comunicazioni
+  pubbliche da attività e worklog interni;
+- richiedere conferma del dipendente dopo la risoluzione, applicare chiusura automatica
+  dopo 5 giorni e consentire riapertura entro 14 giorni;
+- rappresentare il rifiuto come stato tracciabile, non come cancellazione;
+- mantenere la v0.2 compatibile con la singola istanza Render Free e con dati
+  completamente fittizi.
+
+**Motivazione:**
+
+Le funzionalità richieste condividono dati e regole: allegati servono alla chat e ai
+messaggi, gruppi alimentano assegnazioni e notifiche, worklog e stati alimentano i
+report, mentre le versioni delle procedure proteggono le fonti usate dall'agente.
+Costruire prima le fondamenta evita soluzioni duplicate. Conferme umane, strumenti
+limitati e pubblicazione amministrativa impediscono invece che Gemini crei ticket,
+azioni o conoscenza attendibile senza un controllo esplicito.
