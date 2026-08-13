@@ -16,9 +16,10 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Create le milestone GitHub 9-13 e le 22 issue da `SP-090` a `SP-133`.
 - Ogni issue contiene obiettivo, modifiche, dipendenze, rischi, criteri di accettazione e
   verifiche.
-- **SP-090 - Migrazioni versionate per la v0.2** è completata e verificata localmente.
-- **SP-092 - Allegati sicuri** è completata e verificata localmente; dipende soltanto da
-  SP-090 e viene quindi completata senza anticipare le funzioni di SP-091 o SP-093.
+- **SP-090 - Migrazioni versionate per la v0.2** è completata e pubblicata su `main`.
+- **SP-091 - Gruppi di supporto e appartenenze** è completata e pubblicata su `main`.
+- **SP-092 - Allegati sicuri** è completata e verificata localmente sulla base di SP-091,
+  senza anticipare le funzioni di SP-093.
 - La roadmap verrà implementata una issue e una pull request alla volta; il codice della
   `v0.2.0` non è stato anticipato durante la pianificazione.
 
@@ -187,8 +188,8 @@ web è il dettaglio ticket; le future issue useranno gli stessi servizi per bozz
 
 ## Prossima attività
 
-**SP-091 - Gruppi di supporto e appartenenze.** Rendere i gruppi amministrabili e
-collegare ogni tecnico a uno o più gruppi, conservando nello storico quelli disattivati.
+**SP-093 - Comunicazioni cronologiche sul ticket.** Introdurre il thread pubblico
+append-only per richiedente e supporto, riusando gli allegati autorizzati di SP-092.
 
 ## Blocchi o decisioni aperte
 
@@ -200,7 +201,7 @@ collegare ogni tecnico a uno o più gruppi, conservando nello storico quelli dis
 Prompt consigliato:
 
 > Leggi `AGENTS.md`, `docs/PROJECT_STATUS.md` e `docs/PROJECT_PLAN.md`. L'MVP è completo:
-> procedi con SP-090 seguendo la relativa issue GitHub. Spiegami in modo semplice cosa
+> procedi con SP-093 seguendo la relativa issue GitHub. Spiegami in modo semplice cosa
 > farai e perché, senza anticipare le issue successive.
 
 ## Come chiudere una sessione
@@ -595,14 +596,35 @@ Prima di terminare verificare che:
 - `pytest -W error`: 350 test superati senza avvisi dopo SP-090.
 - Ruff: controllo superato e 155 file Python conformi alla formattazione.
 - `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-090.
+- Aggiunta la migrazione `0003_support_groups` con catalogo univoco e appartenenze
+  molti-a-molti; fresh install e upgrade v0.1.0 convergono ancora allo stesso schema.
+- Convertiti i sette gruppi fissi in seed demo ripetibile con 11 appartenenze fittizie.
+- Verificati tecnico in più gruppi, rifiuto dei dipendenti, unicità normalizzata e
+  permessi di modifica riservati all'amministratore.
+- Verificato che un gruppo disattivato resti leggibile nei ticket storici ma venga
+  escluso dalle nuove assegnazioni e dalla lista fornita alla classificazione AI.
+- Rimosso l'ultimo enum di gruppi dal contratto delle azioni proposte: anche una nuova
+  proposta di assegnazione viene controllata sul catalogo attivo del database.
+- Verificate nel browser integrato pagina amministrativa, editor dei membri e dettaglio
+  ticket; layout mobile a 390 × 844 senza scorrimento orizzontale o errori console.
+- `alembic current`: revisione `0003_support_groups (head)`; `alembic check`: nessuna
+  nuova operazione rilevata rispetto ai modelli SQLAlchemy.
+- `pytest -W error`: 358 test superati senza avvisi dopo SP-091.
+- Ruff: controllo superato e 161 file Python conformi alla formattazione.
+- `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-091.
 - Aggiunta Pillow `12.3.0` per decodificare e ricodificare PNG/JPEG senza metadati;
   PDF, TXT e LOG sono validati con parser o testo UTF-8 reale.
-- Aggiunta migrazione `0003_secure_attachments`; fresh install e upgrade v0.1.0
-  producono anche la tabella privata `attachments` senza perdere righe esistenti.
+- Aggiunta migrazione `0004_secure_attachments`, successiva a `0003_support_groups`;
+  fresh install e upgrade v0.1.0 producono anche la tabella privata `attachments` senza
+  perdere righe esistenti.
 - Verificati file validi e camuffati, limiti per invio/file/ticket, errori disco,
-  autorizzazione dipendente/tecnico e pulizia di metadati e file del contesto.
+  integrità SHA-256, autorizzazione dipendente/tecnico/admin e pulizia ripetibile di
+  metadati e file del contesto.
 - Verificati nel browser integrato riquadro Allegati privati, caricamento di un LOG
-  sintetico e link di download senza percorsi interni esposti.
+  sintetico, download autorizzato, vista tecnica e layout mobile senza overflow o errori
+  console; il file di collaudo è stato poi rimosso.
+- `alembic current`: revisione `0004_secure_attachments (head)`; `alembic check`: nessuna
+  nuova operazione rilevata rispetto ai modelli SQLAlchemy.
+- `pytest -W error`: 386 test superati senza avvisi dopo la revisione completa di SP-092.
+- Ruff: controllo superato e 168 file Python conformi alla formattazione.
 - `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-092.
-- Ruff: controllo superato e 124 file Python conformi alla formattazione.
-- `pytest -W error`: 364 test superati senza avvisi dopo SP-092.

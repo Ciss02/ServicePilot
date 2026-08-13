@@ -24,6 +24,8 @@ from app.db import (
     KnowledgeSegment,
     ProposedAction,
     Site,
+    SupportGroup,
+    SupportGroupMembership,
     Ticket,
     TicketSolutionSource,
     User,
@@ -112,6 +114,29 @@ def web_client(tmp_path, monkeypatch) -> Iterator[tuple[TestClient, Engine, str]
                     ]
                 )
                 session.flush()
+                support_groups = [
+                    SupportGroup(
+                        name="Supporto rete",
+                        name_key="supporto rete",
+                        description="Connettività della sede web demo.",
+                    ),
+                    SupportGroup(
+                        name="Supporto workplace",
+                        name_key="supporto workplace",
+                        description="Postazioni della sede web demo.",
+                    ),
+                ]
+                session.add_all(support_groups)
+                session.flush()
+                session.add_all(
+                    [
+                        SupportGroupMembership(
+                            support_group_id=group.id,
+                            user_id=technician.id,
+                        )
+                        for group in support_groups
+                    ]
+                )
                 session.add_all(
                     [
                         Ticket(
@@ -441,6 +466,125 @@ def test_admin_can_open_knowledge_upload_page(web_client) -> None:
     assert 'name="q"' in response.text
     assert 'enctype="multipart/form-data"' in response.text
     assert 'aria-current="page"' in response.text
+
+
+def test_admin_manages_group_data_state_and_members(web_client) -> None:
+    client, database_engine, password = web_client
+    login_web(client, "admin.web@servicepilot.example", password)
+    with Session(database_engine) as session:
+        technician_id = session.scalar(
+            select(User.id).where(User.email == "tecnico.web@servicepilot.example")
+        )
+        admin_id = session.scalar(
+            select(User.id).where(User.email == "admin.web@servicepilot.example")
+        )
+
+    page = client.get("/app/admin/groups")
+    created = client.post(
+        "/app/admin/groups",
+        data={
+            "name": "Supporto applicazioni demo",
+            "description": "Applicazioni fittizie usate nella demo web.",
+        },
+        follow_redirects=False,
+    )
+    assert page.status_code == 200
+    assert "Gruppi di supporto" in page.text
+    assert 'aria-current="page"' in page.text
+    assert "Nuovo gruppo" in page.text
+    assert 'type="checkbox"' not in page.text
+    assert "Seleziona tecnico o admin" in page.text
+    assert created.status_code == 303
+
+    with Session(database_engine) as session:
+        group = session.scalar(
+            select(SupportGroup).where(SupportGroup.name == "Supporto applicazioni demo")
+        )
+        assert group is not None
+        group_id = group.id
+
+    technician_added = client.post(
+        f"/app/admin/groups/{group_id}/members/add",
+        data={"member_id": str(technician_id)},
+        follow_redirects=False,
+    )
+    admin_added = client.post(
+        f"/app/admin/groups/{group_id}/members/add",
+        data={"member_id": str(admin_id)},
+        follow_redirects=False,
+    )
+    renamed = client.post(
+        f"/app/admin/groups/{group_id}/update",
+        data={
+            "name": "Supporto applicativo demo",
+            "description": "Catalogo applicativo fittizio aggiornato.",
+        },
+        follow_redirects=False,
+    )
+    deactivated = client.post(
+        f"/app/admin/groups/{group_id}/state",
+        data={"is_active": "false"},
+        follow_redirects=False,
+    )
+
+    assert technician_added.status_code == 303
+    assert admin_added.status_code == 303
+    assert renamed.status_code == 303
+    assert deactivated.status_code == 303
+    with Session(database_engine) as session:
+        group = session.get(SupportGroup, group_id)
+        assert group.name == "Supporto applicativo demo"
+        assert group.is_active is False
+        assert set(
+            session.scalars(
+                select(SupportGroupMembership.user_id).where(
+                    SupportGroupMembership.support_group_id == group_id
+                )
+            )
+        ) == {technician_id, admin_id}
+
+    removed = client.post(
+        f"/app/admin/groups/{group_id}/members/{technician_id}/remove",
+        follow_redirects=False,
+    )
+    assert removed.status_code == 303
+    with Session(database_engine) as session:
+        assert set(
+            session.scalars(
+                select(SupportGroupMembership.user_id).where(
+                    SupportGroupMembership.support_group_id == group_id
+                )
+            )
+        ) == {admin_id}
+
+
+@pytest.mark.parametrize(
+    "email",
+    [
+        "dipendente.web@servicepilot.example",
+        "tecnico.web@servicepilot.example",
+    ],
+)
+def test_non_admin_cannot_manage_support_groups(web_client, email: str) -> None:
+    client, database_engine, password = web_client
+    login_web(client, email, password)
+
+    page = client.get("/app/admin/groups", follow_redirects=False)
+    creation = client.post(
+        "/app/admin/groups",
+        data={"name": "Gruppo vietato", "description": "Dato fittizio vietato."},
+        follow_redirects=False,
+    )
+
+    assert page.status_code == 303
+    assert page.headers["location"] == "/app"
+    assert creation.status_code == 303
+    assert creation.headers["location"] == "/app"
+    with Session(database_engine) as session:
+        assert (
+            session.scalar(select(SupportGroup.id).where(SupportGroup.name == "Gruppo vietato"))
+            is None
+        )
 
 
 def test_admin_can_consult_and_filter_the_full_audit_log(web_client) -> None:
@@ -2113,7 +2257,14 @@ def test_ticket_attachment_download_is_private_and_uses_safe_headers(web_client)
         attachment = session.scalar(select(Attachment))
         assert attachment is not None
         attachment_id = attachment.id
-        assert attachment.storage_filename not in upload.headers["location"]
+        storage_filename = attachment.storage_filename
+        assert storage_filename not in upload.headers["location"]
+
+    detail = client.get(upload.headers["location"])
+
+    assert detail.status_code == 200
+    assert "Allegati caricati" in detail.text
+    assert storage_filename not in detail.text
 
     download = client.get(f"/app/attachments/{attachment_id}/download")
 
@@ -2125,8 +2276,21 @@ def test_ticket_attachment_download_is_private_and_uses_safe_headers(web_client)
     assert download.headers["x-content-type-options"] == "nosniff"
     assert "sandbox" in download.headers["content-security-policy"]
 
+    unavailable_preview = client.get(f"/app/attachments/{attachment_id}/preview")
+
+    assert unavailable_preview.status_code == 404
+
     client.post("/logout", follow_redirects=False)
     login_web(client, "altro.dipendente.web@servicepilot.example", password)
     forbidden = client.get(f"/app/attachments/{attachment_id}/download")
+    forbidden_upload = client.post(
+        f"/app/tickets/{ticket_id}/attachments",
+        files={"files": ("estraneo.log", b"contenuto estraneo", "text/plain")},
+        follow_redirects=False,
+    )
 
     assert forbidden.status_code == 404
+    assert forbidden_upload.status_code == 303
+    assert forbidden_upload.headers["location"] == "/app"
+    with Session(database_engine) as session:
+        assert session.scalar(select(func.count()).select_from(Attachment)) == 1

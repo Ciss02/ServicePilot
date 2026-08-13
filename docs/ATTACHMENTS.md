@@ -46,8 +46,9 @@ validati, con `nosniff`, CSP isolata e `no-store`.
 
 Il reset della demo elimina metadati e file degli allegati prima di ricreare i ticket.
 Il servizio `delete_context_attachments` è riutilizzabile per i futuri annullamenti di
-bozze e cancellazioni di contesto; segnala un errore di disco senza dichiarare una pulizia
-inesistente.
+bozze e cancellazioni di contesto. File e metadati vengono rimossi in modo ripetibile:
+se il disco fallisce, i metadati restano disponibili per ritentare e l'operazione non
+dichiara falsamente una pulizia completata.
 
 ## Limiti intenzionali
 
@@ -57,7 +58,8 @@ espone la directory `storage/attachments`.
 
 ## Verifiche
 
-I test automatici coprono file validi e camuffati, limiti, normalizzazione JPEG,
-fallimento disco, autorizzazione, pulizia del contesto, upgrade dal database v0.1 e
-download HTTP con intestazioni sicure. La prova visiva locale conferma il riquadro del
-ticket, il caricamento di un log sintetico e il link di download.
+I test automatici coprono file validi e camuffati, limiti prima e dopo normalizzazione,
+integrità SHA-256, normalizzazione PNG/JPEG, errori disco/database, autorizzazione,
+pulizia ripetibile del contesto, upgrade dai database v0.1 e SP-091 e download HTTP con
+intestazioni sicure. La prova visiva locale conferma il riquadro del ticket, il
+caricamento di un log sintetico e il link di download.

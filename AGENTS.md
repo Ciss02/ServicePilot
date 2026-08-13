@@ -38,7 +38,10 @@ Prima di modificare il progetto:
 - Aggiornare `docs/PROJECT_STATUS.md` al termine di ogni attività completata.
 - Aggiornare la casella corrispondente in `docs/PROJECT_PLAN.md` solo dopo la verifica.
 - Prima di un commit, riepilogare modifiche e controlli eseguiti.
-- Non pubblicare su GitHub o effettuare deploy senza richiesta esplicita dell'utente.
+- Al termine di ogni issue completata e verificata, creare automaticamente commit, push
+  e pull request pronta per la revisione, senza attendere una richiesta separata.
+- Non effettuare mai il merge della pull request senza un "ok" esplicito dell'utente.
+- Non effettuare deploy senza richiesta esplicita dell'utente.
 
 ## Criterio di apprendimento
 

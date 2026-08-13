@@ -20,6 +20,7 @@ target_metadata = Base.metadata
 ENUM_CHECK_CONSTRAINT_NAMES = {
     "action_status",
     "action_type",
+    "attachment_context_type",
     "audit_actor_type",
     "audit_event_type",
     "classification_review_status",

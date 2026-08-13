@@ -14,9 +14,8 @@ from app.ai.ticket_classification import (
     classify_confirmed_ticket,
     suggest_ticket_classification,
 )
-from app.db import AuditEvent, Site, Ticket, User, build_engine, create_database
+from app.db import AuditEvent, Site, SupportGroup, Ticket, User, build_engine, create_database
 from app.domain.vocabulary import (
-    AssignmentGroup,
     AuditEventType,
     ClassificationReviewStatus,
     Priority,
@@ -94,11 +93,12 @@ def test_suggestion_uses_controlled_options_and_backend_priority() -> None:
         ticket,
         site=site,
         ai_model=model,
+        allowed_assignment_groups=["Supporto rete", "Service desk"],
     )
 
     assert suggestion.category.value == "network_and_connectivity"
     assert suggestion.subcategory == "VPN"
-    assert suggestion.assigned_group is AssignmentGroup.NETWORK_SUPPORT
+    assert suggestion.assigned_group == "Supporto rete"
     assert suggestion.priority is Priority.P2
     call = model.calls[0]
     assert call["response_schema"] is AIProposedTicketClassification
@@ -118,7 +118,6 @@ def test_suggestion_uses_controlled_options_and_backend_priority() -> None:
         {"category": "invented_category"},
         {"impact": "critical"},
         {"urgency": "immediate"},
-        {"assigned_group": "Gruppo inventato"},
         {"priority": "p1"},
     ],
 )
@@ -129,6 +128,19 @@ def test_response_contract_rejects_unknown_values_and_model_priority(
 
     with pytest.raises(ValidationError):
         AIProposedTicketClassification.model_validate(payload)
+
+
+def test_suggestion_rejects_group_outside_database_options() -> None:
+    ticket, site = ticket_and_site()
+    model = ClassificationModelStub({**valid_proposal(), "assigned_group": "Gruppo inventato"})
+
+    with pytest.raises(AIInvalidResponseError, match="gruppo non disponibile"):
+        suggest_ticket_classification(
+            ticket,
+            site=site,
+            ai_model=model,
+            allowed_assignment_groups=["Supporto rete"],
+        )
 
 
 def test_classification_is_saved_once_with_deterministic_priority(tmp_path) -> None:
@@ -142,7 +154,12 @@ def test_classification_is_saved_once_with_deterministic_priority(tmp_path) -> N
             display_name="Dipendente Classificazione Demo",
             role=Role.EMPLOYEE,
         )
-        session.add_all([site, requester])
+        group = SupportGroup(
+            name="Supporto rete",
+            name_key="supporto rete",
+            description="Connettività della sede demo.",
+        )
+        session.add_all([site, requester, group])
         session.flush()
         ticket = Ticket(
             title="VPN non disponibile nella sede demo",

@@ -1,7 +1,7 @@
 """Aggiunge metadati privati per gli allegati controllati.
 
-Revision ID: 0003_secure_attachments
-Revises: 0002_normalize_v010
+Revision ID: 0004_secure_attachments
+Revises: 0003_support_groups
 """
 
 from collections.abc import Sequence
@@ -9,8 +9,8 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "0003_secure_attachments"
-down_revision: str | None = "0002_normalize_v010"
+revision: str = "0004_secure_attachments"
+down_revision: str | None = "0003_support_groups"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

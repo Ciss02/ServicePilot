@@ -20,6 +20,7 @@ from app.tickets.management import (
     ClassificationReviewRequiredError,
     InvalidStatusTransitionError,
     ManagedSiteNotFoundError,
+    ManagedSupportGroupUnavailableError,
     ManagedTechnicianNotFoundError,
     ManagedTechnicianUnavailableError,
     ManagedTicketNotFoundError,
@@ -141,6 +142,11 @@ def update_ticket(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Il ticket può essere assegnato soltanto a un tecnico attivo",
+        )
+    except ManagedSupportGroupUnavailableError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Il ticket può essere assegnato soltanto a un gruppo attivo",
         )
     except InvalidStatusTransitionError as error:
         raise HTTPException(

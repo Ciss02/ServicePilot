@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 import re
 import tempfile
+import unicodedata
 import warnings
 from dataclasses import dataclass
 from io import BytesIO
@@ -37,9 +39,11 @@ _IMAGE_FORMATS = {
     ".jpg": ("image/jpeg", "JPEG"),
     ".jpeg": ("image/jpeg", "JPEG"),
 }
-_DANGEROUS_TEXT_PREFIX = re.compile(
-    r"^<(?:!doctype\s+html|html|head|body|script|svg)\b", re.IGNORECASE
+_DANGEROUS_TEXT_MARKUP = re.compile(
+    r"<\s*(?:!|\?|/?[a-z][a-z0-9:-]*(?:\s|/?>))",
+    re.IGNORECASE,
 )
+LOGGER = logging.getLogger(__name__)
 
 
 class AttachmentValidationError(ValueError):
@@ -83,7 +87,9 @@ def _safe_original_filename(raw_filename: str | None) -> tuple[str, str]:
     filename = Path(raw_filename.replace("\\", "/")).name.strip()
     if not filename or filename in {".", ".."}:
         raise AttachmentValidationError("Il nome dell'allegato non è valido.")
-    if len(filename) > 255 or any(ord(character) < 32 for character in filename):
+    if len(filename) > 255 or any(
+        unicodedata.category(character) in {"Cc", "Cf"} for character in filename
+    ):
         raise AttachmentValidationError("Il nome dell'allegato non è valido.")
     extension = Path(filename).suffix.lower()
     if extension not in {*_TEXT_EXTENSIONS, *_IMAGE_FORMATS, ".pdf"}:
@@ -141,7 +147,9 @@ def _validate_pdf(content: bytes) -> None:
         reader = PdfReader(BytesIO(content), strict=True)
         if reader.is_encrypted or len(reader.pages) < 1:
             raise AttachmentValidationError("Il PDF deve essere leggibile e non protetto.")
-    except PdfReadError as error:
+    except AttachmentValidationError:
+        raise
+    except (PdfReadError, EOFError, OSError, TypeError, ValueError) as error:
         raise AttachmentValidationError("Il file non contiene un PDF valido.") from error
 
 
@@ -152,8 +160,25 @@ def _validate_text(content: bytes) -> None:
         raise AttachmentValidationError("TXT e LOG devono contenere testo UTF-8 valido.") from error
     if "\x00" in text or any(ord(char) < 32 and char not in "\n\r\t" for char in text):
         raise AttachmentValidationError("TXT e LOG non possono contenere dati binari.")
-    if _DANGEROUS_TEXT_PREFIX.match(text.lstrip()):
+    if _DANGEROUS_TEXT_MARKUP.search(text):
         raise AttachmentValidationError("Contenuti HTML o SVG non sono ammessi come allegati.")
+
+
+def _remove_paths(paths: list[Path]) -> int:
+    """Tenta tutta la compensazione e registra senza mascherare l'errore iniziale."""
+
+    failures = 0
+    for path in paths:
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            failures += 1
+    if failures:
+        LOGGER.error(
+            "Pulizia incompleta dello storage allegati: %s file non rimossi.",
+            failures,
+        )
+    return failures
 
 
 def _validate_upload(upload: UploadFile) -> _ValidatedAttachment:
@@ -258,20 +283,28 @@ def store_ticket_attachments(
                 )
             )
         session.add_all(attachments)
+        session.flush()
         session.commit()
-        for attachment in attachments:
-            session.refresh(attachment)
         return attachments
-    except (OSError, SQLAlchemyError) as error:
+    except AttachmentValidationError:
         session.rollback()
-        for path in [*temporary_paths, *final_paths]:
-            path.unlink(missing_ok=True)
+        _remove_paths([*temporary_paths, *final_paths])
+        raise
+    except Exception as error:
+        session.rollback()
+        cleanup_failures = _remove_paths([*temporary_paths, *final_paths])
+        cleanup_note = (
+            " La pulizia dello storage non è riuscita completamente." if cleanup_failures else ""
+        )
         raise AttachmentPersistenceError(
-            "Non siamo riusciti a conservare gli allegati. Riprova tra poco."
+            "Non siamo riusciti a conservare gli allegati. Riprova tra poco." + cleanup_note
         ) from error
     finally:
         for upload in uploads:
-            upload.file.close()
+            try:
+                upload.file.close()
+            except Exception:
+                LOGGER.warning("Chiusura incompleta di un file ricevuto.", exc_info=True)
 
 
 def list_ticket_attachments(session: Session, ticket_id: int) -> list[Attachment]:
@@ -293,7 +326,7 @@ def get_visible_attachment(session: Session, current_user: User, attachment_id: 
     """Restituisce un allegato solo dopo il controllo del relativo ticket."""
 
     attachment = session.get(Attachment, attachment_id)
-    if attachment is None or attachment.context_type is not AttachmentContextType.TICKET:
+    if attachment is None or attachment.context_type != AttachmentContextType.TICKET:
         raise AttachmentNotFoundError
     if get_visible_ticket(session, current_user, attachment.context_id) is None:
         raise AttachmentNotFoundError
@@ -301,10 +334,20 @@ def get_visible_attachment(session: Session, current_user: User, attachment_id: 
 
 
 def attachment_file_path(attachment: Attachment, storage_directory: Path) -> Path:
-    """Risolve il file interno senza consentire traversal del percorso."""
+    """Risolve il file e verifica dimensione e impronta prima di servirlo."""
 
     path = _safe_stored_path(storage_directory, attachment.storage_filename)
-    if not path.is_file():
+    try:
+        if not path.is_file() or path.stat().st_size != attachment.size_bytes:
+            raise AttachmentStorageError("Il file allegato non è disponibile.")
+        checksum = hashlib.sha256()
+        with path.open("rb") as stored_file:
+            while chunk := stored_file.read(READ_CHUNK_SIZE):
+                checksum.update(chunk)
+    except OSError as error:
+        raise AttachmentStorageError("Il file allegato non è disponibile.") from error
+    if checksum.hexdigest() != attachment.checksum_sha256:
+        LOGGER.error("Controllo di integrità fallito per un allegato privato.")
         raise AttachmentStorageError("Il file allegato non è disponibile.")
     return path
 
@@ -314,7 +357,7 @@ def delete_context_attachments(
     context: AttachmentContext,
     storage_directory: Path,
 ) -> tuple[int, int]:
-    """Elimina i metadati del contesto e prova a rimuovere tutti i file associati."""
+    """Rimuove prima i file e conserva i metadati finché la pulizia non riesce."""
 
     attachments = list(
         session.scalars(
@@ -324,7 +367,20 @@ def delete_context_attachments(
             )
         ).all()
     )
-    storage_filenames = [attachment.storage_filename for attachment in attachments]
+    failures = 0
+    for attachment in attachments:
+        try:
+            path = _safe_stored_path(storage_directory, attachment.storage_filename)
+            path.unlink(missing_ok=True)
+        except (AttachmentStorageError, OSError):
+            failures += 1
+    if failures:
+        LOGGER.error(
+            "Cancellazione allegati rinviata: %s file non rimossi; metadati conservati.",
+            failures,
+        )
+        return 0, failures
+
     try:
         for attachment in attachments:
             session.delete(attachment)
@@ -334,10 +390,4 @@ def delete_context_attachments(
         raise AttachmentPersistenceError(
             "Non siamo riusciti a eliminare gli allegati del contesto."
         ) from error
-    failures = 0
-    for storage_filename in storage_filenames:
-        try:
-            _safe_stored_path(storage_directory, storage_filename).unlink(missing_ok=True)
-        except (AttachmentStorageError, OSError):
-            failures += 1
-    return len(attachments), failures
+    return len(attachments), 0

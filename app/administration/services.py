@@ -64,8 +64,10 @@ def _remove_stored_files(
         if path is None:
             failures += 1
             continue
+        if not path.exists():
+            continue
         try:
-            path.unlink(missing_ok=True)
+            path.unlink()
         except OSError:
             failures += 1
         else:
@@ -89,6 +91,22 @@ def reset_demo_dataset(
     attachment_filenames = list(session.scalars(select(Attachment.storage_filename)).all())
     removed_documents = len(storage_filenames)
 
+    removed_files, cleanup_failures = _remove_stored_files(
+        storage_directory,
+        storage_filenames,
+    )
+    removed_attachment_files, attachment_cleanup_failures = _remove_stored_files(
+        attachment_storage_directory,
+        attachment_filenames,
+    )
+    total_cleanup_failures = cleanup_failures + attachment_cleanup_failures
+    if total_cleanup_failures:
+        raise DemoResetError(
+            "Il ripristino non è stato applicato al database perché "
+            f"{total_cleanup_failures} file non sono stati rimossi. "
+            "I metadati restano disponibili per riprovare la pulizia."
+        )
+
     try:
         # L'ordine rispetta i collegamenti: prima i figli, poi ticket e documenti.
         session.execute(delete(AuditEvent))
@@ -106,22 +124,14 @@ def reset_demo_dataset(
     except Exception as error:
         session.rollback()
         raise DemoResetError(
-            "Il ripristino è stato annullato: i dati precedenti non sono stati modificati."
+            "Il ripristino del database è stato annullato. I file già rimossi "
+            "saranno gestiti in modo ripetibile al prossimo tentativo."
         ) from error
-
-    removed_files, cleanup_failures = _remove_stored_files(
-        storage_directory,
-        storage_filenames,
-    )
-    removed_attachment_files, attachment_cleanup_failures = _remove_stored_files(
-        attachment_storage_directory,
-        attachment_filenames,
-    )
     return DemoResetResult(
         tickets=session.scalar(select(func.count()).select_from(Ticket)) or 0,
         actions=session.scalar(select(func.count()).select_from(ProposedAction)) or 0,
         audit_events=session.scalar(select(func.count()).select_from(AuditEvent)) or 0,
         removed_documents=removed_documents,
         removed_files=removed_files + removed_attachment_files,
-        file_cleanup_failures=cleanup_failures + attachment_cleanup_failures,
+        file_cleanup_failures=0,
     )

@@ -10,7 +10,6 @@ from app.domain import (
     RequesterCommunicationPayload,
     VendorEscalationPayload,
 )
-from app.domain.vocabulary import AssignmentGroup
 
 
 def test_assignment_proposal_accepts_controlled_group_or_technician() -> None:
@@ -18,13 +17,13 @@ def test_assignment_proposal_accepts_controlled_group_or_technician() -> None:
         action_type=ActionType.ASSIGN_TICKET,
         rationale="Il problema riguarda la connettività della sede demo.",
         payload=AssignmentActionPayload(
-            assigned_group=AssignmentGroup.NETWORK_SUPPORT,
+            assigned_group="Supporto rete",
             assigned_technician_id=3,
         ),
         expected_effect="Il ticket sarà preso in carico dal supporto rete.",
     )
 
-    assert proposal.payload.assigned_group is AssignmentGroup.NETWORK_SUPPORT
+    assert proposal.payload.assigned_group == "Supporto rete"
     assert proposal.payload.assigned_technician_id == 3
 
 

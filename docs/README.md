@@ -38,6 +38,7 @@ sviluppo.
 - [`TICKET_API.md`](TICKET_API.md) — endpoint e regole del ciclo di vita;
 - [`ATTACHMENTS.md`](ATTACHMENTS.md) — archivio privato, limiti, autorizzazione e pulizia;
 - [`DATABASE.md`](DATABASE.md) — tabelle, configurazione e persistenza;
+- [`SUPPORT_GROUPS.md`](SUPPORT_GROUPS.md) — catalogo amministrabile e appartenenze;
 - [`DEMO_DATA.md`](DEMO_DATA.md) — contenuto sintetico e caricamento ripetibile.
 
 ## AI e knowledge base

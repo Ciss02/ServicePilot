@@ -62,6 +62,12 @@
         <section class="detail-card attachment-card" aria-labelledby="attachments-title">
           <p class="card-label">Allegati privati</p>
           <h2 id="attachments-title">File della richiesta</h2>
+          {% if attachment_uploaded %}
+            <div class="ticket-created-alert attachment-uploaded-alert" role="status">
+              <span aria-hidden="true">✓</span>
+              <p><strong>Allegati caricati</strong>I file sono stati controllati e conservati.</p>
+            </div>
+          {% endif %}
           {% if attachment_error %}
             <div class="form-alert" role="alert">Non siamo riusciti a controllare o conservare gli allegati. Verifica formato e limiti, poi riprova.</div>
           {% endif %}

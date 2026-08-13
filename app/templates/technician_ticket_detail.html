@@ -60,6 +60,7 @@
         <section class="detail-card attachment-card" aria-labelledby="attachments-title">
           <p class="card-label">Allegati privati</p>
           <h2 id="attachments-title">File del ticket</h2>
+          {% if attachment_uploaded %}<div class="ticket-created-alert attachment-uploaded-alert" role="status"><span aria-hidden="true">✓</span><p><strong>Allegati caricati</strong>I file sono stati controllati e conservati.</p></div>{% endif %}
           {% if attachment_error %}<div class="form-alert" role="alert">Non siamo riusciti a controllare o conservare gli allegati. Verifica formato e limiti, poi riprova.</div>{% endif %}
           {% if attachments %}
             <ul class="attachment-list">
@@ -271,7 +272,15 @@
             </div>
             <div class="field-group">
               <label for="assigned_group">Gruppo</label>
-              <input id="assigned_group" name="assigned_group" value="{{ values.assigned_group }}" maxlength="100" {% if errors.assigned_group %}aria-invalid="true"{% endif %}>
+              <select id="assigned_group" name="assigned_group" {% if errors.assigned_group %}aria-invalid="true"{% endif %}>
+                <option value="">Non assegnato</option>
+                {% if current_group_is_inactive %}
+                  <option value="{{ values.assigned_group }}" selected>{{ values.assigned_group }} · storico, non attivo</option>
+                {% endif %}
+                {% for group in support_groups %}
+                  <option value="{{ group.name }}" {% if values.assigned_group == group.name %}selected{% endif %}>{{ group.name }}</option>
+                {% endfor %}
+              </select>
               {% if errors.assigned_group %}<small class="field-error">{{ errors.assigned_group }}</small>{% endif %}
             </div>
           </fieldset>

@@ -4,6 +4,8 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from alembic import command
+from alembic.config import Config
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
 from sqlalchemy import Engine, String, inspect, text
@@ -16,6 +18,7 @@ from app.db.migrations import CURRENT_REVISION, V010_TABLE_NAMES, DatabaseMigrat
 from app.domain.vocabulary import Role, TicketStatus
 
 APPLICATION_TABLES = set(Base.metadata.tables)
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture
@@ -205,6 +208,36 @@ def test_v010_upgrade_preserves_rows_and_records_baseline(database_engine: Engin
             connection.execute(text("SELECT summary FROM audit_events WHERE id = 1")).scalar_one()
             == "Ticket demo creato"
         )
+        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == (
+            CURRENT_REVISION
+        )
+
+
+def test_sp091_database_upgrades_to_attachments_without_losing_groups(
+    database_engine: Engine,
+) -> None:
+    config = Config(str(PROJECT_ROOT / "alembic.ini"))
+    config.set_main_option("script_location", str(PROJECT_ROOT / "migrations"))
+    with database_engine.connect() as connection:
+        config.attributes["connection"] = connection
+        command.upgrade(config, "0003_support_groups")
+        connection.execute(
+            text(
+                "INSERT INTO support_groups (id, name, name_key, description) "
+                "VALUES (99, 'Gruppo conservato', 'gruppo conservato', "
+                "'Dato fittizio precedente a SP-092')"
+            )
+        )
+        connection.commit()
+
+    create_database(database_engine)
+
+    with database_engine.connect() as connection:
+        assert (
+            connection.execute(text("SELECT name FROM support_groups WHERE id = 99")).scalar_one()
+            == "Gruppo conservato"
+        )
+        assert "attachments" in inspect(connection).get_table_names()
         assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == (
             CURRENT_REVISION
         )
