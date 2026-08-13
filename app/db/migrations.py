@@ -11,7 +11,8 @@ from app.db.base import Base
 
 ALEMBIC_VERSION_TABLE = "alembic_version"
 BASELINE_REVISION = "0001_v010_baseline"
-CURRENT_REVISION = "0002_normalize_v010"
+CURRENT_REVISION = "0003_secure_attachments"
+V010_TABLE_NAMES = frozenset(Base.metadata.tables) - {"attachments"}
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 MIGRATIONS_DIRECTORY = PROJECT_ROOT / "migrations"
 ALEMBIC_CONFIG_PATH = PROJECT_ROOT / "alembic.ini"
@@ -173,7 +174,7 @@ def _validate_v010_schema(connection: Connection) -> None:
     """Accetta soltanto una baseline v0.1.0 completa prima dello stamp."""
 
     database_inspector = inspect(connection)
-    expected_tables = set(Base.metadata.tables)
+    expected_tables = set(V010_TABLE_NAMES)
     actual_tables = set(database_inspector.get_table_names())
     if actual_tables != expected_tables:
         missing = sorted(expected_tables - actual_tables)

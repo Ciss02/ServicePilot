@@ -3,6 +3,7 @@
 from app.db.base import Base
 from app.db.demo_data import SeedSummary, load_demo_data, seed_demo_data
 from app.db.models import (
+    Attachment,
     AuditEvent,
     AuthSession,
     KnowledgeDocument,
@@ -18,6 +19,7 @@ from app.db.session import SessionLocal, build_engine, create_database, engine, 
 __all__ = [
     "Base",
     "AuthSession",
+    "Attachment",
     "AuditEvent",
     "KnowledgeDocument",
     "KnowledgeSegment",

@@ -19,7 +19,7 @@ from fastapi import (
 from fastapi import (
     Path as PathParameter,
 )
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
 from sqlalchemy import func, select
@@ -51,6 +51,17 @@ from app.api.dependencies import (
     DatabaseSession,
     SessionCookie,
     get_current_user,
+)
+from app.attachments import (
+    AttachmentNotFoundError,
+    AttachmentPersistenceError,
+    AttachmentStorageError,
+    AttachmentValidationError,
+    attachment_file_path,
+    get_attachment_storage_directory,
+    get_visible_attachment,
+    list_ticket_attachments,
+    store_ticket_attachments,
 )
 from app.audit import (
     list_audit_events,
@@ -471,6 +482,7 @@ def _technical_ticket_context(
     solution_error: str | None = None,
     action_result: str | None = None,
     action_error: str | None = None,
+    attachment_error: str | None = None,
 ) -> dict[str, object]:
     """Prepara dettaglio, scelte consentite e valori del modulo tecnico."""
 
@@ -517,6 +529,8 @@ def _technical_ticket_context(
             "action_proposals": action_proposals,
             "action_result": action_result,
             "action_error": action_error or action_load_error,
+            "attachments": list_ticket_attachments(session, ticket.id),
+            "attachment_error": attachment_error,
             "audit_events": present_audit_events(
                 session,
                 list_ticket_audit_events(session, ticket.id),
@@ -1043,6 +1057,7 @@ def reset_demo_data(
             session,
             load_demo_passwords(),
             get_knowledge_storage_directory(),
+            get_attachment_storage_directory(),
         )
     except (DemoCredentialsError, DemoResetError) as error:
         return templates.TemplateResponse(
@@ -1416,6 +1431,7 @@ def employee_ticket_detail(
     classification_reviewed: Annotated[bool, Query()] = False,
     solution_attempted: Annotated[bool, Query()] = False,
     action_result: Annotated[str | None, Query()] = None,
+    attachment_error: Annotated[str | None, Query()] = None,
 ) -> Response:
     """Mostra il dettaglio personale o gli strumenti riservati al tecnico."""
 
@@ -1440,6 +1456,7 @@ def employee_ticket_detail(
                 classification_reviewed=classification_reviewed,
                 solution_attempted=solution_attempted,
                 action_result=action_result,
+                attachment_error=attachment_error,
             ),
             headers={"Cache-Control": "no-store"},
         )
@@ -1457,12 +1474,105 @@ def employee_ticket_detail(
     context = _workspace_context(current_user, f"Ticket SP-{ticket.id:04d}")
     context["ticket"] = _present_tickets(session, [ticket])[0]
     context["created"] = created
+    context["attachments"] = list_ticket_attachments(session, ticket.id)
+    context["attachment_error"] = attachment_error
     return templates.TemplateResponse(
         request=request,
         name="employee_ticket_detail.html",
         context=context,
         headers={"Cache-Control": "no-store"},
     )
+
+
+@router.post("/app/tickets/{ticket_id}/attachments")
+def upload_ticket_attachments(
+    ticket_id: WebTicketId,
+    session: DatabaseSession,
+    current_user: WebUser,
+    files: Annotated[list[UploadFile], File()],
+) -> Response:
+    """Conserva allegati del ticket soltanto dopo il controllo di visibilit\u00e0."""
+
+    ticket = get_visible_ticket(session, current_user, ticket_id)
+    if ticket is None:
+        return RedirectResponse(url="/app", status_code=status.HTTP_303_SEE_OTHER)
+    try:
+        store_ticket_attachments(
+            session,
+            files,
+            ticket,
+            current_user,
+            get_attachment_storage_directory(),
+        )
+    except AttachmentValidationError:
+        return RedirectResponse(
+            url=f"/app/tickets/{ticket_id}?attachment_error=invalid",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    except AttachmentPersistenceError:
+        return RedirectResponse(
+            url=f"/app/tickets/{ticket_id}?attachment_error=storage",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    return RedirectResponse(
+        url=f"/app/tickets/{ticket_id}?attachment_uploaded=true",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+def _attachment_response(
+    session: Session,
+    current_user: User,
+    attachment_id: int,
+    *,
+    inline: bool,
+) -> FileResponse:
+    """Prepara download o anteprima solo dopo la verifica del ticket collegato."""
+
+    try:
+        attachment = get_visible_attachment(session, current_user, attachment_id)
+        path = attachment_file_path(attachment, get_attachment_storage_directory())
+    except (AttachmentNotFoundError, AttachmentStorageError) as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Allegato non disponibile"
+        ) from error
+    if inline and attachment.content_type not in {"image/png", "image/jpeg", "application/pdf"}:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Anteprima non disponibile"
+        )
+    return FileResponse(
+        path,
+        media_type=attachment.content_type,
+        filename=attachment.original_filename,
+        content_disposition_type="inline" if inline else "attachment",
+        headers={
+            "Cache-Control": "no-store",
+            "Content-Security-Policy": "sandbox; default-src 'none'",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@router.get("/app/attachments/{attachment_id}/download")
+def download_attachment(
+    attachment_id: Annotated[int, PathParameter(gt=0)],
+    session: DatabaseSession,
+    current_user: WebUser,
+) -> FileResponse:
+    """Scarica il file usando il nome originale come solo metadato sicuro."""
+
+    return _attachment_response(session, current_user, attachment_id, inline=False)
+
+
+@router.get("/app/attachments/{attachment_id}/preview")
+def preview_attachment(
+    attachment_id: Annotated[int, PathParameter(gt=0)],
+    session: DatabaseSession,
+    current_user: WebUser,
+) -> FileResponse:
+    """Mostra inline solo file gi\u00e0 validati come immagine o PDF."""
+
+    return _attachment_response(session, current_user, attachment_id, inline=True)
 
 
 @router.post(

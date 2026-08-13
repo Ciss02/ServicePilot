@@ -36,6 +36,7 @@ sviluppo.
 - [`DOMAIN_VOCABULARY.md`](DOMAIN_VOCABULARY.md) — stati, priorità e valori controllati;
 - [`TICKET_CONTRACTS.md`](TICKET_CONTRACTS.md) — dati accettati e restituiti;
 - [`TICKET_API.md`](TICKET_API.md) — endpoint e regole del ciclo di vita;
+- [`ATTACHMENTS.md`](ATTACHMENTS.md) — archivio privato, limiti, autorizzazione e pulizia;
 - [`DATABASE.md`](DATABASE.md) — tabelle, configurazione e persistenza;
 - [`DEMO_DATA.md`](DEMO_DATA.md) — contenuto sintetico e caricamento ripetibile.
 

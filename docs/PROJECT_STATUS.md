@@ -17,6 +17,8 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 - Ogni issue contiene obiettivo, modifiche, dipendenze, rischi, criteri di accettazione e
   verifiche.
 - **SP-090 - Migrazioni versionate per la v0.2** è completata e verificata localmente.
+- **SP-092 - Allegati sicuri** è completata e verificata localmente; dipende soltanto da
+  SP-090 e viene quindi completata senza anticipare le funzioni di SP-091 o SP-093.
 - La roadmap verrà implementata una issue e una pull request alla volta; il codice della
   `v0.2.0` non è stato anticipato durante la pianificazione.
 
@@ -177,11 +179,11 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-090 - Migrazioni versionate per la v0.2**
+**SP-092 - Allegati sicuri**
 
-Alembic è la fonte versionata dello schema. La baseline `0001_v010_baseline` crea un
-database vuoto oppure riconosce uno schema v0.1.0 completo senza perdere righe; avvio
-locale, applicazione e deploy applicano lo stesso bootstrap in modo ripetibile.
+Archivio privato riutilizzabile per ticket, bozze e messaggi, con contesto controllato,
+nomi casuali, controlli reali dei contenuti e download autorizzato. Il primo collegamento
+web è il dettaglio ticket; le future issue useranno gli stessi servizi per bozze e messaggi.
 
 ## Prossima attività
 
@@ -593,3 +595,14 @@ Prima di terminare verificare che:
 - `pytest -W error`: 350 test superati senza avvisi dopo SP-090.
 - Ruff: controllo superato e 155 file Python conformi alla formattazione.
 - `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-090.
+- Aggiunta Pillow `12.3.0` per decodificare e ricodificare PNG/JPEG senza metadati;
+  PDF, TXT e LOG sono validati con parser o testo UTF-8 reale.
+- Aggiunta migrazione `0003_secure_attachments`; fresh install e upgrade v0.1.0
+  producono anche la tabella privata `attachments` senza perdere righe esistenti.
+- Verificati file validi e camuffati, limiti per invio/file/ticket, errori disco,
+  autorizzazione dipendente/tecnico e pulizia di metadati e file del contesto.
+- Verificati nel browser integrato riquadro Allegati privati, caricamento di un LOG
+  sintetico e link di download senza percorsi interni esposti.
+- `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-092.
+- Ruff: controllo superato e 124 file Python conformi alla formattazione.
+- `pytest -W error`: 364 test superati senza avvisi dopo SP-092.
