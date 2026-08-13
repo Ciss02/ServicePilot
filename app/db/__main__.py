@@ -18,7 +18,7 @@ def main() -> None:
         choices=("init", "seed"),
         default="init",
         nargs="?",
-        help="init crea le tabelle; seed carica anche i dati dimostrativi",
+        help="init applica le migrazioni; seed carica anche i dati dimostrativi",
     )
     args = parser.parse_args()
 

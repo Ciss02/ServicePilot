@@ -156,6 +156,11 @@ fonti dei suggerimenti, azioni ed eventi audit. SQLite è sufficiente per una de
 istanza singola; l'indirizzo del database è configurabile tramite
 `SERVICEPILOT_DATABASE_URL`.
 
+Alembic è la fonte versionata dello schema. Il bootstrap applica le revisioni all'avvio
+e riconosce la baseline v0.1.0 soltanto dopo averne verificato la struttura; i modelli
+SQLAlchemy restano la rappresentazione usata dall'applicazione, non un sostituto delle
+migrazioni.
+
 Le operazioni che devono rimanere coerenti condividono una transazione. Per esempio:
 
 - creazione del ticket ed evento di creazione;
