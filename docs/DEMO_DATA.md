@@ -32,7 +32,8 @@ Dopo aver preparato l'ambiente locale e impostato le tre variabili descritte in
 .\.venv\Scripts\python.exe -m app.db seed
 ```
 
-Il comando crea anche le tabelle mancanti. Può essere ripetuto: sedi e utenti vengono
+Il comando applica prima le migrazioni Alembic fino alla revisione corrente. Può essere
+ripetuto: sedi e utenti vengono
 riconosciuti rispettivamente tramite codice ed email, mentre i ticket demo vengono
 riconosciuti dal loro titolo esplicito. Le azioni demo vengono riconosciute tramite
 ticket, tipo e motivazione. I record già presenti vengono riallineati ai valori

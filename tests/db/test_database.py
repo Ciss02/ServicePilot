@@ -1,16 +1,25 @@
-"""Verifiche della struttura iniziale del database."""
+"""Verifiche della struttura e delle migrazioni versionate del database."""
+
+from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
-from sqlalchemy import inspect, text
+from alembic.migration import MigrationContext
+from alembic.operations import Operations
+from sqlalchemy import Engine, String, inspect, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db import Site, Ticket, User, build_engine, create_database
+from app.db.base import Base
+from app.db.migrations import CURRENT_REVISION, DatabaseMigrationError
 from app.domain.vocabulary import Role, TicketStatus
+
+APPLICATION_TABLES = set(Base.metadata.tables)
 
 
 @pytest.fixture
-def database_engine(tmp_path):
+def database_engine(tmp_path: Path) -> Iterator[Engine]:
     """Usa un file SQLite temporaneo, isolato dai dati locali."""
 
     engine = build_engine(f"sqlite:///{tmp_path / 'servicepilot-test.db'}")
@@ -18,211 +27,237 @@ def database_engine(tmp_path):
     engine.dispose()
 
 
-def test_database_creation_is_repeatable(database_engine) -> None:
-    create_database(database_engine)
-    create_database(database_engine)
-
-    assert set(inspect(database_engine).get_table_names()) == {
-        "auth_sessions",
-        "audit_events",
-        "knowledge_documents",
-        "knowledge_segments",
-        "proposed_actions",
-        "sites",
-        "ticket_solution_sources",
-        "tickets",
-        "users",
-    }
-    assert "password_hash" in {
-        column["name"] for column in inspect(database_engine).get_columns("users")
-    }
+def _normalized_sql(value: str | None) -> str | None:
+    return " ".join(value.split()) if value is not None else None
 
 
-def test_existing_user_table_receives_password_hash_column(database_engine) -> None:
-    with database_engine.begin() as connection:
-        connection.execute(
-            text(
-                "CREATE TABLE users ("
-                "id INTEGER PRIMARY KEY, "
-                "email VARCHAR(254) NOT NULL UNIQUE, "
-                "display_name VARCHAR(120) NOT NULL, "
-                "role VARCHAR(20) NOT NULL, "
-                "is_active BOOLEAN NOT NULL, "
-                "created_at DATETIME NOT NULL)"
-            )
-        )
+def _schema_snapshot(engine: Engine) -> dict[str, object]:
+    """Descrive lo schema applicativo senza includere la tabella tecnica Alembic."""
+
+    database_inspector = inspect(engine)
+    snapshot: dict[str, object] = {}
+    for table_name in sorted(APPLICATION_TABLES):
+        snapshot[table_name] = {
+            "columns": sorted(
+                (
+                    column["name"],
+                    str(column["type"]),
+                    column["nullable"],
+                    _normalized_sql(column.get("default")),
+                    column["primary_key"],
+                )
+                for column in database_inspector.get_columns(table_name)
+            ),
+            "foreign_keys": sorted(
+                (
+                    tuple(constraint["constrained_columns"]),
+                    constraint["referred_table"],
+                    tuple(constraint["referred_columns"]),
+                    constraint.get("options", {}).get("ondelete"),
+                )
+                for constraint in database_inspector.get_foreign_keys(table_name)
+            ),
+            "indexes": sorted(
+                (
+                    index["name"],
+                    tuple(index["column_names"]),
+                    bool(index["unique"]),
+                )
+                for index in database_inspector.get_indexes(table_name)
+            ),
+            "checks": sorted(
+                (
+                    constraint["name"],
+                    _normalized_sql(constraint["sqltext"]),
+                )
+                for constraint in database_inspector.get_check_constraints(table_name)
+            ),
+            "unique_constraints": sorted(
+                (
+                    constraint["name"] or "",
+                    tuple(constraint["column_names"]),
+                )
+                for constraint in database_inspector.get_unique_constraints(table_name)
+            ),
+        }
+    return snapshot
+
+
+def _create_populated_v010_database(
+    engine: Engine,
+    *,
+    historical_alter_shape: bool = False,
+) -> None:
+    """Simula un database finale v0.1.0 privo della tabella Alembic."""
+
+    Base.metadata.create_all(engine)
+    if historical_alter_shape:
+        with engine.begin() as connection:
+            operations = Operations(MigrationContext.configure(connection))
+            with operations.batch_alter_table("tickets", recreate="always") as batch_op:
+                batch_op.drop_constraint(
+                    "classification_review_status",
+                    type_="check",
+                )
+                batch_op.drop_constraint(
+                    "ck_tickets_ai_solution_status",
+                    type_="check",
+                )
+                batch_op.alter_column(
+                    "classification_review_status",
+                    existing_type=String(length=19),
+                    type_=String(length=30),
+                    existing_nullable=False,
+                    existing_server_default="pending",
+                )
+    with engine.begin() as connection:
         connection.execute(
             text(
                 "INSERT INTO users "
-                "(email, display_name, role, is_active, created_at) "
-                "VALUES ('legacy@example.test', 'Profilo locale', "
-                "'employee', 1, CURRENT_TIMESTAMP)"
+                "(id, email, display_name, role, is_active) VALUES "
+                "(1, 'dipendente-migrazione@example.test', 'Dipendente Migrazione', "
+                "'employee', 1)"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO sites (id, code, name, is_active) "
+                "VALUES (1, 'MIGRATION-HQ', 'Sede migrazione', 1)"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO tickets "
+                "(id, title, description, requester_id, site_id, service, affected_users) "
+                "VALUES (1, 'Ticket v0.1.0', 'Dato fittizio da conservare', 1, 1, 'VPN', 1)"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO knowledge_documents "
+                "(id, original_filename, storage_filename, content_type, size_bytes, "
+                "checksum_sha256, uploaded_by_user_id) VALUES "
+                "(1, 'procedura-demo.md', 'migration-demo.md', 'text/markdown', 20, "
+                "'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 1)"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO knowledge_segments "
+                "(id, document_id, position, source_section, content, character_count) "
+                "VALUES (1, 1, 0, 'Test', 'Contenuto procedura demo', 23)"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO proposed_actions "
+                "(id, ticket_id, action_type, rationale, payload_json, expected_effect) "
+                "VALUES (1, 1, 'notify_requester', "
+                "'Motivazione fittizia sufficientemente lunga', '{}', "
+                "'Effetto previsto fittizio')"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO audit_events "
+                "(id, ticket_id, actor_type, actor_user_id, event_type, summary, action_id) "
+                "VALUES (1, 1, 'human', 1, 'ticket_created', "
+                "'Ticket demo creato', 1)"
             )
         )
 
+
+def test_fresh_database_creation_is_versioned_and_repeatable(database_engine: Engine) -> None:
     create_database(database_engine)
     create_database(database_engine)
 
-    columns = {column["name"] for column in inspect(database_engine).get_columns("users")}
+    assert set(inspect(database_engine).get_table_names()) == APPLICATION_TABLES | {
+        "alembic_version"
+    }
     with database_engine.connect() as connection:
-        preserved_email, password_hash = connection.execute(
-            text("SELECT email, password_hash FROM users")
-        ).one()
-
-    assert "password_hash" in columns
-    assert preserved_email == "legacy@example.test"
-    assert password_hash is None
+        revision = connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
+    assert revision == CURRENT_REVISION
 
 
-def test_existing_ticket_table_receives_unique_creation_key(database_engine) -> None:
-    with database_engine.begin() as connection:
-        connection.execute(
-            text("CREATE TABLE tickets (id INTEGER PRIMARY KEY, title TEXT NOT NULL)")
+def test_v010_upgrade_preserves_rows_and_records_baseline(database_engine: Engine) -> None:
+    _create_populated_v010_database(database_engine)
+
+    create_database(database_engine)
+    create_database(database_engine)
+
+    with database_engine.connect() as connection:
+        assert connection.execute(text("SELECT email FROM users WHERE id = 1")).scalar_one() == (
+            "dipendente-migrazione@example.test"
         )
-        connection.execute(text("INSERT INTO tickets (title) VALUES ('Ticket locale esistente')"))
+        assert connection.execute(text("SELECT title FROM tickets WHERE id = 1")).scalar_one() == (
+            "Ticket v0.1.0"
+        )
+        assert (
+            connection.execute(
+                text("SELECT original_filename FROM knowledge_documents WHERE id = 1")
+            ).scalar_one()
+            == "procedura-demo.md"
+        )
+        assert (
+            connection.execute(text("SELECT summary FROM audit_events WHERE id = 1")).scalar_one()
+            == "Ticket demo creato"
+        )
+        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == (
+            CURRENT_REVISION
+        )
 
-    create_database(database_engine)
-    create_database(database_engine)
 
-    columns = {column["name"] for column in inspect(database_engine).get_columns("tickets")}
-    indexes = {index["name"]: index for index in inspect(database_engine).get_indexes("tickets")}
-    with database_engine.connect() as connection:
-        preserved_title = connection.execute(text("SELECT title FROM tickets")).scalar_one()
+def test_historical_v010_alter_shape_is_normalized_without_losing_rows(
+    database_engine: Engine,
+    tmp_path: Path,
+) -> None:
+    _create_populated_v010_database(database_engine, historical_alter_shape=True)
+    fresh_engine = build_engine(f"sqlite:///{tmp_path / 'fresh-comparison.db'}")
+    try:
+        create_database(fresh_engine)
+        create_database(database_engine)
 
-    assert "creation_key" in columns
-    assert indexes["ux_tickets_creation_key"]["unique"] == 1
-    assert preserved_title == "Ticket locale esistente"
+        assert _schema_snapshot(database_engine) == _schema_snapshot(fresh_engine)
+        with database_engine.connect() as connection:
+            assert (
+                connection.execute(text("SELECT title FROM tickets WHERE id = 1")).scalar_one()
+                == "Ticket v0.1.0"
+            )
+            assert (
+                connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
+                == CURRENT_REVISION
+            )
+    finally:
+        fresh_engine.dispose()
 
 
-def test_existing_ticket_table_receives_classification_review_status(
-    database_engine,
+def test_fresh_and_v010_upgrade_produce_the_same_application_schema(tmp_path: Path) -> None:
+    fresh_engine = build_engine(f"sqlite:///{tmp_path / 'fresh.db'}")
+    upgraded_engine = build_engine(f"sqlite:///{tmp_path / 'upgraded.db'}")
+    try:
+        create_database(fresh_engine)
+        _create_populated_v010_database(upgraded_engine)
+        create_database(upgraded_engine)
+
+        assert _schema_snapshot(fresh_engine) == _schema_snapshot(upgraded_engine)
+    finally:
+        fresh_engine.dispose()
+        upgraded_engine.dispose()
+
+
+def test_unknown_unversioned_schema_is_rejected_without_being_stamped(
+    database_engine: Engine,
 ) -> None:
     with database_engine.begin() as connection:
-        connection.execute(
-            text("CREATE TABLE tickets (id INTEGER PRIMARY KEY, title TEXT NOT NULL)")
-        )
-        connection.execute(
-            text("INSERT INTO tickets (title) VALUES ('Ticket locale da conservare')")
-        )
+        connection.execute(text("CREATE TABLE users (id INTEGER PRIMARY KEY)"))
 
-    create_database(database_engine)
-    create_database(database_engine)
+    with pytest.raises(DatabaseMigrationError, match="incompatibile"):
+        create_database(database_engine)
 
-    columns = {column["name"] for column in inspect(database_engine).get_columns("tickets")}
-    with database_engine.connect() as connection:
-        title, review_status = connection.execute(
-            text("SELECT title, classification_review_status FROM tickets")
-        ).one()
-
-    assert "classification_review_status" in columns
-    assert title == "Ticket locale da conservare"
-    assert review_status == "pending"
+    assert inspect(database_engine).get_table_names() == ["users"]
 
 
-def test_existing_ticket_receives_ai_solution_columns(database_engine) -> None:
-    with database_engine.begin() as connection:
-        connection.execute(
-            text("CREATE TABLE tickets (id INTEGER PRIMARY KEY, title TEXT NOT NULL)")
-        )
-        connection.execute(
-            text("INSERT INTO tickets (title) VALUES ('Ticket locale da conservare')")
-        )
-
-    create_database(database_engine)
-    create_database(database_engine)
-
-    columns = {column["name"] for column in inspect(database_engine).get_columns("tickets")}
-    with database_engine.connect() as connection:
-        row = connection.execute(
-            text(
-                "SELECT title, ai_suggested_solution, ai_solution_status, "
-                "ai_solution_error, ai_solution_generated_at FROM tickets"
-            )
-        ).one()
-
-    assert {
-        "ai_suggested_solution",
-        "ai_solution_status",
-        "ai_solution_error",
-        "ai_solution_generated_at",
-    } <= columns
-    assert row.title == "Ticket locale da conservare"
-    assert row.ai_suggested_solution is None
-    assert row.ai_solution_status == "pending"
-    assert row.ai_solution_error is None
-    assert row.ai_solution_generated_at is None
-
-
-def test_existing_knowledge_document_receives_extraction_state(database_engine) -> None:
-    with database_engine.begin() as connection:
-        connection.execute(
-            text(
-                "CREATE TABLE knowledge_documents ("
-                "id INTEGER PRIMARY KEY, original_filename VARCHAR(255) NOT NULL)"
-            )
-        )
-        connection.execute(
-            text(
-                "INSERT INTO knowledge_documents (original_filename) VALUES ('procedura-locale.md')"
-            )
-        )
-
-    create_database(database_engine)
-    create_database(database_engine)
-
-    columns = {
-        column["name"] for column in inspect(database_engine).get_columns("knowledge_documents")
-    }
-    with database_engine.connect() as connection:
-        row = connection.execute(
-            text(
-                "SELECT original_filename, extraction_status, extraction_error, "
-                "index_status, index_error, embedding_model, "
-                "embedding_dimensions, indexed_at "
-                "FROM knowledge_documents"
-            )
-        ).one()
-
-    assert {
-        "extraction_status",
-        "extraction_error",
-        "index_status",
-        "index_error",
-        "embedding_model",
-        "embedding_dimensions",
-        "indexed_at",
-    } <= columns
-    assert row.original_filename == "procedura-locale.md"
-    assert row.extraction_status == "pending"
-    assert row.extraction_error is None
-    assert row.index_status == "pending"
-    assert row.index_error is None
-    assert row.embedding_model is None
-    assert row.embedding_dimensions is None
-    assert row.indexed_at is None
-
-
-def test_existing_knowledge_segment_receives_embedding_column(database_engine) -> None:
-    with database_engine.begin() as connection:
-        connection.execute(text("CREATE TABLE knowledge_segments (id INTEGER PRIMARY KEY)"))
-        connection.execute(text("INSERT INTO knowledge_segments DEFAULT VALUES"))
-
-    create_database(database_engine)
-    create_database(database_engine)
-
-    columns = {
-        column["name"] for column in inspect(database_engine).get_columns("knowledge_segments")
-    }
-    with database_engine.connect() as connection:
-        embedding_json = connection.execute(
-            text("SELECT embedding_json FROM knowledge_segments")
-        ).scalar_one()
-
-    assert "embedding_json" in columns
-    assert embedding_json is None
-
-
-def test_initial_records_can_be_saved(database_engine) -> None:
+def test_initial_records_can_be_saved(database_engine: Engine) -> None:
     create_database(database_engine)
 
     with Session(database_engine) as session:
@@ -263,7 +298,7 @@ def test_initial_records_can_be_saved(database_engine) -> None:
 
 
 def test_proposed_action_table_keeps_proposal_separate_from_ticket(
-    database_engine,
+    database_engine: Engine,
 ) -> None:
     create_database(database_engine)
 
@@ -288,68 +323,7 @@ def test_proposed_action_table_keeps_proposal_separate_from_ticket(
     }
 
 
-def test_existing_proposed_actions_receive_decision_and_result_columns(
-    database_engine,
-) -> None:
-    with database_engine.begin() as connection:
-        connection.execute(
-            text(
-                "CREATE TABLE proposed_actions ("
-                "id INTEGER PRIMARY KEY, "
-                "ticket_id INTEGER NOT NULL, "
-                "status VARCHAR(30) NOT NULL)"
-            )
-        )
-        connection.execute(
-            text("INSERT INTO proposed_actions (ticket_id, status) VALUES (7, 'pending_approval')")
-        )
-
-    create_database(database_engine)
-    create_database(database_engine)
-
-    columns = {
-        column["name"] for column in inspect(database_engine).get_columns("proposed_actions")
-    }
-    with database_engine.connect() as connection:
-        row = connection.execute(
-            text(
-                "SELECT ticket_id, status, reviewed_by_user_id, decided_at, "
-                "execution_reference, execution_message, execution_error_code "
-                "FROM proposed_actions"
-            )
-        ).one()
-
-    assert {
-        "reviewed_by_user_id",
-        "decided_at",
-        "execution_reference",
-        "execution_message",
-        "execution_error_code",
-    } <= columns
-    assert row.ticket_id == 7
-    assert row.status == "pending_approval"
-    assert tuple(row)[2:] == (None, None, None, None, None)
-
-
-def test_existing_database_receives_proposed_action_table(database_engine) -> None:
-    with database_engine.begin() as connection:
-        connection.execute(
-            text("CREATE TABLE tickets (id INTEGER PRIMARY KEY, title TEXT NOT NULL)")
-        )
-        connection.execute(
-            text("INSERT INTO tickets (title) VALUES ('Ticket locale da conservare')")
-        )
-
-    create_database(database_engine)
-    create_database(database_engine)
-
-    assert "proposed_actions" in inspect(database_engine).get_table_names()
-    with database_engine.connect() as connection:
-        title = connection.execute(text("SELECT title FROM tickets")).scalar_one()
-    assert title == "Ticket locale da conservare"
-
-
-def test_ticket_rejects_unknown_requester(database_engine) -> None:
+def test_ticket_rejects_unknown_requester(database_engine: Engine) -> None:
     create_database(database_engine)
 
     with Session(database_engine) as session:

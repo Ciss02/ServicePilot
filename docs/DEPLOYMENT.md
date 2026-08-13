@@ -28,8 +28,10 @@ Le due applicazioni restano comunque processi distinti.
 
 La demo usa intenzionalmente SQLite e la cartella `/tmp/servicepilot`. Sul piano
 gratuito questi file sono temporanei: un riavvio, un nuovo deploy o lo spegnimento per
-inattività li elimina. Il comando `python -m app.deployment` ricrea le cartelle e carica
-il dataset fittizio prima di avviare il server.
+inattività li elimina. Il comando `python -m app.deployment` ricrea le cartelle, applica
+le migrazioni Alembic e carica il dataset fittizio prima di avviare il server. Lo stesso
+avvio aggiorna in modo ripetibile un database già esistente: Render non richiede un
+comando di migrazione manuale separato.
 
 Durante una visita, un amministratore può anche usare **Ripristina demo** e digitare
 `RIPRISTINA DEMO`. Il ripristino sostituisce ticket, azioni, audit e knowledge base in

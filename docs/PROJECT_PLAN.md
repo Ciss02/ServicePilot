@@ -181,7 +181,7 @@ vengono svolte nell'ordine seguente, una issue e una pull request alla volta.
 **Risultato:** ticket, gruppi, allegati e comunicazioni hanno una base dati sicura e
 versionata.
 
-- [ ] **[SP-090 - Migrazioni versionate per la v0.2](https://github.com/Ciss02/ServicePilot/issues/74)**
+- [x] **[SP-090 - Migrazioni versionate per la v0.2](https://github.com/Ciss02/ServicePilot/issues/74)**
   Introdurre Alembic e garantire upgrade da `v0.1.0` e creazione da database vuoto.
   Verifica: i due percorsi producono lo stesso schema senza perdere dati.
 - [ ] **[SP-091 - Gruppi di supporto e appartenenze](https://github.com/Ciss02/ServicePilot/issues/75)**
@@ -272,5 +272,5 @@ lo storico.
 
 ## Prossima attività
 
-**SP-090 - Migrazioni versionate per la v0.2.** Nessun'altra issue della nuova roadmap
-deve essere implementata prima che la base delle migrazioni sia verificata e unita.
+**SP-091 - Gruppi di supporto e appartenenze.** Rendere i gruppi amministrabili e
+collegare i tecnici a uno o più gruppi, usando la base Alembic verificata in SP-090.

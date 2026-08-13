@@ -8,15 +8,15 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ### Evoluzione v0.2.0 pianificata
 
-- La release stabile corrente resta `v0.1.0`; nessuna funzione v0.2 è ancora
-  implementata o pubblicata.
+- La release stabile pubblicata resta `v0.1.0`; la prima base tecnica della v0.2 è
+  implementata localmente ma non ancora pubblicata.
 - Approvata la roadmap completa descritta in
   [`V020_PRODUCT_PLAN.md`](V020_PRODUCT_PLAN.md).
 - Le milestone GitHub 0-8 sono state chiuse perché già completate nella release MVP.
 - Create le milestone GitHub 9-13 e le 22 issue da `SP-090` a `SP-133`.
 - Ogni issue contiene obiettivo, modifiche, dipendenze, rischi, criteri di accettazione e
   verifiche.
-- La prossima attività obbligatoria è **SP-090 - Migrazioni versionate per la v0.2**.
+- **SP-090 - Migrazioni versionate per la v0.2** è completata e verificata localmente.
 - La roadmap verrà implementata una issue e una pull request alla volta; il codice della
   `v0.2.0` non è stato anticipato durante la pianificazione.
 
@@ -177,16 +177,16 @@ Questo è il punto di ingresso rapido per ogni nuova sessione Codex.
 
 ## Ultima attività completata
 
-**SP-084 - Release MVP v0.1.0**
+**SP-090 - Migrazioni versionate per la v0.2**
 
-La prima versione stabile è pubblicata con note di rilascio e collegamento nel README.
-Tutte le attività previste per l'MVP sono completate e verificate.
+Alembic è la fonte versionata dello schema. La baseline `0001_v010_baseline` crea un
+database vuoto oppure riconosce uno schema v0.1.0 completo senza perdere righe; avvio
+locale, applicazione e deploy applicano lo stesso bootstrap in modo ripetibile.
 
 ## Prossima attività
 
-**SP-090 - Migrazioni versionate per la v0.2.** Introdurre la base Alembic e verificare
-sia l'aggiornamento di un database `v0.1.0` sia la creazione da database vuoto. Le issue
-successive dipendono da questa base e non devono essere anticipate.
+**SP-091 - Gruppi di supporto e appartenenze.** Rendere i gruppi amministrabili e
+collegare ogni tecnico a uno o più gruppi, conservando nello storico quelli disattivati.
 
 ## Blocchi o decisioni aperte
 
@@ -573,3 +573,23 @@ Prima di terminare verificare che:
 - `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-084.
 - Ruff: controllo superato e 150 file conformi alla formattazione.
 - `pytest -W error`: 354 test superati senza avvisi dopo SP-084.
+- Aggiunta Alembic `1.19.1` come dipendenza di runtime, necessaria anche durante
+  l'avvio e il deploy.
+- Verificate `0001_v010_baseline` e `0002_normalize_v010` su database SQLite vuoto, su
+  schema v0.1.0 canonico e sulla variante prodotta dai vecchi `ALTER TABLE`, usando dati
+  fittizi di utenti, ticket, knowledge base e audit.
+- Verificata la conservazione delle righe e l'idempotenza di due avvii consecutivi.
+- Aggiornata con successo una copia temporanea del database locale storico: conteggi
+  invariati su 9 tabelle, nessuna violazione delle chiavi esterne e file originale non
+  modificato.
+- Confrontati colonne, tipi, nullabilità, chiavi, riferimenti, indici, unicità e vincoli:
+  fresh install e upgrade v0.1.0 producono lo stesso schema applicativo.
+- Verificato il rifiuto di un database non versionato incompleto senza creare
+  `alembic_version`.
+- `alembic current`: revisione `0002_normalize_v010 (head)`; `alembic check`: nessuna
+  nuova operazione rilevata rispetto ai modelli SQLAlchemy.
+- Rimossi dal bootstrap tutti gli `ALTER TABLE` manuali e verificata l'applicazione
+  automatica delle migrazioni da portale, comando locale e deploy.
+- `pytest -W error`: 350 test superati senza avvisi dopo SP-090.
+- Ruff: controllo superato e 155 file Python conformi alla formattazione.
+- `pip check`: nessuna dipendenza mancante o incompatibile dopo SP-090.

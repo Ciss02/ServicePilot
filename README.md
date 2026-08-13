@@ -99,7 +99,7 @@ La vista completa dei componenti e dei confini di sicurezza è in
 ### Tecnologie
 
 - Python 3.13, FastAPI e Pydantic;
-- SQLAlchemy con SQLite per l'MVP;
+- SQLAlchemy, Alembic e SQLite per l'MVP;
 - Jinja2, HTML e CSS responsive;
 - Gemini tramite adapter sostituibile;
 - embedding Gemini e recupero semantico locale;
@@ -151,6 +151,9 @@ Avviare portale, dataset sintetico e servizi REST simulati:
 ```bash
 python -m app.deployment
 ```
+
+L'avvio applica automaticamente le migrazioni database versionate prima di caricare i
+dati demo; non sono richiesti comandi separati durante il deploy.
 
 Aprire `http://127.0.0.1:8000/login`. Gli account principali sono:
 

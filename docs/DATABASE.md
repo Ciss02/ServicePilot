@@ -38,16 +38,34 @@ Senza configurazione aggiuntiva viene usato `sqlite:///./servicepilot.db`. È po
 scegliere un altro database impostando la variabile d'ambiente
 `SERVICEPILOT_DATABASE_URL`.
 
-Per creare le tabelle mancanti:
+Per portare il database alla revisione corrente:
 
 ```powershell
 .\.venv\Scripts\python.exe -m app.db
 ```
 
-Il comando può essere eseguito più volte e non cancella i dati esistenti. L'avvio
-include piccoli aggiornamenti compatibili per database creati da versioni precedenti.
-Un sistema generale di migrazioni resta necessario se il progetto evolverà oltre
-l'MVP con modifiche strutturali più ampie.
+Il comando può essere eseguito più volte e non cancella i dati esistenti. Usa Alembic,
+legge le revisioni ordinate in `migrations/versions/` e aggiorna la tabella tecnica
+`alembic_version`.
+
+La prima revisione, `0001_v010_baseline`, descrive in modo immutabile lo schema
+pubblicato con `v0.1.0`. Su un database vuoto crea tutte le tabelle. Su un database
+v0.1.0 esistente verifica prima l'intera struttura e registra la baseline. La revisione
+`0002_normalize_v010` corregge poi la sola variante storica prodotta dai precedenti
+`ALTER TABLE`, conservando le righe e facendo convergere entrambi i percorsi allo stesso
+schema. Un database non versionato parziale o sconosciuto viene rifiutato senza essere
+marcato come aggiornato.
+
+Per controllare la revisione dalla radice del repository:
+
+```powershell
+.\.venv\Scripts\python.exe -m alembic current
+```
+
+Per applicare le revisioni usare `python -m app.db`: oltre a eseguire `upgrade head`,
+questo comando contiene il riconoscimento sicuro dei database v0.1.0 ancora privi della
+tabella Alembic. L'avvio del portale, il comando `seed` e il deploy richiamano lo stesso
+bootstrap in automatico e non richiedono un passaggio manuale separato.
 
 ## Controlli applicati
 
@@ -76,11 +94,13 @@ l'MVP con modifiche strutturali più ampie.
 - riepilogo tra 5 e 300 caratteri e dettagli JSON fino a 4.000 caratteri;
 - modifica e cancellazione degli eventi già caricati bloccate dall'applicazione.
 
-I test usano file SQLite temporanei e non modificano `servicepilot.db`.
+I test usano file SQLite temporanei e non modificano `servicepilot.db`. Coprono sia una
+creazione vuota sia l'aggiornamento di un database v0.1.0 popolato e confrontano i due
+schemi risultanti.
 
 ## Dati dimostrativi
 
-Il comando seguente crea le tabelle mancanti e carica il dataset sintetico:
+Il comando seguente applica le migrazioni e carica il dataset sintetico:
 
 ```powershell
 .\.venv\Scripts\python.exe -m app.db seed
